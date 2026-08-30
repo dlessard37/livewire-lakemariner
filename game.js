@@ -2476,7 +2476,7 @@ const voice = { map: null, el: null, src: null, buf: new Map() };
 
 function loadVoicePack() {
   if (voice._loading) return voice._loading;
-  voice._loading = fetch("/assets/voice/map.json?v=120")
+  voice._loading = fetch("/assets/voice/map.json?v=121")
     .then((r) => (r.ok ? r.json() : null))
     .then((rows) => {
       if (!Array.isArray(rows)) {
@@ -2636,28 +2636,28 @@ const RADIO_META = {
   tremont: { tag: "TREMONT · BOOK 2", src: "assets/tremont_portrait.jpg" },
   utah: { tag: "UTAH · BOOK 2", src: "assets/utah_portrait.jpg" },
   drew: { tag: "DREW · GENERAL FOREMAN", src: "assets/drew_portrait.jpg" },
-  joe: { tag: "JOE RIVERA", src: "assets/joe_portrait.jpg?v=120" },
-  chris: { tag: "CHRIS · LIGHTING", src: "assets/chris_portrait.jpg?v=120" },
-  don: { tag: "DON THE FOREMAN", src: "assets/don_portrait.jpg?v=120" },
+  joe: { tag: "JOE RIVERA", src: "assets/joe_portrait.jpg?v=121" },
+  chris: { tag: "CHRIS · LIGHTING", src: "assets/chris_portrait.jpg?v=121" },
+  don: { tag: "DON THE FOREMAN", src: "assets/don_portrait.jpg?v=121" },
   safety: { tag: "MARITZA · SITE SAFETY", src: "assets/safety_portrait.jpg" },
-  redbeard: { tag: "RED BEARD · DATA 1", src: "assets/redbeard_portrait.jpg?v=120" },
-  andy: { tag: "ANDY · SICK & NEEDY", src: "assets/andy_portrait.jpg?v=120" },
-  nate: { tag: "NATE · WIENERS", src: "assets/nate_portrait.jpg?v=120" },
-  kenny: { tag: "KENNY THE STEW", src: "assets/kenny_portrait.jpg?v=120" },
+  redbeard: { tag: "RED BEARD · DATA 1", src: "assets/redbeard_portrait.jpg?v=121" },
+  andy: { tag: "ANDY · SICK & NEEDY", src: "assets/andy_portrait.jpg?v=121" },
+  nate: { tag: "NATE · WIENERS", src: "assets/nate_portrait.jpg?v=121" },
+  kenny: { tag: "KENNY THE STEW", src: "assets/kenny_portrait.jpg?v=121" },
 };
 
 const FACE_SRC = {
-  redbeard: "/assets/redbeard_face.jpg?v=120",
-  andy: "/assets/andy_face.jpg?v=120",
-  nate: "/assets/nate_face.jpg?v=120",
-  kenny: "/assets/kenny_face.jpg?v=120",
-  safety: "/assets/safety_face.jpg?v=120",
-  gf: "/assets/drew_face.jpg?v=120",
-  joe: "/assets/joe_face.jpg?v=120",
-  chris: "/assets/chris_face.jpg?v=120",
-  don: "/assets/don_face.jpg?v=120",
-  lugo: "/assets/lugo_face.jpg?v=120",
-  lemon: "/assets/lemon_face.jpg?v=120",
+  redbeard: "/assets/redbeard_face.jpg?v=121",
+  andy: "/assets/andy_face.jpg?v=121",
+  nate: "/assets/nate_face.jpg?v=121",
+  kenny: "/assets/kenny_face.jpg?v=121",
+  safety: "/assets/safety_face.jpg?v=121",
+  gf: "/assets/drew_face.jpg?v=121",
+  joe: "/assets/joe_face.jpg?v=121",
+  chris: "/assets/chris_face.jpg?v=121",
+  don: "/assets/don_face.jpg?v=121",
+  lugo: "/assets/lugo_face.jpg?v=121",
+  lemon: "/assets/lemon_face.jpg?v=121",
 };
 
 function paintRadioFace(who) {
@@ -8556,13 +8556,13 @@ function buildRacks() {
   const nPer = 9;
   const pitch = 0.68;
 
-  const rackTex = loader.load("/assets/tex_rack.jpg?v=120");
+  const rackTex = loader.load("/assets/tex_rack.jpg?v=121");
   rackTex.colorSpace = THREE.SRGBColorSpace;
-  const crahTex = loader.load("/assets/tex_crah.jpg?v=120");
+  const crahTex = loader.load("/assets/tex_crah.jpg?v=121");
   crahTex.colorSpace = THREE.SRGBColorSpace;
   // sealed concrete slab — this site has NO raised floor; power and data
   // run in the overhead tray (see assets/ref_mech.jpg / ref_elec.jpg)
-  const floorTex = loader.load("/assets/tex_concrete.jpg?v=120");
+  const floorTex = loader.load("/assets/tex_concrete.jpg?v=121");
   floorTex.colorSpace = THREE.SRGBColorSpace;
   floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
   floorTex.repeat.set(8, 12);

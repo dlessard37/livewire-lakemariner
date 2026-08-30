@@ -2,7 +2,7 @@
 // Precaches the app shell + assets. Core code files are network-first so new
 // versions land immediately; heavy static assets are cache-first.
 
-const CACHE_VERSION = 'livewire-v120';
+const CACHE_VERSION = 'livewire-v121';
 
 // small, frequently-edited files: prefer the network, fall back to cache
 // (resolved against the SW scope so subpath hosting still works)
