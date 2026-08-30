@@ -669,16 +669,12 @@ function crossList() {
   return list;
 }
 
-/** Middle of the building: DATA crosses + the N-S aisle between the racks. 110°+. */
+/** Hot hallway: ONLY the center cross corridor between Data Hall 2 and Data Hall 3. 110°+. */
+const HOT_CROSS = 2; // crossBand(2) = the corridor between pod index 1 (DH2) and pod index 2 (DH3)
 function inHotAisle(x, z) {
   if (x < CB.data0 - 0.35 || x > CB.data1 + 0.35) return false;
-  if (z < CB.z0 - 0.4 || z > CB.z1 + 0.4) return false;
-  for (let i = 0; i <= CB.pods; i++) {
-    const c = crossBand(i);
-    if (z >= c.z0 && z < c.z1) return true;
-  }
-  if (Math.abs(x - CB.dataX) < 1.85) return true;
-  return false;
+  const c = crossBand(HOT_CROSS);
+  return z >= c.z0 && z < c.z1;
 }
 /** gaps in N-S walls where cross-halls punch through (full open, no door) */
 function crossGaps() {
@@ -6760,8 +6756,8 @@ function buildHotAisle() {
     depthWrite: false,
   });
   const tape = new THREE.MeshBasicMaterial({ color: 0x1a140c });
-  for (let i = 0; i <= CB.pods; i++) {
-    const c = crossBand(i);
+  {
+    const c = crossBand(HOT_CROSS);
     const w = CB.data1 - CB.data0;
     const strip = boxMesh(w, 0.05, 0.42, glow);
     strip.position.set(CB.dataX, 5.42, c.mid);
@@ -6783,7 +6779,7 @@ function buildHotAisle() {
     scene.add(tag);
   }
   const pl = new THREE.PointLight(0xff7a28, 0.4, 24);
-  pl.position.set(CB.dataX, 4.1, (CB.z0 + CB.z1) * 0.5);
+  pl.position.set(CB.dataX, 4.1, crossBand(HOT_CROSS).mid);
   scene.add(pl);
 }
 
@@ -8538,17 +8534,6 @@ function buildRacks() {
       addCollider(cx, mid, 1.0, 1.8, 0, 2.2);
     }
 
-    // orange chimney over the N-S hot aisle in this pod
-    const glow = new THREE.MeshBasicMaterial({
-      color: 0xff6a1a,
-      transparent: true,
-      opacity: 0.2,
-      depthWrite: false,
-    });
-    const strip = boxMesh(3.2, 0.04, 16.2, glow);
-    strip.position.set(CB.dataX, 5.55, mid);
-    strip.userData.noBake = true;
-    scene.add(strip);
   }
 
   const n = spots.length;
