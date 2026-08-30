@@ -606,7 +606,7 @@ const BARK = {
 };
 
 /* kit -> speakAs role. Default is crew. Set this when a new NPC gets their own baked voice. */
-const NPC_VOICE = { safety: "safety", redbeard: "redbeard", andy: "andy" };
+const NPC_VOICE = { safety: "safety", redbeard: "redbeard", andy: "andy", nate: "nate", kenny: "kenny" };
 
 const CB = {
   pods: 4,
@@ -687,7 +687,7 @@ function zoneName(x, z) {
     return z > CB.z0 - 6 ? "CB-5 · IRON UP" : "CB-5 LAYDOWN";
   }
   if (x < -132 && z < 20) return "PARKING";
-  if (x < -168 && z > 42 && z < 138) return "LANDFILL · SXS";
+  if (x < -168 && z > 42 && z < 174) return "LANDFILL · SXS"; // course runs to the big landing at z≈170
   if (x < -148) {
     if (z > 130) return "COOLING PONDS";
     return "WEST FIELD";
@@ -699,7 +699,7 @@ function zoneName(x, z) {
     return "MINER ROW · LMD";
   }
   if (z < CB.z0 - 0.5) {
-    if (z < 16 && x > CB.west + 8 && x < CB.east - 8) return "SOUTH PARKING";
+    if (z < 16 && x > CB.west + 8 && x < 56) return "SOUTH PARKING"; // the lot pad spans to x≈56
     if (z < 18 && x < CB.west + 20) return "PARKING";
     return "YARD · GATE";
   }
@@ -2074,15 +2074,16 @@ function overlayOpen() {
 
 addEventListener("keydown", (e) => {
   if (typingInField(e.target) || overlayOpen()) return; // iPhone ADD TO THE GAME needs Space
+  if (e.repeat) return; // OS key-repeat must not spam interact/jump
   keys[e.code] = true;
-  if (["Space", "Tab"].includes(e.code)) e.preventDefault();
+  if (state.mode === "play" && ["Space", "Tab"].includes(e.code)) e.preventDefault();
   if (e.code === "KeyE" || e.code === "Enter") tryInteract();
   if (e.code === "Space") jump();
   if (e.code === "KeyT") openChat();
   if (e.code === "KeyV") sendWave();
 });
 addEventListener("keyup", (e) => {
-  if (typingInField(e.target) || overlayOpen()) return;
+  // always clear — swallowing a keyup while an overlay has focus leaves the key stuck down
   keys[e.code] = false;
 });
 
@@ -2475,7 +2476,7 @@ const voice = { map: null, el: null, src: null, buf: new Map() };
 
 function loadVoicePack() {
   if (voice._loading) return voice._loading;
-  voice._loading = fetch("/assets/voice/map.json?v=116")
+  voice._loading = fetch("/assets/voice/map.json?v=119")
     .then((r) => (r.ok ? r.json() : null))
     .then((rows) => {
       if (!Array.isArray(rows)) {
@@ -2608,19 +2609,24 @@ function speakTTS(role, text) {
   else go();
 }
 
-function speakAs(role, text) {
+function speakAs(role, text, opts) {
   if (!text || !settings.voice) return;
   recoverAudio();
-  stopVoice();
   const url = voice.map && voice.map[role + "|" + text];
   if (url) {
+    stopVoice();
     playClip(url, role, text);
     return;
   }
   if (!voice.map) {
     voice.pending = { role, text };
     loadVoicePack();
+    return;
   }
+  // No baked clip for this line. Don't kill whatever's already playing, and
+  // put the words on screen so the character doesn't read as dead. Callers
+  // that already show the text (the radio HUD) pass shown:true.
+  if (!opts || !opts.shown) toast(text);
 }
 
 let radioWho = "";
@@ -2630,28 +2636,28 @@ const RADIO_META = {
   tremont: { tag: "TREMONT · BOOK 2", src: "assets/tremont_portrait.jpg" },
   utah: { tag: "UTAH · BOOK 2", src: "assets/utah_portrait.jpg" },
   drew: { tag: "DREW · GENERAL FOREMAN", src: "assets/drew_portrait.jpg" },
-  joe: { tag: "JOE RIVERA", src: "assets/joe_portrait.jpg?v=116" },
-  chris: { tag: "CHRIS · LIGHTING", src: "assets/chris_portrait.jpg?v=116" },
-  don: { tag: "DON THE FOREMAN", src: "assets/don_portrait.jpg?v=116" },
+  joe: { tag: "JOE RIVERA", src: "assets/joe_portrait.jpg?v=119" },
+  chris: { tag: "CHRIS · LIGHTING", src: "assets/chris_portrait.jpg?v=119" },
+  don: { tag: "DON THE FOREMAN", src: "assets/don_portrait.jpg?v=119" },
   safety: { tag: "MARITZA · SITE SAFETY", src: "assets/safety_portrait.jpg" },
-  redbeard: { tag: "RED BEARD · DATA 1", src: "assets/redbeard_portrait.jpg?v=116" },
-  andy: { tag: "ANDY · SICK & NEEDY", src: "assets/andy_portrait.jpg?v=116" },
-  nate: { tag: "NATE · WIENERS", src: "assets/nate_portrait.jpg?v=116" },
-  kenny: { tag: "KENNY THE STEW", src: "assets/kenny_portrait.jpg?v=116" },
+  redbeard: { tag: "RED BEARD · DATA 1", src: "assets/redbeard_portrait.jpg?v=119" },
+  andy: { tag: "ANDY · SICK & NEEDY", src: "assets/andy_portrait.jpg?v=119" },
+  nate: { tag: "NATE · WIENERS", src: "assets/nate_portrait.jpg?v=119" },
+  kenny: { tag: "KENNY THE STEW", src: "assets/kenny_portrait.jpg?v=119" },
 };
 
 const FACE_SRC = {
-  redbeard: "/assets/redbeard_face.jpg?v=116",
-  andy: "/assets/andy_face.jpg?v=116",
-  nate: "/assets/nate_face.jpg?v=116",
-  kenny: "/assets/kenny_face.jpg?v=116",
-  safety: "/assets/safety_face.jpg?v=116",
-  gf: "/assets/drew_face.jpg?v=116",
-  joe: "/assets/joe_face.jpg?v=116",
-  chris: "/assets/chris_face.jpg?v=116",
-  don: "/assets/don_face.jpg?v=116",
-  lugo: "/assets/lugo_face.jpg?v=116",
-  lemon: "/assets/lemon_face.jpg?v=116",
+  redbeard: "/assets/redbeard_face.jpg?v=119",
+  andy: "/assets/andy_face.jpg?v=119",
+  nate: "/assets/nate_face.jpg?v=119",
+  kenny: "/assets/kenny_face.jpg?v=119",
+  safety: "/assets/safety_face.jpg?v=119",
+  gf: "/assets/drew_face.jpg?v=119",
+  joe: "/assets/joe_face.jpg?v=119",
+  chris: "/assets/chris_face.jpg?v=119",
+  don: "/assets/don_face.jpg?v=119",
+  lugo: "/assets/lugo_face.jpg?v=119",
+  lemon: "/assets/lemon_face.jpg?v=119",
 };
 
 function paintRadioFace(who) {
@@ -2712,7 +2718,7 @@ function radio(line, who) {
   $("radio-line").textContent = line;
   paintRadioFace(who);
   $("radio").classList.add("show");
-  speakAs(who, line);
+  speakAs(who, line, { shown: true });
   clearTimeout(radioTimer);
   radioTimer = setTimeout(() => $("radio").classList.remove("show"), 5200);
 }
@@ -2819,14 +2825,25 @@ function collideXZ(x, z, r, y = player.position.y) {
       let dz = z - nz;
       const d2 = dx * dx + dz * dz;
       if (d2 < r * r) {
-        const dist = Math.sqrt(d2) || 0.0001;
+        const dist = Math.sqrt(d2);
+        if (dist < 1e-6) {
+          // center is inside the box — the clamp gives no direction, which used
+          // to make the wall inert; eject through the nearest face instead
+          const w = x - b.minx, e = b.maxx - x, s = z - b.minz, n = b.maxz - z;
+          const m = Math.min(w, e, s, n);
+          if (m === w) x = b.minx - r - 0.001;
+          else if (m === e) x = b.maxx + r + 0.001;
+          else if (m === s) z = b.minz - r - 0.001;
+          else z = b.maxz + r + 0.001;
+          continue;
+        }
         const push = r - dist + 0.001;
         x += (dx / dist) * push;
         z += (dz / dist) * push;
       }
     }
   }
-  x = THREE.MathUtils.clamp(x, -232, 168);
+  x = THREE.MathUtils.clamp(x, -233, 168);
   z = THREE.MathUtils.clamp(z, -30, CB.z1 + 70);
   return { x, z };
 }
@@ -3523,8 +3540,11 @@ function buildOuterSite() {
         const wob = ((n % 5) - 2) * 0.012;
         if (n % 3 === 0) sedan(x, z, yaw + wob, col);
         else pickup(x, z, yaw + wob, col);
+        // collide per car, not per row — a row box walled off the empty
+        // stalls (the n%7 skips) and the walk-through gaps between cars
+        const sideways = Math.abs(Math.sin(yaw)) > 0.7;
+        addCollider(x, z, sideways ? 4.6 : 2.2, sideways ? 2.2 : 4.6, 0, 1.6);
       }
-      addCollider(x0 + ((cols - 1) * gapX) / 2, z0 + r * gapZ, cols * gapX + 1.2, 4.8, 0, 1.6);
     }
   }
 
@@ -4403,6 +4423,8 @@ function placeWorkMarker(mk, x, z, y) {
 function updateWorkMarkers(dt, t) {
   if (state.mode !== "play" && state.mode !== "end") return;
   const cur = currentJob();
+  // loop-invariant — building this Set per interactable per frame was pure GC churn
+  const jobIds = new Set((JOBS || []).map((j) => j.id));
   for (const it of state.interactables || []) {
     const mk = it.marker;
     if (!mk) continue;
@@ -4416,7 +4438,6 @@ function updateWorkMarkers(dt, t) {
     if (cycleDay(day) === 7 && it.sign) continue;
 
     // show every unfinished work diamond for the active jobs
-    const jobIds = new Set((JOBS || []).map((j) => j.id));
     const isWork = jobIds.has(it.id) || it.demo || it.battery || it.mag || it.pullGame || it.reelTarget || it.check || it.eol || it.high;
     if (isWork || (cur && it.id === cur.id)) {
       mk.visible = true;
@@ -4545,18 +4566,22 @@ function switchMesh() {
   return g;
 }
 
+// shared on/off disc materials — allocating a fresh material per call leaked
+// one into the renderer caches every day transition, per device
+const SMOKE_LOOK = {
+  tremOn: new THREE.MeshLambertMaterial({ color: 0xfff4d6, emissive: 0xffe08a, emissiveIntensity: 0.7 }),
+  tremOff: new THREE.MeshLambertMaterial({ color: 0xa8adb4 }),
+  faOn: new THREE.MeshLambertMaterial({ color: 0xf4f1ea }),
+  faOff: new THREE.MeshLambertMaterial({ color: 0x8a8884 }),
+};
 function setSmokeLook(s, on) {
   if (!s || !s.userData.disc) return;
   if (isTremont()) {
-    s.userData.disc.material = new THREE.MeshLambertMaterial({
-      color: on ? 0xfff4d6 : 0xa8adb4,
-      emissive: on ? 0xffe08a : 0x000000,
-      emissiveIntensity: on ? 0.7 : 0,
-    });
+    s.userData.disc.material = on ? SMOKE_LOOK.tremOn : SMOKE_LOOK.tremOff;
     s.userData.led.material.emissive.setHex(on ? 0xffe8a0 : 0x000000);
     s.userData.led.material.emissiveIntensity = on ? 1.3 : 0;
   } else {
-    s.userData.disc.material = mat(on ? 0xf4f1ea : 0x8a8884);
+    s.userData.disc.material = on ? SMOKE_LOOK.faOn : SMOKE_LOOK.faOff;
     s.userData.led.material.emissive.setHex(on ? 0xff2a2a : 0x000000);
     s.userData.led.material.emissiveIntensity = on ? 0.9 : 0;
   }
@@ -4962,9 +4987,11 @@ function applyNightPower(t) {
     let podsOn = fed;
     if (low && t != null) podsOn = Math.sin(t * 17) > -0.15;
     for (const L of nightRig.pods) {
-      L.intensity = fed ? 1.4 : 0;
+      // flicker with intensity, not visibility — toggling visible changes the
+      // light count and forces a full shader recompile for every lit material
+      L.visible = true;
+      L.intensity = fed && podsOn ? 1.4 : 0;
       L.distance = 38;
-      L.visible = podsOn;
     }
     nightRig.lamp.visible = !!state.hasTools;
     nightRig.lamp.intensity = fed && !low ? 0.7 : 2.5;
@@ -5052,7 +5079,17 @@ function npcWalk(rec, tx, tz, sp, dt) {
     let ddz = nz - cz;
     const d2 = ddx * ddx + ddz * ddz;
     if (d2 < 0.16) {
-      const dd = Math.sqrt(d2) || 0.0001;
+      const dd = Math.sqrt(d2);
+      if (dd < 1e-6) {
+        // center inside the box — push out through the nearest face
+        const fw = nx - b.minx, fe = b.maxx - nx, fs = nz - b.minz, fn = b.maxz - nz;
+        const fm = Math.min(fw, fe, fs, fn);
+        if (fm === fw) nx = b.minx - 0.401;
+        else if (fm === fe) nx = b.maxx + 0.401;
+        else if (fm === fs) nz = b.minz - 0.401;
+        else nz = b.maxz + 0.401;
+        continue;
+      }
       nx += (ddx / dd) * (0.4 - dd + 0.001);
       nz += (ddz / dd) * (0.4 - dd + 0.001);
     }
@@ -5480,7 +5517,11 @@ function storeInteractable() {
 function rebuildDayItems() {
   // drop leftover day-7 sign diamonds so a re-run doesn't stack them
   for (const it of state.interactables || []) {
-    if (it.sign && it.marker && it.marker.parent) it.marker.parent.remove(it.marker);
+    if (it.sign && it.marker && it.marker.parent) {
+      it.marker.parent.remove(it.marker);
+      it.marker.geometry?.dispose?.();
+      it.marker.material?.dispose?.();
+    }
   }
   // clear day-3's blue/orange repaints and last run's leftover spools
   for (const it of worldItems) {
@@ -7317,12 +7358,30 @@ function clearGhosts() {
   for (const id of [...net.remotes.keys()]) dropGhost(id);
 }
 
+function disposeGhostTree(root) {
+  // ghosts are churned (mode flips, 45s timeouts), so their merged
+  // geometries, face textures, and tag canvases must actually be freed
+  root.traverse((o) => {
+    if (o.isMesh || o.isSprite) {
+      o.geometry?.dispose?.();
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      for (const m of mats) {
+        if (!m || m === VERT_MAT) continue;
+        m.map?.dispose?.();
+        m.dispose?.();
+      }
+    }
+  });
+}
+
 function dropGhost(id) {
   const g = net.remotes.get(id);
   if (!g) return;
   scene.remove(g.mesh);
+  disposeGhostTree(g.mesh);
   net.remotes.delete(id);
   net.hail.delete(id);
+  net.seenWave.delete(id);
 }
 
 function syncGhosts(rows) {
@@ -7347,6 +7406,7 @@ function syncGhosts(rows) {
           g.name = p.name;
           const nt = makeNameTag(p.name, p.who === "tremont" ? "TREMONT · CH.7" : "UTAH · CH.7");
           g.mesh.remove(g.tag);
+          disposeGhostTree(g.tag);
           g.mesh.add(nt);
           g.tag = nt;
         }
@@ -7370,13 +7430,19 @@ function paintRoster() {
   if (!el) return;
   const me = handleName() || "YOU";
   const meWho = getTraveler() === "tremont" ? "TREMONT" : "UTAH";
-  const bits = [`<span class="roster-me">${me} · ${meWho}</span>`];
+  el.textContent = "";
+  const mine = document.createElement("span");
+  mine.className = "roster-me";
+  mine.textContent = `${me} · ${meWho}`;
+  el.appendChild(mine);
   for (const p of net.roster || []) {
     const tag = p.who === "tremont" ? "TREMONT" : "UTAH";
     const mode = p.mode === "play" ? "ON HALL" : p.mode === "title" ? "GATE" : String(p.mode).toUpperCase();
-    bits.push(`<span>${p.name} · ${tag} · ${mode}</span>`);
+    // p.name comes from the shared presence doc — never mark it up as HTML
+    const row = document.createElement("span");
+    row.textContent = `${p.name} · ${tag} · ${mode}`;
+    el.appendChild(row);
   }
-  el.innerHTML = bits.join("");
   const sub = $("chat-sub");
   if (sub) {
     const n = Math.max(1, net.onSite);
@@ -7548,6 +7614,8 @@ function sendWave() {
 }
 
 function openChat() {
+  const pg = $("panel-game");
+  if (pg && !pg.classList.contains("hidden")) return; // no chat underneath a minigame panel
   const handle = handleName();
   const h = $("chat-handle");
   if (h) h.value = handle;
@@ -8414,7 +8482,17 @@ function updateDrew(dt, t) {
     let ddz = nz - cz;
     const d2 = ddx * ddx + ddz * ddz;
     if (d2 < 0.16) {
-      const dd = Math.sqrt(d2) || 0.0001;
+      const dd = Math.sqrt(d2);
+      if (dd < 1e-6) {
+        // center inside the box — push out through the nearest face
+        const fw = nx - b.minx, fe = b.maxx - nx, fs = nz - b.minz, fn = b.maxz - nz;
+        const fm = Math.min(fw, fe, fs, fn);
+        if (fm === fw) nx = b.minx - 0.401;
+        else if (fm === fe) nx = b.maxx + 0.401;
+        else if (fm === fs) nz = b.minz - 0.401;
+        else nz = b.maxz + 0.401;
+        continue;
+      }
       nx += (ddx / dd) * (0.4 - dd + 0.001);
       nz += (ddz / dd) * (0.4 - dd + 0.001);
     }
@@ -8464,11 +8542,11 @@ function buildRacks() {
   const nPer = 9;
   const pitch = 0.68;
 
-  const rackTex = loader.load("/assets/tex_rack.jpg?v=117");
+  const rackTex = loader.load("/assets/tex_rack.jpg?v=119");
   rackTex.colorSpace = THREE.SRGBColorSpace;
-  const crahTex = loader.load("/assets/tex_crah.jpg?v=117");
+  const crahTex = loader.load("/assets/tex_crah.jpg?v=119");
   crahTex.colorSpace = THREE.SRGBColorSpace;
-  const floorTex = loader.load("/assets/tex_raised.jpg?v=117");
+  const floorTex = loader.load("/assets/tex_raised.jpg?v=119");
   floorTex.colorSpace = THREE.SRGBColorSpace;
   floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
   floorTex.repeat.set(18, 28);
@@ -8889,7 +8967,12 @@ function tryInteract() {
           break;
         }
       }
-      if (!placed) player.position.set(L.position.x, 0, L.position.z - 2.6);
+      if (!placed) {
+        // settle the last-resort spot against the colliders instead of
+        // dropping the player inside a wall next to a parked lift
+        const safe = collideXZ(L.position.x, L.position.z - 2.6, 0.4, 0);
+        player.position.set(safe.x, 0, safe.z);
+      }
     }
     sfx("pickup");
     vib(15);
@@ -9003,14 +9086,20 @@ function tryInteract() {
       sfx("ok");
       return;
     }
+    // pay only when she actually drank — topping a full tank is not work
+    const wasLow = (dayState.genT || 0) < GEN_FEED * 0.75;
     dayState.genT = GEN_FEED;
     dayState.genLow = false;
     dayState.genWarned = false;
     applyNightPower();
-    addWatts(40, "GENNY FED");
+    if (wasLow) {
+      addWatts(40, "GENNY FED");
+      toast("DIESEL'S IN — HALLS UP");
+    } else {
+      toast("TANK'S STILL FULL");
+    }
     sfx("ok");
     vib(15);
-    toast("DIESEL'S IN — HALLS UP");
     return; // never done — she's thirsty until transfer
   }
   if (it.reelSrc) {
@@ -9022,7 +9111,9 @@ function tryInteract() {
     if (dayState.carrying) {
       toast("ONE REEL AT A TIME", true);
       sfx("bad");
-    } else if (state.progress.reels >= 4) {
+    } else if (state.progress.reels >= ((state.needs && state.needs.reels) || 4)) {
+      // day 5 needs 3, day 12 needs 4 — a hard-coded 4 handed out an
+      // un-stageable extra reel that stuck to the player all shift
       toast("RACK'S EMPTY");
     } else {
       dayState.carrying = true;
@@ -9162,6 +9253,8 @@ function hurt(amount, why) {
     dayState.utv = null;
     dayState.workoutT = 0; // KO'd riders come off the lift — it stays where they left it
     dayState.pushCart = false;
+    dayState.carrying = false; // the reel comes off the shoulder at the trailer too
+    if (state.carrySpool) state.carrySpool.visible = false;
     syncLiftBtns();
     player.position.set(14, 0, 16);
     pvel.x = pvel.z = 0;
@@ -9471,7 +9564,7 @@ function renderVesStep() {
   order.forEach((c) => {
     const b = document.createElement("button");
     b.type = "button";
-    b.className = "ves-pick" + (c.ok ? " yes" : " no");
+    b.className = "ves-pick"; // never paint the answer key on at render time
     b.innerHTML = `<b>${c.lab}</b><span>${c.sub}</span>`;
     b.addEventListener("click", () => vesPick(c, b));
     picks.appendChild(b);
@@ -9758,9 +9851,10 @@ const GEAR_ADDR = [
   { id: "05", lab: "05  FEEDER" },
 ];
 const facpKeys = () => {
+  const d = cycleDay(day); // week 2 (days 8-14) mirrors week 1's panel content
   if (isTremont()) {
     return (
-      { 2: ["WALK TEST", "RACK IN", "CLOSE"], 4: ["TRANSFER", "RACK IN", "CLOSE"], 7: ["ENERGIZE", "RACK IN", "CLOSE"] }[day] || [
+      { 2: ["WALK TEST", "RACK IN", "CLOSE"], 4: ["TRANSFER", "RACK IN", "CLOSE"], 7: ["ENERGIZE", "RACK IN", "CLOSE"] }[d] || [
         "CHECK",
         "CLOSE",
         "RACK IN",
@@ -9768,7 +9862,7 @@ const facpKeys = () => {
     );
   }
   return (
-    { 2: ["WALK TEST", "SILENCE", "RESET"], 4: ["TRANSFER", "SILENCE", "RESET"], 7: ["ENERGIZE", "SILENCE", "RESET"] }[day] || [
+    { 2: ["WALK TEST", "SILENCE", "RESET"], 4: ["TRANSFER", "SILENCE", "RESET"], 7: ["ENERGIZE", "SILENCE", "RESET"] }[d] || [
       "ACK",
       "SILENCE",
       "RESET",
@@ -9789,10 +9883,11 @@ function openFacp(it) {
   facpKeyAt = 0;
   facpDone = false;
   const keyNames = facpKeys();
+  const cd = cycleDay(day); // week-2 days show their week-1 counterpart's panel
   const addrBook = isTremont() ? GEAR_ADDR : FACP_ADDR;
   $("facp-title").textContent = isTremont()
-    ? ({ 2: "WALK-TEST GEAR", 3: "FINAL ACCEPTANCE", 4: "POWER TRANSFER", 7: "ENERGIZE CB-4" }[day] || "COMMISSION GEAR")
-    : ({ 2: "WALK-TEST FACP", 3: "FINAL ACCEPTANCE", 4: "POWER TRANSFER", 7: "ENERGIZE CB-4" }[day] || "COMMISSION FACP");
+    ? ({ 2: "WALK-TEST GEAR", 3: "FINAL ACCEPTANCE", 4: "POWER TRANSFER", 7: "ENERGIZE CB-4" }[cd] || "COMMISSION GEAR")
+    : ({ 2: "WALK-TEST FACP", 3: "FINAL ACCEPTANCE", 4: "POWER TRANSFER", 7: "ENERGIZE CB-4" }[cd] || "COMMISSION FACP");
   const facpSubs = isTremont()
     ? {
         1: `Address the circuits in order. Then ${keyNames.join(", ")}. Inspector is in the lot.`,
@@ -9808,7 +9903,7 @@ function openFacp(it) {
         4: `Utility's locked out. Address, then ${keyNames.join(", ")} to hand the building back.`,
         7: `Address the loop in order. Then ${keyNames.join(", ")}. AHJ is at the panel.`,
       };
-  $("facp-sub").textContent = facpSubs[day] || facpSubs[1];
+  $("facp-sub").textContent = facpSubs[cd] || facpSubs[1];
   $("facp-close").disabled = false;
   $("facp-game").classList.remove("hidden");
   setFacpStatus(isTremont() ? "TROUBLE  ·  CIRCUIT OPEN" : "TROUBLE  ·  LOOP OPEN");
@@ -10494,15 +10589,30 @@ function updateHeat(dt) {
     dayState.heat = Math.max(0, (dayState.heat || 0) - dt * 0.15);
     if ((dayState.heat || 0) < 0.04) dayState.heatAnnounced = false;
   }
+  // diff before writing — this runs every frame (same convention as the clock/zone HUD)
   const wrap = $("heat-meter");
   const veil = $("heat-veil");
   const shown = hot || (dayState.heat || 0) > 0.05;
-  if (wrap) wrap.classList.toggle("hidden", !shown);
+  if (wrap && ui.heatShown !== shown) {
+    ui.heatShown = shown;
+    wrap.classList.toggle("hidden", !shown);
+  }
   const f = 86 + Math.floor((dayState.heat || 0) * 32);
-  if ($("heat-f")) $("heat-f").textContent = f + "°";
-  const fill = $("heat-fill");
-  if (fill) fill.style.width = Math.round((dayState.heat || 0) * 100) + "%";
-  if (veil) veil.style.opacity = String(hot ? 0.16 + dayState.heat * 0.5 : (dayState.heat || 0) * 0.1);
+  if (ui.heatF !== f && $("heat-f")) {
+    ui.heatF = f;
+    $("heat-f").textContent = f + "°";
+  }
+  const pct = Math.round((dayState.heat || 0) * 100);
+  if (ui.heatPct !== pct) {
+    ui.heatPct = pct;
+    const fill = $("heat-fill");
+    if (fill) fill.style.width = pct + "%";
+  }
+  const veilOp = Math.round((hot ? 0.16 + dayState.heat * 0.5 : (dayState.heat || 0) * 0.1) * 100) / 100;
+  if (veil && ui.heatVeil !== veilOp) {
+    ui.heatVeil = veilOp;
+    veil.style.opacity = String(veilOp);
+  }
   renderer.toneMappingExposure = 1.05 + (hot ? 0.12 : 0) + (dayState.heat || 0) * 0.28;
   const stage = dayState.heatSaid || 0;
   const next = HEAT_BARK[stage];
@@ -10623,7 +10733,13 @@ function updatePlayer(dt) {
     speed *= 1 - Math.min(0.5, (dayState.heat - 0.22) * 0.7);
   }
   // airborne clears the puddle — hopping them is a real move
-  if (player.position.y < 0.2 && inWet(player.position.x, player.position.z)) speed *= 0.55;
+  if (player.position.y < 0.2 && inWet(player.position.x, player.position.z)) {
+    speed *= 0.55;
+    if (!dayState.wetSaid) {
+      dayState.wetSaid = true; // once a shift is plenty
+      radio(pickLine(radioPack().wet));
+    }
+  }
   if (player.position.z > CB.z1 + 26) {
     speed *= 0.28;
     if (!state.swam) {
@@ -10887,7 +11003,11 @@ function updateInteract() {
     if (target) {
       const ang = Math.atan2(target.x - px, target.z - pz) - cam.yaw;
       // positive relative bearing is screen-LEFT; CSS rotation is clockwise
-      $("needle").style.transform = `rotate(${(-ang * 180) / Math.PI}deg)`;
+      const deg = Math.round((-ang * 180) / Math.PI);
+      if (ui.needleDeg !== deg) {
+        ui.needleDeg = deg;
+        $("needle").style.transform = `rotate(${deg}deg)`;
+      }
     }
   }
 }
@@ -11673,7 +11793,10 @@ function softReset() {
     if (avail < j.need) {
       console.warn("[LW] day", day, "job", j.id, "short:", avail, "<", j.need);
       track("job_short", { day, job: j.id, avail, need: j.need });
-      state.needs[j.id] = Math.max(1, avail);
+      // avail can legitimately be 0 (e.g. traveler-specific devices);
+      // flooring at 1 would make the day unwinnable
+      state.needs[j.id] = avail;
+      if (avail === 0) state.done[j.id] = true;
     }
   }
   for (const led of state.racks) {
@@ -12099,6 +12222,7 @@ function teachTouch() {
 }
 
 let starting = false;
+let lastStartAt = 0;
 let introTimer = 0;
 
 function gateError(msg, el) {
@@ -12119,6 +12243,10 @@ function clearGateError() {
 
 async function startShift(resume, wantDay = 1) {
   if (starting) return; // double-tap during the async build must not re-enter
+  // the gate button has two click listeners (game.js + index.html shim); the
+  // second fires after the sync path has already finished, so guard by time too
+  if (Date.now() - lastStartAt < 600) return;
+  lastStartAt = Date.now();
   if (!commitHand(true)) {
     gateError("NAME GOES ON THE SLIP", $("gate-name"));
     return;
@@ -12255,7 +12383,18 @@ function applyTravelerUI() {
 }
 document.querySelectorAll(".trav-btn").forEach((b) => {
   b.addEventListener("click", () => {
+    const before = getTraveler();
     setTraveler(b.dataset.traveler);
+    if (state.built && getTraveler() !== before) {
+      // the merged world is traveler-specific (VESDAs, FA devices, conduit);
+      // it can't be un-baked, so a swap after building needs a fresh page —
+      // otherwise Utah's Day 1/8 VESDA jobs are unwinnable in a Tremont world
+      toast("SWAPPING TRAVELERS — RESETTING THE HALL");
+      setTimeout(() => {
+        try { location.reload(); } catch (_) {}
+      }, 400);
+      return;
+    }
     try {
       applyTravelerUI();
     } catch (err) {

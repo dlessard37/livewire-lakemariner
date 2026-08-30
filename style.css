@@ -245,7 +245,6 @@ h1 {
 #gate-local { max-width: 110px; }
 .gate-hint {
   font-weight: 600;
-  color: var(--hi, #d6f04a);
   font-size: 11px;
   color: var(--muted);
   line-height: 1.4;
@@ -405,7 +404,6 @@ h1 {
   box-shadow: inset 0 0 0 1px #445;
 }
 .pip.on { background: var(--hi); box-shadow: none; }
-.pip.hurt { background: var(--orange); }
 
 #btn-pause {
   pointer-events: auto;
@@ -823,33 +821,6 @@ h1 {
 
 /* trouble hunt */
 #trouble-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
-.tr-row {
-  display: flex; align-items: center; gap: 10px;
-  background: #221416;
-  border: 2px solid #5a3030;
-  padding: 10px 10px;
-  min-height: 52px;
-  cursor: pointer;
-  font-family: Oswald, sans-serif;
-  letter-spacing: 0.08em;
-  color: var(--ink);
-  width: 100%;
-  text-align: left;
-}
-.tr-row .tr-term { width: 92px; flex: none; font-size: 15px; }
-.tr-row .tr-wire {
-  flex: 1;
-  height: 14px;
-  border: 1px solid rgba(0,0,0,0.5);
-}
-.tr-row .tr-open {
-  flex: 1;
-  font-size: 12px;
-  color: var(--orange);
-  letter-spacing: 0.14em;
-}
-.tr-row.lifted { border-color: var(--hi); background: #2d2a10; }
-.tr-row.fixed { border-color: #7dff9a; background: #12301a; }
 
 .print-row { margin: 0 0 12px; }
 .print-link {
@@ -1319,7 +1290,9 @@ h1 {
   position: fixed; inset: 0; z-index: 48;
   display: flex; align-items: flex-end; justify-content: center;
   background: rgba(6,7,4,0.72);
-  padding: calc(12px + var(--safeb)) 12px 16px;
+  /* the sheet is bottom-anchored: safe-area inset goes on the BOTTOM,
+     so SEND/WAVE clear the iPhone home-indicator zone */
+  padding: 12px 12px calc(16px + var(--safeb));
 }
 #chat-dock.hidden { display: none !important; }
 .chat-sheet { width: min(520px, 100%); pointer-events: auto; }
@@ -1530,9 +1503,6 @@ h1 {
   .ves-picks { grid-template-columns: 1fr; }
   .ves-pick { min-height: 72px; }
 }
-
-
-
 
 /* ADD TO THE GAME — player request bench */
 .btn-shop {

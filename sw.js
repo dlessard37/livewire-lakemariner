@@ -2,7 +2,7 @@
 // Precaches the app shell + assets. Core code files are network-first so new
 // versions land immediately; heavy static assets are cache-first.
 
-const CACHE_VERSION = 'livewire-v118';
+const CACHE_VERSION = 'livewire-v119';
 
 // small, frequently-edited files: prefer the network, fall back to cache
 // (resolved against the SW scope so subpath hosting still works)
@@ -29,6 +29,14 @@ const PRECACHE_URLS = [
   'assets/lugo_portrait.jpg',
   'assets/lemon_portrait.jpg',
   'assets/drew_portrait.jpg',
+  'assets/joe_portrait.jpg',
+  'assets/chris_portrait.jpg',
+  'assets/don_portrait.jpg',
+  'assets/safety_portrait.jpg',
+  'assets/redbeard_portrait.jpg',
+  'assets/andy_portrait.jpg',
+  'assets/nate_portrait.jpg',
+  'assets/kenny_portrait.jpg',
   'assets/vista_data.jpg',
   'assets/vista_data2.jpg',
   'assets/vista_fan.jpg',
@@ -65,7 +73,9 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_VERSION).then((cache) =>
       // Add each URL individually so one missing file doesn't fail the install.
-      Promise.allSettled(PRECACHE_URLS.map((url) => cache.add(url)))
+      // cache:'reload' bypasses the HTTP cache so a fresh install can't
+      // precache an hour-stale game.js next to a new index.html.
+      Promise.allSettled(PRECACHE_URLS.map((url) => cache.add(new Request(url, { cache: 'reload' }))))
     ).then(() => self.skipWaiting())
   );
 });
@@ -120,6 +130,9 @@ self.addEventListener('fetch', (event) => {
           if (cached) return cached;
           // never serve the HTML shell as JS/CSS — that bricks the installed app
           if (isCode) return new Response('/* offline */', { status: 504, headers: { 'Content-Type': 'text/plain' } });
+          // ...and never as an image either — a broken <img> beats an HTML-as-jpg one
+          if (request.destination === 'image')
+            return new Response('', { status: 504, headers: { 'Content-Type': 'text/plain' } });
           return caches.match('index.html');
         })
     );

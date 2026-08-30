@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=118" />
+  <link rel="stylesheet" href="style.css?v=119" />
   <link rel="icon" href="assets/icon_192.png" />
   <link rel="apple-touch-icon" href="assets/icon_192.png" />
   <script type="importmap">
@@ -27,7 +27,7 @@
   <link rel="modulepreload" href="vendor/three.module.min.js" />
   <link rel="modulepreload" href="vendor/BufferGeometryUtils.js" />
   <link rel="modulepreload" href="props.js" />
-  <link rel="modulepreload" href="game.js?v=118" />
+  <link rel="modulepreload" href="game.js?v=119" />
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
@@ -405,7 +405,7 @@
     </div>
   </div>
 
-  <script type="module" src="game.js?v=118"></script>
+  <script type="module" src="game.js?v=119"></script>
   <script>
     (function () {
       const $ = (id) => document.getElementById(id);
@@ -487,6 +487,9 @@
         if (!b || b.disabled) return;
         const d = Number(b.getAttribute("data-day")) || 1;
         window.__lwPicked = d;
+        // game.js rebuilds the chips and owns the highlight + START label once loaded;
+        // this shim only paints them when the hall script isn't up yet
+        if (window.LW && typeof window.LW.getPickedDay === "function") return;
         $("day-picker").querySelectorAll(".day-chip").forEach((c) => c.classList.toggle("on", c === b));
         const start = $("btn-start");
         if (start && d > 1) start.textContent = "DAY " + d;
@@ -558,12 +561,12 @@
         const el = $("site-pulse");
         if (el) el.textContent = "No hall radio — close and reopen.";
       }, 8000);
-      if ("serviceWorker" in navigator && /web\.app$/.test(location.hostname)) {
+      if ("serviceWorker" in navigator && /(web\.app|firebaseapp\.com)$/.test(location.hostname)) {
         addEventListener("load", () => {
           navigator.serviceWorker.getRegistrations().then((regs) => {
             regs.forEach((r) => r.update());
           }).catch(() => {});
-          navigator.serviceWorker.register("sw.js?v=118").then((reg) => reg.update()).catch(() => {});
+          navigator.serviceWorker.register("sw.js?v=119").then((reg) => reg.update()).catch(() => {});
           navigator.serviceWorker.addEventListener("controllerchange", () => {
             if (sessionStorage.getItem("lw_sw79")) return;
             sessionStorage.setItem("lw_sw79", "1");
