@@ -196,10 +196,10 @@ export function buildExtraDressing(ctx) {
   }
 
   /* overhead cable tray segment along z, hung on rods off the deck */
-  function traySegment(x, zMid, len) {
-    placeBox(x, 6.5, zMid, 0.5, 0.1, len, mats.beam, false);
+  function traySegment(x, zMid, len, y = 6.5) {
+    placeBox(x, y, zMid, 0.5, 0.1, len, mats.beam, false);
     for (const dz of [-len * 0.4, len * 0.4]) {
-      placeBox(x, 6.6, zMid + dz, 0.05, 1.45, 0.05, mats.beam, false);
+      placeBox(x, y + 0.1, zMid + dz, 0.05, 1.45, 0.05, mats.beam, false);
     }
   }
 
@@ -433,6 +433,13 @@ export function buildExtraDressing(ctx) {
     feederDrop(CB.elecEX, mid + 6, ki++, -1);
 
     traySegment(CB.corX, mid, 20);
+    // no raised floor on this site — the data hall's cable runs live in
+    // tiers of overhead tray, like the reference photos: a run over each
+    // rack row plus the open bays either side
+    traySegment(CB.corX - 2.28, mid, 18, 6.9);
+    traySegment(CB.corX + 2.28, mid, 18, 6.9);
+    traySegment(CB.corX - 8, mid, 16, 6.7);
+    traySegment(CB.corX + 8, mid, 16, 6.7);
     traySegment(CB.westHallX, mid, 22);
     traySegment(CB.eastHallX, mid, 22);
     traySegment(CB.elecWX, mid, 14);

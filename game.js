@@ -3988,12 +3988,12 @@ function buildCB4() {
     run.position.set(CB.dataX + 2.0, 2.55, mid);
     scene.add(run);
 
-    // data hall columns + tray
+    // data hall columns + the E-W cross tray feeding the N-S runs
     for (const dx of [-10, 10]) {
       placeBox(CB.dataX + dx, 0, mid - 5, 0.4, 8, 0.4, mats.beam, true);
       placeBox(CB.dataX + dx, 0, mid + 5, 0.4, 8, 0.4, mats.beam, true);
     }
-    placeBox(CB.dataX, 7.2, mid, 28, 0.12, 0.5, mats.dark, false);
+    placeBox(CB.dataX, 7.2, mid, 28, 0.12, 0.5, mats.beam, false);
 
     // fan units in both crawls
     for (const fx of [CB.fanWX, CB.fanEX]) {
@@ -8560,14 +8560,16 @@ function buildRacks() {
   rackTex.colorSpace = THREE.SRGBColorSpace;
   const crahTex = loader.load("/assets/tex_crah.jpg?v=120");
   crahTex.colorSpace = THREE.SRGBColorSpace;
-  const floorTex = loader.load("/assets/tex_raised.jpg?v=120");
+  // sealed concrete slab — this site has NO raised floor; power and data
+  // run in the overhead tray (see assets/ref_mech.jpg / ref_elec.jpg)
+  const floorTex = loader.load("/assets/tex_concrete.jpg?v=120");
   floorTex.colorSpace = THREE.SRGBColorSpace;
   floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
-  floorTex.repeat.set(18, 28);
+  floorTex.repeat.set(8, 12);
 
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(CB.data1 - CB.data0 - 0.3, CB.z1 - CB.z0 - 0.3),
-    new THREE.MeshLambertMaterial({ map: floorTex, color: 0xd4d2cc })
+    new THREE.MeshLambertMaterial({ map: floorTex, color: 0xc9c7c1 })
   );
   floor.rotation.x = -Math.PI / 2;
   floor.position.set(CB.dataX, 0.02, (CB.z0 + CB.z1) / 2);
