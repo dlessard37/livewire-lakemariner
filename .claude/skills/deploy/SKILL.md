@@ -22,8 +22,13 @@ https://livewire-lakemariner.web.app. The repo root is the hosting public dir
 
 Always export the proxy CA first: `export NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt`
 
-- **If `$FIREBASE_TOKEN` is set** (configured in the Claude Code environment settings):
-  no login needed — pass `--token "$FIREBASE_TOKEN"` to the deploy command.
+- **If `$FIREBASE_SA_JSON` is set** (a service-account key JSON configured in the
+  Claude Code environment settings — the preferred setup): write it verbatim to a file
+  in the scratchpad directory, `export GOOGLE_APPLICATION_CREDENTIALS=<that file>`,
+  and deploy — no login needed. Never write the key inside the repo (it would be
+  committed or deployed) and never print its contents.
+- **Else if `$FIREBASE_TOKEN` is set**: pass `--token "$FIREBASE_TOKEN"` to the
+  deploy command.
 - **Otherwise** run `firebase login --no-localhost < /dev/null`, give the user the
   printed URL and session ID (they open it on any device, sign in, and paste back an
   authorization code), then run `firebase login <code>`. After the deploy, remove the
