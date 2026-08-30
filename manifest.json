@@ -1,0 +1,15 @@
+{
+  "name": "LIVE WIRE — Lake Mariner",
+  "short_name": "LIVE WIRE",
+  "description": "Utah, IBEW Book 2 traveler, runs fire alarm at the Lake Mariner data center in Barker, NY.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#14160f",
+  "theme_color": "#14160f",
+  "icons": [
+    { "src": "assets/icon_192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon_512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
