@@ -2476,7 +2476,7 @@ const voice = { map: null, el: null, src: null, buf: new Map() };
 
 function loadVoicePack() {
   if (voice._loading) return voice._loading;
-  voice._loading = fetch("/assets/voice/map.json?v=121")
+  voice._loading = fetch("/assets/voice/map.json?v=122")
     .then((r) => (r.ok ? r.json() : null))
     .then((rows) => {
       if (!Array.isArray(rows)) {
@@ -2636,28 +2636,29 @@ const RADIO_META = {
   tremont: { tag: "TREMONT · BOOK 2", src: "assets/tremont_portrait.jpg" },
   utah: { tag: "UTAH · BOOK 2", src: "assets/utah_portrait.jpg" },
   drew: { tag: "DREW · GENERAL FOREMAN", src: "assets/drew_portrait.jpg" },
-  joe: { tag: "JOE RIVERA", src: "assets/joe_portrait.jpg?v=121" },
-  chris: { tag: "CHRIS · LIGHTING", src: "assets/chris_portrait.jpg?v=121" },
-  don: { tag: "DON THE FOREMAN", src: "assets/don_portrait.jpg?v=121" },
+  joe: { tag: "JOE RIVERA", src: "assets/joe_portrait.jpg?v=122" },
+  chris: { tag: "CHRIS · LIGHTING", src: "assets/chris_portrait.jpg?v=122" },
+  don: { tag: "DON THE FOREMAN", src: "assets/don_portrait.jpg?v=122" },
   safety: { tag: "MARITZA · SITE SAFETY", src: "assets/safety_portrait.jpg" },
-  redbeard: { tag: "RED BEARD · DATA 1", src: "assets/redbeard_portrait.jpg?v=121" },
-  andy: { tag: "ANDY · SICK & NEEDY", src: "assets/andy_portrait.jpg?v=121" },
-  nate: { tag: "NATE · WIENERS", src: "assets/nate_portrait.jpg?v=121" },
-  kenny: { tag: "KENNY THE STEW", src: "assets/kenny_portrait.jpg?v=121" },
+  redbeard: { tag: "RED BEARD · DATA 1", src: "assets/redbeard_portrait.jpg?v=122" },
+  andy: { tag: "ANDY · SICK & NEEDY", src: "assets/andy_portrait.jpg?v=122" },
+  nate: { tag: "NATE · WIENERS", src: "assets/nate_portrait.jpg?v=122" },
+  kenny: { tag: "KENNY THE STEW", src: "assets/kenny_portrait.jpg?v=122" },
 };
 
 const FACE_SRC = {
-  redbeard: "/assets/redbeard_face.jpg?v=121",
-  andy: "/assets/andy_face.jpg?v=121",
-  nate: "/assets/nate_face.jpg?v=121",
-  kenny: "/assets/kenny_face.jpg?v=121",
-  safety: "/assets/safety_face.jpg?v=121",
-  gf: "/assets/drew_face.jpg?v=121",
-  joe: "/assets/joe_face.jpg?v=121",
-  chris: "/assets/chris_face.jpg?v=121",
-  don: "/assets/don_face.jpg?v=121",
-  lugo: "/assets/lugo_face.jpg?v=121",
-  lemon: "/assets/lemon_face.jpg?v=121",
+  oconnell: "/assets/utah_face.jpg?v=122", // multiplayer ghosts of Utah players
+  redbeard: "/assets/redbeard_face.jpg?v=122",
+  andy: "/assets/andy_face.jpg?v=122",
+  nate: "/assets/nate_face.jpg?v=122",
+  kenny: "/assets/kenny_face.jpg?v=122",
+  safety: "/assets/safety_face.jpg?v=122",
+  gf: "/assets/drew_face.jpg?v=122",
+  joe: "/assets/joe_face.jpg?v=122",
+  chris: "/assets/chris_face.jpg?v=122",
+  don: "/assets/don_face.jpg?v=122",
+  lugo: "/assets/lugo_face.jpg?v=122",
+  lemon: "/assets/lemon_face.jpg?v=122",
 };
 
 function paintRadioFace(who) {
@@ -2925,7 +2926,8 @@ function makeElectrician() {
   const g = new THREE.Group();
   const fit = wornOutfit();
   const isTremont = getTraveler() === "tremont";
-  const SHIRTC = { shirt_red: 0xc62828, shirt_black: 0x1c1c1c, shirt_blue: 0x1e3a6e }[fit.shirt] || COLORS.shirt;
+  // Utah's default tee is the burnt orange from the site photos
+  const SHIRTC = { shirt_red: 0xc62828, shirt_black: 0x1c1c1c, shirt_blue: 0x1e3a6e }[fit.shirt] || (isTremont ? COLORS.shirt : 0xc86a32);
   const PANTSC = { pants_jeans: 0x3b5678, pants_khaki: 0x8a7a5a, pants_black: 0x24262a }[fit.pants] || COLORS.jeans;
   const HATC = { hat_white: 0xf4f1ea, hat_black: 0x24262a, hat_cowboy: 0xc8a05a }[fit.hat] || COLORS.hat;
   const tw = isTremont ? 0.5 : 0.46;
@@ -2977,31 +2979,31 @@ function makeElectrician() {
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 14, 12), mat(COLORS.skin));
   head.position.set(0, 1.58, 0);
   g.add(head);
+  // tiny emissive keeps locks out of the vertex-color merge so they stay strands
+  const hmat = (c) => new THREE.MeshLambertMaterial({ color: c, emissive: c, emissiveIntensity: 0.1 });
+  function curlyLock(ox, oy, oz, len, radius, waves, phase, swayX, swayZ, m) {
+    const pts = [];
+    const n = 12;
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      const amp = 0.028 + t * 0.02;
+      pts.push(
+        new THREE.Vector3(
+          ox + Math.sin(t * waves * Math.PI * 2 + phase) * amp + t * swayX,
+          oy - t * len,
+          oz + Math.cos(t * waves * Math.PI * 2 + phase * 0.65) * amp * 0.7 + t * swayZ
+        )
+      );
+    }
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 12, radius, 5, false), m));
+  }
   if (isTremont) {
     const blonde = 0xe8c45c;
     const blondeDeep = 0xc49a38;
     const blondeLite = 0xf4dc8c;
-    // tiny emissive keeps locks out of the vertex-color merge so they stay strands
-    const hmat = (c) => new THREE.MeshLambertMaterial({ color: c, emissive: c, emissiveIntensity: 0.1 });
     const hairMat = hmat(blonde);
     const hairDeep = hmat(blondeDeep);
     const hairLite = hmat(blondeLite);
-    function curlyLock(ox, oy, oz, len, radius, waves, phase, swayX, swayZ, m) {
-      const pts = [];
-      const n = 12;
-      for (let i = 0; i <= n; i++) {
-        const t = i / n;
-        const amp = 0.028 + t * 0.02;
-        pts.push(
-          new THREE.Vector3(
-            ox + Math.sin(t * waves * Math.PI * 2 + phase) * amp + t * swayX,
-            oy - t * len,
-            oz + Math.cos(t * waves * Math.PI * 2 + phase * 0.65) * amp * 0.7 + t * swayZ
-          )
-        );
-      }
-      g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 12, radius, 5, false), m));
-    }
     const tones = [hairMat, hairDeep, hairLite];
     // nape fan — under the brim, hanging to the shoulders
     for (let i = 0; i < 13; i++) {
@@ -3062,16 +3064,60 @@ function makeElectrician() {
     bridge.position.set(0, 1.595, 0.15);
     g.add(bridge);
   } else {
-    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.165, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), mat(COLORS.hair));
+    // UTAH — built from the real site photos: his actual face (grin, safety
+    // specs over glasses, handlebar mustache), dark-auburn curls out the back
+    const ftex = loader.load("/assets/utah_face.jpg?v=122");
+    ftex.colorSpace = THREE.SRGBColorSpace;
+    const face = new THREE.Mesh(
+      new THREE.CircleGeometry(0.135, 24),
+      new THREE.MeshBasicMaterial({ map: ftex, transparent: true, depthWrite: true })
+    );
+    // the player's head is a sphere (NPCs use boxes): the plane must sit
+    // proud of the sphere's front bulge or the head pokes through the photo
+    face.position.set(0, 1.575, 0.168);
+    g.add(face);
+    const auburn = 0x46281a;
+    const auburnDeep = 0x301a0e;
+    const auburnLite = 0x6a4028;
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.165, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), hmat(auburn));
     hair.position.set(0, 1.62, 0);
     g.add(hair);
-    const beard = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), mat(COLORS.beard));
-    beard.scale.set(1, 0.7, 0.7);
-    beard.position.set(0, 1.48, 0.1);
-    g.add(beard);
-    const stache = boxMesh(0.1, 0.025, 0.04, mat(COLORS.beard));
-    stache.position.set(0, 1.54, 0.15);
-    g.add(stache);
+    const tones = [hmat(auburn), hmat(auburnDeep), hmat(auburnLite)];
+    // short curls poking out the back of the lid, like the photos
+    for (let i = 0; i < 9; i++) {
+      const a = -0.85 + (i / 8) * 1.7;
+      curlyLock(
+        Math.sin(a) * 0.19,
+        1.58,
+        -Math.cos(a) * 0.19 - 0.02,
+        0.1 + (i % 3) * 0.02,
+        0.014,
+        2.4 + (i % 3) * 0.3,
+        i * 0.8,
+        Math.sin(a) * 0.04,
+        -0.03,
+        tones[i % 3]
+      );
+    }
+    // sideburns down past the ears
+    for (const s of [-1, 1]) {
+      const burn = boxMesh(0.025, 0.09, 0.05, hmat(auburnDeep));
+      burn.position.set(s * 0.15, 1.55, 0.05);
+      g.add(burn);
+    }
+    // safety-spec temple arms so the profile still reads glasses
+    for (const s of [-1, 1]) {
+      const armT = boxMesh(0.015, 0.02, 0.14, mat(0x1a1c20));
+      armT.position.set(s * 0.152, 1.6, 0.07);
+      g.add(armT);
+    }
+    // handlebar tips push past the photo plane so the stache has depth
+    for (const s of [-1, 1]) {
+      const tip = boxMesh(0.035, 0.02, 0.03, mat(0x7a4a26));
+      tip.position.set(s * 0.078, 1.532, 0.146);
+      tip.rotation.z = s * -0.45;
+      g.add(tip);
+    }
   }
 
   const hat = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), mat(HATC));
@@ -3088,12 +3134,54 @@ function makeElectrician() {
   const lampG = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), mat(0xfff2c8, { emissive: 0xffe08a, emissiveIntensity: 0.8 }));
   lampG.position.set(0, 1.76, 0.18);
   g.add(lampG);
-  const band = boxMesh(0.34, 0.04, 0.34, mat(0x6b5a3a));
+  // Utah wears a dark headband under the lid (the photos); Tremont keeps tan
+  const band = boxMesh(0.34, 0.04, 0.34, mat(isTremont ? 0x6b5a3a : 0x1c2230));
   band.position.set(0, 1.66, 0);
   g.add(band);
   const decal = boxMesh(0.05, 0.04, 0.01, mat(0xff8a1a));
   decal.position.set(-0.08, 1.78, 0.14);
   g.add(decal);
+  if (!isTremont) {
+    // "UTAH" in marker across the front of the white lid
+    const tc = document.createElement("canvas");
+    tc.width = 128;
+    tc.height = 64;
+    const tcx = tc.getContext("2d");
+    tcx.clearRect(0, 0, 128, 64);
+    tcx.fillStyle = "#15130f";
+    tcx.font = "bold 34px Oswald, Arial, sans-serif";
+    tcx.textAlign = "center";
+    tcx.textBaseline = "middle";
+    tcx.fillText("UTAH", 64, 34);
+    const ttex = new THREE.CanvasTexture(tc);
+    const hatTag = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.13, 0.065),
+      new THREE.MeshBasicMaterial({ map: ttex, transparent: true })
+    );
+    hatTag.position.set(0, 1.70, 0.187); // proud of the 0.18-radius dome
+    hatTag.rotation.x = -0.15;
+    g.add(hatTag);
+    // sticker collection: gold star, pride bar, the cartoon crew
+    const star = boxMesh(0.035, 0.032, 0.008, mat(0xe8c437));
+    star.position.set(-0.105, 1.72, 0.115);
+    star.rotation.y = -0.6;
+    g.add(star);
+    const prideC = [0xd32f2f, 0xf57c00, 0xfbc02d, 0x388e3c, 0x1976d2, 0x7b1fa2];
+    prideC.forEach((pc, i) => {
+      const sbar = boxMesh(0.008, 0.026, 0.008, mat(pc));
+      sbar.position.set(0.082 + i * 0.0085, 1.72, 0.118 - i * 0.004);
+      sbar.rotation.y = 0.6;
+      g.add(sbar);
+    });
+    const cart = boxMesh(0.028, 0.024, 0.008, mat(0xf4d848));
+    cart.position.set(0.045, 1.755, 0.145);
+    cart.rotation.x = -0.35;
+    g.add(cart);
+    const cart2 = boxMesh(0.024, 0.02, 0.008, mat(0x6ab04c));
+    cart2.position.set(-0.05, 1.755, 0.143);
+    cart2.rotation.x = -0.35;
+    g.add(cart2);
+  }
   const muffL = new THREE.Mesh(new THREE.SphereGeometry(isTremont ? 0.042 : 0.055, 8, 6), mat(0x1a1a1a));
   muffL.scale.set(0.65, 1, 0.85);
   muffL.position.set(isTremont ? 0.155 : 0.17, 1.68, 0.04);
@@ -8556,13 +8644,13 @@ function buildRacks() {
   const nPer = 9;
   const pitch = 0.68;
 
-  const rackTex = loader.load("/assets/tex_rack.jpg?v=121");
+  const rackTex = loader.load("/assets/tex_rack.jpg?v=122");
   rackTex.colorSpace = THREE.SRGBColorSpace;
-  const crahTex = loader.load("/assets/tex_crah.jpg?v=121");
+  const crahTex = loader.load("/assets/tex_crah.jpg?v=122");
   crahTex.colorSpace = THREE.SRGBColorSpace;
   // sealed concrete slab — this site has NO raised floor; power and data
   // run in the overhead tray (see assets/ref_mech.jpg / ref_elec.jpg)
-  const floorTex = loader.load("/assets/tex_concrete.jpg?v=121");
+  const floorTex = loader.load("/assets/tex_concrete.jpg?v=122");
   floorTex.colorSpace = THREE.SRGBColorSpace;
   floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
   floorTex.repeat.set(8, 12);
