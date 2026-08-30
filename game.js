@@ -2476,7 +2476,7 @@ const voice = { map: null, el: null, src: null, buf: new Map() };
 
 function loadVoicePack() {
   if (voice._loading) return voice._loading;
-  voice._loading = fetch("/assets/voice/map.json?v=122")
+  voice._loading = fetch("/assets/voice/map.json?v=123")
     .then((r) => (r.ok ? r.json() : null))
     .then((rows) => {
       if (!Array.isArray(rows)) {
@@ -2636,29 +2636,29 @@ const RADIO_META = {
   tremont: { tag: "TREMONT · BOOK 2", src: "assets/tremont_portrait.jpg" },
   utah: { tag: "UTAH · BOOK 2", src: "assets/utah_portrait.jpg" },
   drew: { tag: "DREW · GENERAL FOREMAN", src: "assets/drew_portrait.jpg" },
-  joe: { tag: "JOE RIVERA", src: "assets/joe_portrait.jpg?v=122" },
-  chris: { tag: "CHRIS · LIGHTING", src: "assets/chris_portrait.jpg?v=122" },
-  don: { tag: "DON THE FOREMAN", src: "assets/don_portrait.jpg?v=122" },
+  joe: { tag: "JOE RIVERA", src: "assets/joe_portrait.jpg?v=123" },
+  chris: { tag: "CHRIS · LIGHTING", src: "assets/chris_portrait.jpg?v=123" },
+  don: { tag: "DON THE FOREMAN", src: "assets/don_portrait.jpg?v=123" },
   safety: { tag: "MARITZA · SITE SAFETY", src: "assets/safety_portrait.jpg" },
-  redbeard: { tag: "RED BEARD · DATA 1", src: "assets/redbeard_portrait.jpg?v=122" },
-  andy: { tag: "ANDY · SICK & NEEDY", src: "assets/andy_portrait.jpg?v=122" },
-  nate: { tag: "NATE · WIENERS", src: "assets/nate_portrait.jpg?v=122" },
-  kenny: { tag: "KENNY THE STEW", src: "assets/kenny_portrait.jpg?v=122" },
+  redbeard: { tag: "RED BEARD · DATA 1", src: "assets/redbeard_portrait.jpg?v=123" },
+  andy: { tag: "ANDY · SICK & NEEDY", src: "assets/andy_portrait.jpg?v=123" },
+  nate: { tag: "NATE · WIENERS", src: "assets/nate_portrait.jpg?v=123" },
+  kenny: { tag: "KENNY THE STEW", src: "assets/kenny_portrait.jpg?v=123" },
 };
 
 const FACE_SRC = {
-  oconnell: "/assets/utah_face.jpg?v=122", // multiplayer ghosts of Utah players
-  redbeard: "/assets/redbeard_face.jpg?v=122",
-  andy: "/assets/andy_face.jpg?v=122",
-  nate: "/assets/nate_face.jpg?v=122",
-  kenny: "/assets/kenny_face.jpg?v=122",
-  safety: "/assets/safety_face.jpg?v=122",
-  gf: "/assets/drew_face.jpg?v=122",
-  joe: "/assets/joe_face.jpg?v=122",
-  chris: "/assets/chris_face.jpg?v=122",
-  don: "/assets/don_face.jpg?v=122",
-  lugo: "/assets/lugo_face.jpg?v=122",
-  lemon: "/assets/lemon_face.jpg?v=122",
+  oconnell: "/assets/utah_face.jpg?v=123", // multiplayer ghosts of Utah players
+  redbeard: "/assets/redbeard_face.jpg?v=123",
+  andy: "/assets/andy_face.jpg?v=123",
+  nate: "/assets/nate_face.jpg?v=123",
+  kenny: "/assets/kenny_face.jpg?v=123",
+  safety: "/assets/safety_face.jpg?v=123",
+  gf: "/assets/drew_face.jpg?v=123",
+  joe: "/assets/joe_face.jpg?v=123",
+  chris: "/assets/chris_face.jpg?v=123",
+  don: "/assets/don_face.jpg?v=123",
+  lugo: "/assets/lugo_face.jpg?v=123",
+  lemon: "/assets/lemon_face.jpg?v=123",
 };
 
 function paintRadioFace(who) {
@@ -3066,7 +3066,7 @@ function makeElectrician() {
   } else {
     // UTAH — built from the real site photos: his actual face (grin, safety
     // specs over glasses, handlebar mustache), dark-auburn curls out the back
-    const ftex = loader.load("/assets/utah_face.jpg?v=122");
+    const ftex = loader.load("/assets/utah_face.jpg?v=123");
     ftex.colorSpace = THREE.SRGBColorSpace;
     const face = new THREE.Mesh(
       new THREE.CircleGeometry(0.135, 24),
@@ -3120,26 +3120,28 @@ function makeElectrician() {
     }
   }
 
+  // Utah's lid rides higher so the brim clears his eyes and the photo face reads
+  const hatY = isTremont ? 0 : 0.055;
   const hat = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), mat(HATC));
-  hat.position.set(0, 1.7, 0);
+  hat.position.set(0, 1.7 + hatY, 0);
   if (isTremont) hat.rotation.x = -0.14;
   g.add(hat);
   const brim = new THREE.Mesh(new THREE.CylinderGeometry(fit.hat === "hat_cowboy" ? 0.31 : 0.22, fit.hat === "hat_cowboy" ? 0.31 : 0.22, 0.03, 16), mat(HATC));
-  brim.position.set(0, 1.64, 0);
+  brim.position.set(0, 1.64 + hatY, 0);
   if (isTremont) brim.rotation.x = -0.14;
   g.add(brim);
   const lamp = boxMesh(0.07, 0.05, 0.06, mat(0x222));
-  lamp.position.set(0, 1.76, 0.14);
+  lamp.position.set(0, 1.76 + hatY, 0.14);
   g.add(lamp);
   const lampG = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), mat(0xfff2c8, { emissive: 0xffe08a, emissiveIntensity: 0.8 }));
-  lampG.position.set(0, 1.76, 0.18);
+  lampG.position.set(0, 1.76 + hatY, 0.18);
   g.add(lampG);
   // Utah wears a dark headband under the lid (the photos); Tremont keeps tan
   const band = boxMesh(0.34, 0.04, 0.34, mat(isTremont ? 0x6b5a3a : 0x1c2230));
   band.position.set(0, 1.66, 0);
   g.add(band);
   const decal = boxMesh(0.05, 0.04, 0.01, mat(0xff8a1a));
-  decal.position.set(-0.08, 1.78, 0.14);
+  decal.position.set(-0.08, 1.78 + hatY, 0.14);
   g.add(decal);
   if (!isTremont) {
     // "UTAH" in marker across the front of the white lid
@@ -3158,27 +3160,27 @@ function makeElectrician() {
       new THREE.PlaneGeometry(0.13, 0.065),
       new THREE.MeshBasicMaterial({ map: ttex, transparent: true })
     );
-    hatTag.position.set(0, 1.70, 0.187); // proud of the 0.18-radius dome
+    hatTag.position.set(0, 1.70 + hatY, 0.187); // proud of the 0.18-radius dome
     hatTag.rotation.x = -0.15;
     g.add(hatTag);
     // sticker collection: gold star, pride bar, the cartoon crew
     const star = boxMesh(0.035, 0.032, 0.008, mat(0xe8c437));
-    star.position.set(-0.105, 1.72, 0.115);
+    star.position.set(-0.105, 1.72 + hatY, 0.115);
     star.rotation.y = -0.6;
     g.add(star);
     const prideC = [0xd32f2f, 0xf57c00, 0xfbc02d, 0x388e3c, 0x1976d2, 0x7b1fa2];
     prideC.forEach((pc, i) => {
       const sbar = boxMesh(0.008, 0.026, 0.008, mat(pc));
-      sbar.position.set(0.082 + i * 0.0085, 1.72, 0.118 - i * 0.004);
+      sbar.position.set(0.082 + i * 0.0085, 1.72 + hatY, 0.118 - i * 0.004);
       sbar.rotation.y = 0.6;
       g.add(sbar);
     });
     const cart = boxMesh(0.028, 0.024, 0.008, mat(0xf4d848));
-    cart.position.set(0.045, 1.755, 0.145);
+    cart.position.set(0.045, 1.755 + hatY, 0.145);
     cart.rotation.x = -0.35;
     g.add(cart);
     const cart2 = boxMesh(0.024, 0.02, 0.008, mat(0x6ab04c));
-    cart2.position.set(-0.05, 1.755, 0.143);
+    cart2.position.set(-0.05, 1.755 + hatY, 0.143);
     cart2.rotation.x = -0.35;
     g.add(cart2);
   }
@@ -8644,13 +8646,13 @@ function buildRacks() {
   const nPer = 9;
   const pitch = 0.68;
 
-  const rackTex = loader.load("/assets/tex_rack.jpg?v=122");
+  const rackTex = loader.load("/assets/tex_rack.jpg?v=123");
   rackTex.colorSpace = THREE.SRGBColorSpace;
-  const crahTex = loader.load("/assets/tex_crah.jpg?v=122");
+  const crahTex = loader.load("/assets/tex_crah.jpg?v=123");
   crahTex.colorSpace = THREE.SRGBColorSpace;
   // sealed concrete slab — this site has NO raised floor; power and data
   // run in the overhead tray (see assets/ref_mech.jpg / ref_elec.jpg)
-  const floorTex = loader.load("/assets/tex_concrete.jpg?v=122");
+  const floorTex = loader.load("/assets/tex_concrete.jpg?v=123");
   floorTex.colorSpace = THREE.SRGBColorSpace;
   floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
   floorTex.repeat.set(8, 12);
