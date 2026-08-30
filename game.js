@@ -8913,6 +8913,10 @@ function tryInteract() {
     sfx("ok");
     vib(15);
     track("andy_fund", { day });
+    if (REAL_FUND.url && !dayState.realFundHint) {
+      dayState.realFundHint = true;
+      setTimeout(() => toast("REAL FUND LINK'S ON THE BREAK SCREEN"), 2600);
+    }
     return;
   }
   if (it.candy) {
@@ -11870,6 +11874,38 @@ function softReset() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  REAL SICK & NEEDY FUND                                             */
+/*  This is REAL MONEY. Set url to an actual payment link (Venmo /     */
+/*  PayPal.me / GoFundMe / Stripe Payment Link) that goes to the real  */
+/*  fund, and say honestly in `note` where the money lands. Leave url  */
+/*  empty and the whole feature stays hidden.                          */
+/* ------------------------------------------------------------------ */
+const REAL_FUND = {
+  url: "",
+  note: "Real money, opens in your browser. Goes to the local's sick & needy fund.",
+};
+
+function openRealFund() {
+  if (!REAL_FUND.url) return;
+  try {
+    window.open(REAL_FUND.url, "_blank", "noopener");
+  } catch (_) {}
+  track("real_fund_tap", {});
+}
+
+function wireRealFund() {
+  if (!REAL_FUND.url) return;
+  $("btn-real-fund")?.classList.remove("hidden");
+  $("btn-real-fund-pause")?.classList.remove("hidden");
+  const note = $("real-fund-note-pause");
+  if (note) {
+    note.textContent = REAL_FUND.note;
+    note.classList.remove("hidden");
+  }
+}
+wireRealFund();
+
+/* ------------------------------------------------------------------ */
 /*  PAUSE / SETTINGS                                                   */
 /* ------------------------------------------------------------------ */
 function pauseGame() {
@@ -11921,6 +11957,8 @@ function quitToTitle() {
 for (const [id, fn] of [
   ["btn-pause", pauseGame],
   ["btn-resume", resumeGame],
+  ["btn-real-fund", openRealFund],
+  ["btn-real-fund-pause", openRealFund],
   ["btn-quit", quitToTitle],
   ["btn-gate", quitToTitle],
 ]) {
