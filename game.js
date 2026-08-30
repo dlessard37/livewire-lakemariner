@@ -2476,7 +2476,7 @@ const voice = { map: null, el: null, src: null, buf: new Map() };
 
 function loadVoicePack() {
   if (voice._loading) return voice._loading;
-  voice._loading = fetch("/assets/voice/map.json?v=119")
+  voice._loading = fetch("/assets/voice/map.json?v=120")
     .then((r) => (r.ok ? r.json() : null))
     .then((rows) => {
       if (!Array.isArray(rows)) {
@@ -2636,28 +2636,28 @@ const RADIO_META = {
   tremont: { tag: "TREMONT · BOOK 2", src: "assets/tremont_portrait.jpg" },
   utah: { tag: "UTAH · BOOK 2", src: "assets/utah_portrait.jpg" },
   drew: { tag: "DREW · GENERAL FOREMAN", src: "assets/drew_portrait.jpg" },
-  joe: { tag: "JOE RIVERA", src: "assets/joe_portrait.jpg?v=119" },
-  chris: { tag: "CHRIS · LIGHTING", src: "assets/chris_portrait.jpg?v=119" },
-  don: { tag: "DON THE FOREMAN", src: "assets/don_portrait.jpg?v=119" },
+  joe: { tag: "JOE RIVERA", src: "assets/joe_portrait.jpg?v=120" },
+  chris: { tag: "CHRIS · LIGHTING", src: "assets/chris_portrait.jpg?v=120" },
+  don: { tag: "DON THE FOREMAN", src: "assets/don_portrait.jpg?v=120" },
   safety: { tag: "MARITZA · SITE SAFETY", src: "assets/safety_portrait.jpg" },
-  redbeard: { tag: "RED BEARD · DATA 1", src: "assets/redbeard_portrait.jpg?v=119" },
-  andy: { tag: "ANDY · SICK & NEEDY", src: "assets/andy_portrait.jpg?v=119" },
-  nate: { tag: "NATE · WIENERS", src: "assets/nate_portrait.jpg?v=119" },
-  kenny: { tag: "KENNY THE STEW", src: "assets/kenny_portrait.jpg?v=119" },
+  redbeard: { tag: "RED BEARD · DATA 1", src: "assets/redbeard_portrait.jpg?v=120" },
+  andy: { tag: "ANDY · SICK & NEEDY", src: "assets/andy_portrait.jpg?v=120" },
+  nate: { tag: "NATE · WIENERS", src: "assets/nate_portrait.jpg?v=120" },
+  kenny: { tag: "KENNY THE STEW", src: "assets/kenny_portrait.jpg?v=120" },
 };
 
 const FACE_SRC = {
-  redbeard: "/assets/redbeard_face.jpg?v=119",
-  andy: "/assets/andy_face.jpg?v=119",
-  nate: "/assets/nate_face.jpg?v=119",
-  kenny: "/assets/kenny_face.jpg?v=119",
-  safety: "/assets/safety_face.jpg?v=119",
-  gf: "/assets/drew_face.jpg?v=119",
-  joe: "/assets/joe_face.jpg?v=119",
-  chris: "/assets/chris_face.jpg?v=119",
-  don: "/assets/don_face.jpg?v=119",
-  lugo: "/assets/lugo_face.jpg?v=119",
-  lemon: "/assets/lemon_face.jpg?v=119",
+  redbeard: "/assets/redbeard_face.jpg?v=120",
+  andy: "/assets/andy_face.jpg?v=120",
+  nate: "/assets/nate_face.jpg?v=120",
+  kenny: "/assets/kenny_face.jpg?v=120",
+  safety: "/assets/safety_face.jpg?v=120",
+  gf: "/assets/drew_face.jpg?v=120",
+  joe: "/assets/joe_face.jpg?v=120",
+  chris: "/assets/chris_face.jpg?v=120",
+  don: "/assets/don_face.jpg?v=120",
+  lugo: "/assets/lugo_face.jpg?v=120",
+  lemon: "/assets/lemon_face.jpg?v=120",
 };
 
 function paintRadioFace(who) {
@@ -5200,7 +5200,7 @@ function snackItems() {
   return worldItems
     .filter((i) => {
       if (tremont && i.candy) return false; // Tremont does not run the candy bag
-      return i.coffee || i.tender || i.candy || i.cartGrab || i.liftDrive;
+      return i.coffee || i.tender || i.candy || i.cartGrab || i.liftDrive || i.andyFund;
     })
     .map((i) => {
       const copy = { ...i, done: false };
@@ -6884,6 +6884,17 @@ function buildAndy() {
   tag.scale.set(2.5, 0.56, 1);
   tag.position.y = 2.4;
   w.add(tag);
+  state.andy = w;
+  // the collector actually collects — the interactable trails him as he walks
+  addItem({
+    id: "andyFund",
+    mesh: null,
+    x: x - 7,
+    z: p1.mid,
+    label: "Give five bucks · sick & needy",
+    andyFund: true,
+    done: false,
+  });
 }
 
 function buildDrew() {
@@ -8091,6 +8102,9 @@ function updateDayMechanics(dt, t) {
       // the bag rides the cart's nose — walk it up to the crew
       it.x = state.cart.position.x + Math.sin(state.cart.rotation.y) * 0.9;
       it.z = state.cart.position.z + Math.cos(state.cart.rotation.y) * 0.9;
+    } else if (it.andyFund && state.andy) {
+      it.x = state.andy.position.x;
+      it.z = state.andy.position.z;
     } else if (it.cartGrab && state.cart) {
       if (dayState.pushCart) {
         // handle's in Utah's hand: face the bag to share candy, look away to let go
@@ -8542,11 +8556,11 @@ function buildRacks() {
   const nPer = 9;
   const pitch = 0.68;
 
-  const rackTex = loader.load("/assets/tex_rack.jpg?v=119");
+  const rackTex = loader.load("/assets/tex_rack.jpg?v=120");
   rackTex.colorSpace = THREE.SRGBColorSpace;
-  const crahTex = loader.load("/assets/tex_crah.jpg?v=119");
+  const crahTex = loader.load("/assets/tex_crah.jpg?v=120");
   crahTex.colorSpace = THREE.SRGBColorSpace;
-  const floorTex = loader.load("/assets/tex_raised.jpg?v=119");
+  const floorTex = loader.load("/assets/tex_raised.jpg?v=120");
   floorTex.colorSpace = THREE.SRGBColorSpace;
   floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
   floorTex.repeat.set(18, 28);
@@ -8867,6 +8881,38 @@ function tryInteract() {
     openStore();
     sfx("pickup");
     vib(10);
+    return;
+  }
+  if (it.andyFund) {
+    // sick & needy fund: hall tradition — you give, the local has your back
+    if (dayState.andyGave) {
+      speakAs("andy", "Local takes care of its own. Sick and needy fund.");
+      toast("YOU'RE PAID UP TODAY");
+      sfx("ok");
+      return;
+    }
+    if (state.watts < 100) {
+      speakAs("andy", "Folding money. Not IOUs.");
+      toast("NEED 100 PTS", true);
+      sfx("bad");
+      return;
+    }
+    state.watts -= 100;
+    $("watts").textContent = state.watts.toLocaleString();
+    $("watts-mini").textContent = "PTS " + state.watts.toLocaleString();
+    dayState.andyGave = true;
+    if (state.hp < 3) {
+      state.hp += 1; // the fund takes care of you right back
+      setHearts();
+      toast("GAVE $5 · THE LOCAL'S GOT YOU");
+    } else {
+      state.combo += 1; // morale money
+      toast("GAVE $5 · MORALE'S UP");
+    }
+    speakAs("andy", "Local takes care of its own. Sick and needy fund.");
+    sfx("ok");
+    vib(15);
+    track("andy_fund", { day });
     return;
   }
   if (it.candy) {
@@ -11092,16 +11138,19 @@ function updateCrew(dt, t) {
       ud.legR.rotation.x = Math.sin(w) * 0.65;
       const dxp = player.position.x - c.mesh.position.x;
       const dzp = player.position.z - c.mesh.position.z;
-      if (c.kit === "safety") {
+      if (c.kit === "safety" || c.kit === "andy") {
+        // repeat-bark NPCs: keep talking while the player hangs around,
+        // cycling their lines instead of the one-shot the generic crew gets
         if (Math.hypot(dxp, dzp) < 4.6 && t > 2) {
           if (!c.nextBark || t >= c.nextBark) {
-            const lines = BARK.safety;
+            const lines = BARK[c.kit];
             if (lines && lines.length) {
               c.barkI = (c.barkI || 0) % lines.length;
-              speakAs("safety", lines[c.barkI]);
+              speakAs(NPC_VOICE[c.kit] || "crew", lines[c.barkI]);
               c.barkI += 1;
             }
-            c.nextBark = t + 3.5 + Math.random() * 2.5;
+            // Andy paces his ask; the safety lady stays on your heels
+            c.nextBark = t + (c.kit === "andy" ? 5.5 + Math.random() * 3.5 : 3.5 + Math.random() * 2.5);
           }
         }
       } else if (!c.said && Math.hypot(dxp, dzp) < 3.1 && t > 5) {
@@ -11742,6 +11791,7 @@ function softReset() {
   dayState.genTransferred = false;
   dayState.carrying = false;
   dayState.candyCd = 0;
+  dayState.andyGave = false; // Andy passes the hat fresh every shift
   dayState.pushCart = false;
   dayState.driving = false;
   dayState.utv = null;
