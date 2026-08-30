@@ -1668,6 +1668,15 @@ h1 {
   text-decoration: line-through;
   color: #9aa686;
 }
+.st-note {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--hi);
+  border-left: 2px solid var(--hi);
+  padding-left: 8px;
+  line-height: 1.4;
+}
+
 .shop-ticket .st-meta {
   font-size: 11px;
   color: #8a9278;

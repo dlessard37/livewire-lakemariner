@@ -12958,8 +12958,11 @@ function parseShopDoc(doc) {
   const text = ticketBody(String(fsVal(f.text) || "")).trim();
   if (!text) return null;
   const created = fsVal(f.ts) || (doc.createTime && Date.parse(doc.createTime)) || 0;
-  const status = String(fsVal(f.status) || "new").toLowerCase() === "done" ? "done" : "new";
+  // new = untouched · wip = on the bench · done = shipped · passed = declined w/ note
+  const rawStatus = String(fsVal(f.status) || "new").toLowerCase();
+  const status = ["done", "wip", "passed"].includes(rawStatus) ? rawStatus : "new";
   return {
+    note: String(fsVal(f.note) || "").slice(0, 300),
     id: String(doc.name || "").split("/").pop() || "",
     text: text.slice(0, 500),
     name: String(fsVal(f.name) || "ANON").slice(0, 20),
@@ -13013,18 +13016,20 @@ function renderShopList(rows) {
     el.appendChild(d);
     return;
   }
-  const open = rows.filter((r) => r.status !== "done");
-  const done = rows.filter((r) => r.status === "done");
+  const open = rows.filter((r) => r.status === "new" || r.status === "wip");
+  const done = rows.filter((r) => r.status === "done" || r.status === "passed");
   const seen = shopSeenAt();
 
   function addCard(r) {
     const card = document.createElement("div");
-    const isNew = r.status !== "done" && (r.createdAt || 0) > seen;
-    card.className = "shop-ticket" + (r.status === "done" ? " done" : "") + (isNew ? " new" : "");
+    const isNew = (r.status === "new" || r.status === "wip") && (r.createdAt || 0) > seen;
+    card.className = "shop-ticket" + (r.status === "done" || r.status === "passed" ? " done" : "") + (isNew ? " new" : "");
     const meta = document.createElement("div");
     meta.className = "st-meta";
+    const tag =
+      r.status === "done" ? "ADDED · " : r.status === "wip" ? "ON THE BENCH · " : r.status === "passed" ? "PASSED · " : "";
     meta.textContent =
-      (r.status === "done" ? "ADDED · " : "") +
+      tag +
       (r.name || "ANON") +
       " · " +
       (r.who === "tremont" ? "TREMONT" : "UTAH") +
@@ -13033,6 +13038,12 @@ function renderShopList(rows) {
     body.className = "st-text";
     body.textContent = (r.status === "done" ? "✓ " : "") + r.text;
     card.append(meta, body);
+    if (r.note) {
+      const note = document.createElement("div");
+      note.className = "st-note";
+      note.textContent = "BENCH: " + r.note;
+      card.appendChild(note);
+    }
     if (r.photoN || r.clipN || (r.photoUrls && r.photoUrls.length)) {
       const att = document.createElement("div");
       att.className = "st-att";
@@ -13093,7 +13104,7 @@ function paintShopBadge(rows) {
   const btn = $("btn-shop");
   if (!btn) return;
   const seen = shopSeenAt();
-  const n = (rows || []).filter((r) => r.status !== "done" && (r.createdAt || 0) > seen).length;
+  const n = (rows || []).filter((r) => (r.status === "new" || r.status === "wip") && (r.createdAt || 0) > seen).length;
   btn.classList.toggle("has-new", n > 0);
   let main = btn.querySelector(".shop-main");
   let sub = btn.querySelector(".shop-sub");
