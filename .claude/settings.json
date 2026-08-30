@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node .claude/skills/bench/mark-ticket.mjs *)",
+      "Bash(node --check *)",
+      "Bash(firebase deploy *)",
+      "Bash(curl -s https://firestore.googleapis.com/*)",
+      "Bash(curl -s https://livewire-lakemariner.web.app/*)"
+    ]
+  }
+}
