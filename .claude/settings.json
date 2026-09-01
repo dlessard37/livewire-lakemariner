@@ -5,7 +5,17 @@
       "Bash(node --check *)",
       "Bash(firebase deploy *)",
       "Bash(curl -s https://firestore.googleapis.com/*)",
-      "Bash(curl -s https://livewire-lakemariner.web.app/*)"
+      "Bash(curl -s https://livewire-lakemariner.web.app/*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git fetch *)",
+      "Bash(git log *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(npm install -g firebase-tools)",
+      "Bash(npm i -g firebase-tools)",
+      "Bash(sed -i *)"
     ]
   }
 }
