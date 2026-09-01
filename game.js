@@ -575,6 +575,7 @@ const BARK = {
     "This dye job cost more than your boots.",
     "You want one? Sixty. Cash.",
     "Don't get stew on the shirt. That's a sixty-dollar shirt.",
+    "Tie-dye. Sixty bucks. Final answer.",
   ],
   safety: [
     "Glasses. On. Now.",
@@ -2483,7 +2484,7 @@ const voice = { map: null, el: null, src: null, buf: new Map() };
 
 function loadVoicePack() {
   if (voice._loading) return voice._loading;
-  voice._loading = fetch("/assets/voice/map.json?v=124")
+  voice._loading = fetch("/assets/voice/map.json?v=125")
     .then((r) => (r.ok ? r.json() : null))
     .then((rows) => {
       if (!Array.isArray(rows)) {
@@ -2643,29 +2644,29 @@ const RADIO_META = {
   tremont: { tag: "TREMONT · BOOK 2", src: "assets/tremont_portrait.jpg" },
   utah: { tag: "UTAH · BOOK 2", src: "assets/utah_portrait.jpg" },
   drew: { tag: "DREW · GENERAL FOREMAN", src: "assets/drew_portrait.jpg" },
-  joe: { tag: "JOE RIVERA", src: "assets/joe_portrait.jpg?v=124" },
-  chris: { tag: "CHRIS · LIGHTING", src: "assets/chris_portrait.jpg?v=124" },
-  don: { tag: "DON THE FOREMAN", src: "assets/don_portrait.jpg?v=124" },
+  joe: { tag: "JOE RIVERA", src: "assets/joe_portrait.jpg?v=125" },
+  chris: { tag: "CHRIS · LIGHTING", src: "assets/chris_portrait.jpg?v=125" },
+  don: { tag: "DON THE FOREMAN", src: "assets/don_portrait.jpg?v=125" },
   safety: { tag: "MARITZA · SITE SAFETY", src: "assets/safety_portrait.jpg" },
-  redbeard: { tag: "RED BEARD · DATA 1", src: "assets/redbeard_portrait.jpg?v=124" },
-  andy: { tag: "ANDY · SICK & NEEDY", src: "assets/andy_portrait.jpg?v=124" },
-  nate: { tag: "NATE · WIENERS", src: "assets/nate_portrait.jpg?v=124" },
-  kenny: { tag: "KENNY THE STEW", src: "assets/kenny_portrait.jpg?v=124" },
+  redbeard: { tag: "RED BEARD · DATA 1", src: "assets/redbeard_portrait.jpg?v=125" },
+  andy: { tag: "ANDY · SICK & NEEDY", src: "assets/andy_portrait.jpg?v=125" },
+  nate: { tag: "NATE · WIENERS", src: "assets/nate_portrait.jpg?v=125" },
+  kenny: { tag: "KENNY THE STEW", src: "assets/kenny_portrait.jpg?v=125" },
 };
 
 const FACE_SRC = {
-  oconnell: "/assets/utah_face.jpg?v=124", // multiplayer ghosts of Utah players
-  redbeard: "/assets/redbeard_face.jpg?v=124",
-  andy: "/assets/andy_face.jpg?v=124",
-  nate: "/assets/nate_face.jpg?v=124",
-  kenny: "/assets/kenny_face.jpg?v=124",
-  safety: "/assets/safety_face.jpg?v=124",
-  gf: "/assets/drew_face.jpg?v=124",
-  joe: "/assets/joe_face.jpg?v=124",
-  chris: "/assets/chris_face.jpg?v=124",
-  don: "/assets/don_face.jpg?v=124",
-  lugo: "/assets/lugo_face.jpg?v=124",
-  lemon: "/assets/lemon_face.jpg?v=124",
+  oconnell: "/assets/utah_face.jpg?v=125", // multiplayer ghosts of Utah players
+  redbeard: "/assets/redbeard_face.jpg?v=125",
+  andy: "/assets/andy_face.jpg?v=125",
+  nate: "/assets/nate_face.jpg?v=125",
+  kenny: "/assets/kenny_face.jpg?v=125",
+  safety: "/assets/safety_face.jpg?v=125",
+  gf: "/assets/drew_face.jpg?v=125",
+  joe: "/assets/joe_face.jpg?v=125",
+  chris: "/assets/chris_face.jpg?v=125",
+  don: "/assets/don_face.jpg?v=125",
+  lugo: "/assets/lugo_face.jpg?v=125",
+  lemon: "/assets/lemon_face.jpg?v=125",
 };
 
 function paintRadioFace(who) {
@@ -3073,7 +3074,7 @@ function makeElectrician() {
   } else {
     // UTAH — built from the real site photos: his actual face (grin, safety
     // specs over glasses, handlebar mustache), dark-auburn curls out the back
-    const ftex = loader.load("/assets/utah_face.jpg?v=124");
+    const ftex = loader.load("/assets/utah_face.jpg?v=125");
     ftex.colorSpace = THREE.SRGBColorSpace;
     const face = new THREE.Mesh(
       new THREE.CircleGeometry(0.135, 24),
@@ -8673,13 +8674,13 @@ function buildRacks() {
   const nPer = 9;
   const pitch = 0.68;
 
-  const rackTex = loader.load("/assets/tex_rack.jpg?v=124");
+  const rackTex = loader.load("/assets/tex_rack.jpg?v=125");
   rackTex.colorSpace = THREE.SRGBColorSpace;
-  const crahTex = loader.load("/assets/tex_crah.jpg?v=124");
+  const crahTex = loader.load("/assets/tex_crah.jpg?v=125");
   crahTex.colorSpace = THREE.SRGBColorSpace;
   // sealed concrete slab — this site has NO raised floor; power and data
   // run in the overhead tray (see assets/ref_mech.jpg / ref_elec.jpg)
-  const floorTex = loader.load("/assets/tex_concrete.jpg?v=124");
+  const floorTex = loader.load("/assets/tex_concrete.jpg?v=125");
   floorTex.colorSpace = THREE.SRGBColorSpace;
   floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
   floorTex.repeat.set(8, 12);
