@@ -592,6 +592,13 @@ const BARK = {
     "I'm Red Beard. That's the whole introduction.",
     "Row's tight. Squeeze through.",
   ],
+  gibbs: [
+    "Where's my neck?",
+    "You seen my neck? Had it this morning.",
+    "WHERE. IS. MY. NECK.",
+    "Joe's Batman. Somebody's gotta be Robin.",
+    "Check the gang box. Maybe my neck's in there.",
+  ],
   andy: [
     "Sick and needy fund. You in?",
     "Five bucks. Sick and needy. That's the ask.",
@@ -606,7 +613,7 @@ const BARK = {
 };
 
 /* kit -> speakAs role. Default is crew. Set this when a new NPC gets their own baked voice. */
-const NPC_VOICE = { safety: "safety", redbeard: "redbeard", andy: "andy", nate: "nate", kenny: "kenny" };
+const NPC_VOICE = { safety: "safety", redbeard: "redbeard", andy: "andy", nate: "nate", kenny: "kenny", gibbs: "gibbs" };
 
 const CB = {
   pods: 4,
@@ -2476,7 +2483,7 @@ const voice = { map: null, el: null, src: null, buf: new Map() };
 
 function loadVoicePack() {
   if (voice._loading) return voice._loading;
-  voice._loading = fetch("/assets/voice/map.json?v=123")
+  voice._loading = fetch("/assets/voice/map.json?v=124")
     .then((r) => (r.ok ? r.json() : null))
     .then((rows) => {
       if (!Array.isArray(rows)) {
@@ -2636,29 +2643,29 @@ const RADIO_META = {
   tremont: { tag: "TREMONT · BOOK 2", src: "assets/tremont_portrait.jpg" },
   utah: { tag: "UTAH · BOOK 2", src: "assets/utah_portrait.jpg" },
   drew: { tag: "DREW · GENERAL FOREMAN", src: "assets/drew_portrait.jpg" },
-  joe: { tag: "JOE RIVERA", src: "assets/joe_portrait.jpg?v=123" },
-  chris: { tag: "CHRIS · LIGHTING", src: "assets/chris_portrait.jpg?v=123" },
-  don: { tag: "DON THE FOREMAN", src: "assets/don_portrait.jpg?v=123" },
+  joe: { tag: "JOE RIVERA", src: "assets/joe_portrait.jpg?v=124" },
+  chris: { tag: "CHRIS · LIGHTING", src: "assets/chris_portrait.jpg?v=124" },
+  don: { tag: "DON THE FOREMAN", src: "assets/don_portrait.jpg?v=124" },
   safety: { tag: "MARITZA · SITE SAFETY", src: "assets/safety_portrait.jpg" },
-  redbeard: { tag: "RED BEARD · DATA 1", src: "assets/redbeard_portrait.jpg?v=123" },
-  andy: { tag: "ANDY · SICK & NEEDY", src: "assets/andy_portrait.jpg?v=123" },
-  nate: { tag: "NATE · WIENERS", src: "assets/nate_portrait.jpg?v=123" },
-  kenny: { tag: "KENNY THE STEW", src: "assets/kenny_portrait.jpg?v=123" },
+  redbeard: { tag: "RED BEARD · DATA 1", src: "assets/redbeard_portrait.jpg?v=124" },
+  andy: { tag: "ANDY · SICK & NEEDY", src: "assets/andy_portrait.jpg?v=124" },
+  nate: { tag: "NATE · WIENERS", src: "assets/nate_portrait.jpg?v=124" },
+  kenny: { tag: "KENNY THE STEW", src: "assets/kenny_portrait.jpg?v=124" },
 };
 
 const FACE_SRC = {
-  oconnell: "/assets/utah_face.jpg?v=123", // multiplayer ghosts of Utah players
-  redbeard: "/assets/redbeard_face.jpg?v=123",
-  andy: "/assets/andy_face.jpg?v=123",
-  nate: "/assets/nate_face.jpg?v=123",
-  kenny: "/assets/kenny_face.jpg?v=123",
-  safety: "/assets/safety_face.jpg?v=123",
-  gf: "/assets/drew_face.jpg?v=123",
-  joe: "/assets/joe_face.jpg?v=123",
-  chris: "/assets/chris_face.jpg?v=123",
-  don: "/assets/don_face.jpg?v=123",
-  lugo: "/assets/lugo_face.jpg?v=123",
-  lemon: "/assets/lemon_face.jpg?v=123",
+  oconnell: "/assets/utah_face.jpg?v=124", // multiplayer ghosts of Utah players
+  redbeard: "/assets/redbeard_face.jpg?v=124",
+  andy: "/assets/andy_face.jpg?v=124",
+  nate: "/assets/nate_face.jpg?v=124",
+  kenny: "/assets/kenny_face.jpg?v=124",
+  safety: "/assets/safety_face.jpg?v=124",
+  gf: "/assets/drew_face.jpg?v=124",
+  joe: "/assets/joe_face.jpg?v=124",
+  chris: "/assets/chris_face.jpg?v=124",
+  don: "/assets/don_face.jpg?v=124",
+  lugo: "/assets/lugo_face.jpg?v=124",
+  lemon: "/assets/lemon_face.jpg?v=124",
 };
 
 function paintRadioFace(who) {
@@ -3066,7 +3073,7 @@ function makeElectrician() {
   } else {
     // UTAH — built from the real site photos: his actual face (grin, safety
     // specs over glasses, handlebar mustache), dark-auburn curls out the back
-    const ftex = loader.load("/assets/utah_face.jpg?v=123");
+    const ftex = loader.load("/assets/utah_face.jpg?v=124");
     ftex.colorSpace = THREE.SRGBColorSpace;
     const face = new THREE.Mesh(
       new THREE.CircleGeometry(0.135, 24),
@@ -5654,6 +5661,7 @@ function rebuildDayItems() {
 const CREW = {
   gf: { hat: 0xffffff, shirt: 0x00338d, vest: 0xc6e03c, jeans: 0x1a2744, decal: 0xc60c30 },
   joe: { hat: 0xf4f1ea, shirt: 0x3a2418, vest: 0xc6e03c, jeans: 0x5c5346, decal: 0xc62828 },
+  gibbs: { hat: 0xf4f1ea, shirt: 0x2e4a8a, vest: 0xc6e03c, jeans: 0x3b5678, decal: 0x24262a },
   chris: { hat: 0xffffff, shirt: 0x1b2a4a, vest: 0xc6e03c, jeans: 0x2e2a26, decal: 0xc60c30 },
   foreman: { hat: 0xf4f1ea, shirt: 0xc8b088, vest: 0xd6e33c, jeans: 0x2e2a26, decal: 0xff6a1a },
   ahj: { hat: 0xffffff, shirt: 0xd8e2ea, vest: 0xff8a3a, jeans: 0x4a4a52, decal: 0x1565c0 },
@@ -7848,6 +7856,8 @@ const JOE_YELL = [
   "Rivera. That's the name on the slip if this corner ain't done by lunch. So quit dicking around.",
   "You two talking or working? 'Cause I only hear one of those, and it ain't the work.",
   "Measure twice. I already measured once and you're short, genius.",
+  "GET TO FUCKING WORKKK.",
+  "Me and Gibbs? Batman and Robin. I'm Batman. Obviously.",
   "Don't look at the traveler. Look at the fucking work.",
   "Derek — stop staring at the traveler and put your hands on the pipe.",
   "Both of you — close that gap or you're both on the next truck home.",
@@ -7883,6 +7893,23 @@ function buildJoe() {
   derekTag.position.y = 2.25;
   derek.add(derekTag);
   state.joe = { mesh: w, guys, tag, derek, inRange: false, i: 0, nextYell: 0, introduced: false };
+
+  // Mike Gibbs — Joe's Robin, orbiting the corner asking after his neck
+  const gibbs = placeWorker("gibbs", CB.hallEX + 1.6, 59.5, 0.4, {
+    path: [
+      [CB.hallEX + 1.6, 59.5],
+      [CB.hallEX - 1.6, 60.5],
+      [CB.hallEX - 1.2, 64.0],
+      [CB.hallEX + 1.6, 63.0],
+    ],
+    speed: 1.05,
+    skin: 2,
+    hair: 1,
+  });
+  const gTag = makeNameTag("MIKE GIBBS", "BATMAN & ROBIN");
+  gTag.scale.set(2.6, 0.58, 1);
+  gTag.position.y = 2.42;
+  gibbs.add(gTag);
 }
 
 function barkJoe() {
@@ -8646,13 +8673,13 @@ function buildRacks() {
   const nPer = 9;
   const pitch = 0.68;
 
-  const rackTex = loader.load("/assets/tex_rack.jpg?v=123");
+  const rackTex = loader.load("/assets/tex_rack.jpg?v=124");
   rackTex.colorSpace = THREE.SRGBColorSpace;
-  const crahTex = loader.load("/assets/tex_crah.jpg?v=123");
+  const crahTex = loader.load("/assets/tex_crah.jpg?v=124");
   crahTex.colorSpace = THREE.SRGBColorSpace;
   // sealed concrete slab — this site has NO raised floor; power and data
   // run in the overhead tray (see assets/ref_mech.jpg / ref_elec.jpg)
-  const floorTex = loader.load("/assets/tex_concrete.jpg?v=123");
+  const floorTex = loader.load("/assets/tex_concrete.jpg?v=124");
   floorTex.colorSpace = THREE.SRGBColorSpace;
   floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
   floorTex.repeat.set(8, 12);
@@ -11234,7 +11261,7 @@ function updateCrew(dt, t) {
       ud.legR.rotation.x = Math.sin(w) * 0.65;
       const dxp = player.position.x - c.mesh.position.x;
       const dzp = player.position.z - c.mesh.position.z;
-      if (c.kit === "safety" || c.kit === "andy") {
+      if (c.kit === "safety" || c.kit === "andy" || c.kit === "gibbs") {
         // repeat-bark NPCs: keep talking while the player hangs around,
         // cycling their lines instead of the one-shot the generic crew gets
         if (Math.hypot(dxp, dzp) < 4.6 && t > 2) {

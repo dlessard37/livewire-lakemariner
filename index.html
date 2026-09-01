@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=123" />
+  <link rel="stylesheet" href="style.css?v=124" />
   <link rel="icon" href="assets/icon_192.png" />
   <link rel="apple-touch-icon" href="assets/icon_192.png" />
   <script type="importmap">
@@ -27,7 +27,7 @@
   <link rel="modulepreload" href="vendor/three.module.min.js" />
   <link rel="modulepreload" href="vendor/BufferGeometryUtils.js" />
   <link rel="modulepreload" href="props.js" />
-  <link rel="modulepreload" href="game.js?v=123" />
+  <link rel="modulepreload" href="game.js?v=124" />
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
@@ -408,7 +408,7 @@
     </div>
   </div>
 
-  <script type="module" src="game.js?v=123"></script>
+  <script type="module" src="game.js?v=124"></script>
   <script>
     (function () {
       const $ = (id) => document.getElementById(id);
@@ -569,7 +569,7 @@
           navigator.serviceWorker.getRegistrations().then((regs) => {
             regs.forEach((r) => r.update());
           }).catch(() => {});
-          navigator.serviceWorker.register("sw.js?v=123").then((reg) => reg.update()).catch(() => {});
+          navigator.serviceWorker.register("sw.js?v=124").then((reg) => reg.update()).catch(() => {});
           navigator.serviceWorker.addEventListener("controllerchange", () => {
             if (sessionStorage.getItem("lw_sw79")) return;
             sessionStorage.setItem("lw_sw79", "1");
