@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": ".",
+    "public": "rebuild",
     "ignore": [
       "firebase.json",
       ".firebaserc",

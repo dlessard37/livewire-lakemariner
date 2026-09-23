@@ -67,3 +67,24 @@ their URLs and used as assets if appropriate.
    Notes are player-facing: short, in the game's voice, and say where to find the
    new thing. Every non-`new` status MUST have a note.
 4. Summarize the run for the owner: tickets shipped/passed/held, version deployed.
+
+## 5. IMPORTANT — production layout since 2026-09-23 (rebuild era)
+
+The live site is NOT `main`. In Sept 2026 a modular rebuild ("rebuild-04/05",
+`modules/*.mjs`, GLTF characters, PBR materials) was deployed outside this repo;
+`main` is the old v126 single-file build and must never be deployed again as-is.
+
+- **Source of truth for the live site: branch `live-rebuild`** (full site at the
+  branch root, including all assets). Work tickets against THIS code.
+- **Deploy dir: `rebuild/` at the repo root** (untracked on main; firebase.json's
+  `"public": "rebuild"` points at it). If it's missing, restore it from the
+  branch: `git --work-tree=rebuild checkout live-rebuild -- .` after `mkdir rebuild`.
+- Flow per ticket: edit files under `rebuild/`, `node --check` them, bump
+  `?v=rebuild-NN` in index.html + `CACHE_VERSION` in sw.js + `BUILD_VERSION` in
+  modules/config.js (keep all three in step), deploy, verify live, then commit
+  the same content to `live-rebuild` (use a temp GIT_INDEX_FILE +
+  `git --work-tree=rebuild add -A . && git write-tree && git commit-tree -p live-rebuild`
+  + `git update-ref`) and push.
+- Headless QA: serve `rebuild/` locally and drive it with Playwright
+  (`/opt/pw-browsers/chromium`, `--use-gl=swiftshader --enable-unsafe-swiftshader
+  --ignore-certificate-errors`); `window.LW` exposes state/dayLights/nightRig.
