@@ -1185,7 +1185,7 @@ const canvas = $("c");
 /* ------------------------------------------------------------------ */
 /*  SETTINGS / PERSISTENCE                                             */
 /* ------------------------------------------------------------------ */
-const settings = { sfx: true, voice: true, sens: 1, swap: false, mp: true };
+const settings = { sfx: true, voice: true, sens: 1, swap: false, mp: true, night: false };
 try {
   Object.assign(settings, JSON.parse(localStorage.getItem("lw_settings") || "{}"));
 } catch (_) {}
@@ -5367,6 +5367,13 @@ function setCeilEmissive(k) {
   if (nightRig?.bayMat) nightRig.bayMat.emissiveIntensity = 1.55 * k;
 }
 
+// Day 4 is nights by the schedule; the NIGHT SHIFT setting puts any other day
+// on nights too — same dark yard, but the building stays on utility power
+// (no diesel babysitting outside day 4).
+function isNightShift() {
+  return cycleDay(day) === 4 || !!settings.night;
+}
+
 function setNight(on) {
   if (!dayLights) return;
   if(!on)blackout?.restore();
@@ -5406,8 +5413,9 @@ function setNight(on) {
 }
 
 function applyNightPower(t) {
-  if (cycleDay(day) !== 4 || !dayLights) return;
-  const transferred = !!dayState.genTransferred;
+  if (!isNightShift() || !dayLights) return;
+  const utility = cycleDay(day) !== 4; // settings night: utility never dropped
+  const transferred = utility || !!dayState.genTransferred;
   const fed = transferred || dayState.genT > 0;
   const dead = !fed;
   if(!dead)blackout?.restore();
@@ -11449,7 +11457,7 @@ function tryInteract() {
     it.done = true;
     it.mesh.visible = false;
     state.hasTools = true;
-    if (cycleDay(day) === 4) applyNightPower();
+    if (isNightShift()) applyNightPower();
     completeTick("tools", "POUCH ON", 120);
     if (cycleDay(day) === 1) radio(radioPack().tools[0]);
     else if (cycleDay(day) === 4) {
@@ -13877,7 +13885,7 @@ const HEAT_FOG = new THREE.Color(0x8a4a28);
 function updateSiteLook() {
   if (!dayLights || !player) return;
   if (isUtahHome()) return;
-  if (cycleDay(day) === 4 && (state.mode === "play" || state.mode === "end")) {
+  if (isNightShift() && (state.mode === "play" || state.mode === "end")) {
     applyNightPower(clock.elapsedTime);
     if (dayLights.heatKey) dayLights.heatKey.intensity = 0;
     return;
@@ -14152,7 +14160,7 @@ function loop() {
     updateCamera(dt);
     updateSunShadow();
     updateSiteLook();
-    environment?.update({ position: player.position, night: cycleDay(day) === 4,
+    environment?.update({ position: player.position, night: isNightShift(),
       inside: player.position.z > CB.z0 && player.position.z < CB.z1 && player.position.x > CB.west && player.position.x < CB.east });
     renderLook(t);
   }
@@ -14422,7 +14430,7 @@ function softReset() {
     s.tip.visible = s.live;
     s.light.visible = s.live;
   }
-  setNight(cycleDay(day) === 4);
+  setNight(isNightShift());
   ui.hint = undefined;
   $("compass").classList.toggle("hidden", isUtahHome());
   if (cycleDay(day) !== 6 && cycleDay(day) !== 7) $("punch-hint").classList.add("hidden");
@@ -14568,6 +14576,7 @@ function bindToggle(id, key) {
     if (key === "voice" && !settings.voice) stopVoice();
     if (key === "mp" && !settings.mp) clearGhosts();
     if (key === "mp" && settings.mp) pullPresence();
+    if (key === "night" && state.mode !== "title") setNight(isNightShift());
     saveSettings();
     paint();
   });
@@ -14577,6 +14586,7 @@ try {
   bindToggle("set-voice", "voice");
   bindToggle("set-swap", "swap");
   bindToggle("set-mp", "mp");
+  bindToggle("set-night", "night");
 } catch (err) {
   console.warn("[LW] settings bind", err);
 }
@@ -16196,7 +16206,7 @@ window.LW = {
       updateCamera(dt);
       updateSunShadow();
       updateSiteLook();
-      environment?.update({ position: player.position, night: cycleDay(day) === 4,
+      environment?.update({ position: player.position, night: isNightShift(),
         inside: player.position.z > CB.z0 && player.position.z < CB.z1 && player.position.x > CB.west && player.position.x < CB.east });
     }
   },

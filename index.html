@@ -15,9 +15,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=rebuild-04" />
-  <link rel="stylesheet" href="rebuild.css?v=rebuild-04" />
-  <link rel="stylesheet" href="mobile.css?v=rebuild-04" />
+  <link rel="stylesheet" href="style.css?v=rebuild-05" />
+  <link rel="stylesheet" href="rebuild.css?v=rebuild-05" />
+  <link rel="stylesheet" href="mobile.css?v=rebuild-05" />
   <link rel="icon" href="assets/icon_192.png" />
   <link rel="apple-touch-icon" href="assets/icon_192.png" />
   <script type="importmap">
@@ -31,7 +31,7 @@
   <link rel="modulepreload" href="vendor/three.module.min.js" />
   <link rel="modulepreload" href="vendor/BufferGeometryUtils.js" />
   <link rel="modulepreload" href="props.js" />
-  <link rel="modulepreload" href="game.js?v=rebuild-04" />
+  <link rel="modulepreload" href="game.js?v=rebuild-05" />
 </head>
 <body class="gate">
   <canvas id="c"></canvas>
@@ -264,6 +264,11 @@
           <div class="set-ctl"><button id="set-mp" type="button" class="set-btn on">ON</button></div>
         </div>
         <p class="chat-sub" style="margin:4px 0 0">Ghosts of other hands on site. CH. 7 group chat stays open either way.</p>
+        <div class="set-row">
+          <span>NIGHT SHIFT</span>
+          <div class="set-ctl"><button id="set-night" type="button" class="set-btn">OFF</button></div>
+        </div>
+        <p class="chat-sub" style="margin:4px 0 0">Run any day on nights. Dark yard, halls on utility. Day 4 stays on the diesel regardless.</p>
       </div>
       <div class="pause-btns">
         <button id="btn-resume" type="button">BACK ON THE HALL</button>
@@ -437,7 +442,7 @@
     </div>
   </div>
 
-  <script type="module" src="game.js?v=rebuild-04"></script>
+  <script type="module" src="game.js?v=rebuild-05"></script>
   <script>
     (function () {
       const $ = (id) => document.getElementById(id);

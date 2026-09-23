@@ -1,5 +1,5 @@
 // Release preparation changes this version for each published build.
-const CACHE_VERSION = 'livewire-rebuild-20260909-02';
+const CACHE_VERSION = 'livewire-rebuild-20260923-01';
 const SHELL = ['./','index.html','manifest.json','style.css','rebuild.css','mobile.css','modules/config.js','modules/app-updates.js'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_VERSION).then(cache =>
