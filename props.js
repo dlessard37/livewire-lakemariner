@@ -10,8 +10,13 @@
           CB, podBand, makeLabel }
    ================================================================== */
 
+import * as BufferGeometryUtils from './vendor/BufferGeometryUtils.js';
+import { createPowerRouting, powerServicePosition } from './modules/power-routing.mjs';
+
 export function buildExtraDressing(ctx) {
   const { THREE, scene, mats, mat, boxMesh, placeBox, addCollider, CB, podBand, makeLabel, getTraveler } = ctx;
+
+  const powerRouting = createPowerRouting({ THREE, BufferGeometryUtils, materials: mats });
 
   /* deterministic jitter — the layout must not drift between loads,
      saves re-resolve against the same world */
@@ -169,37 +174,23 @@ export function buildExtraDressing(ctx) {
     addCollider(x, z, 1.35, 1.15, 0, 1.0);
   }
 
-  /* feeder-bundle drop — coil on the floor, risers sweeping up the wall
-     toward the tray. leanSign tips the tops toward the wall. */
-  const fdMats = [fdYellow, cordOrange, fdGray];
+  // Supported side-of-gear feeder preparation. The old decorative floor torus
+  // and random upright sticks were centered on the aisle and never met a tray.
   function feederDrop(x, z, k, leanSign) {
-    if (k % 2 === 0) {
-      const coil = new THREE.Mesh(new THREE.TorusGeometry(0.48, 0.11, 6, 12), fdMats[k % 3]);
-      coil.rotation.x = -Math.PI / 2;
-      coil.position.set(x, 0.12, z);
-      scene.add(coil);
-    } else {
-      const coil = cyl(0.52, 0.55, 0.13, 12, fdMats[k % 3]);
-      coil.position.set(x, 0.07, z);
-      scene.add(coil);
-    }
-    const n = 5 + (k % 3);
-    for (let i = 0; i < n; i++) {
-      const h = 3 + rnd() * 2;
-      const r = 0.03 + rnd() * 0.02;
-      const c = cyl(r, r, h, 5, fdMats[(k + i) % 3]);
-      c.position.set(x + jit(0.28), h / 2, z + jit(0.4));
-      c.rotation.z = leanSign * (0.04 + rnd() * 0.05);
-      c.rotation.x = jit(0.05);
-      scene.add(c);
-    }
+    // Preserve the existing deterministic jitter sequence for unrelated scenery.
+    for (let i = 0; i < (5 + k % 3) * 6; i++) rnd();
+    const service = powerServicePosition(CB, leanSign > 0 ? 'west' : 'east', z);
+    const route = powerRouting.workDrop();
+    route.position.set(service.x, 0, z);
+    route.rotation.y = service.yaw;
+    scene.add(route);
   }
 
   /* overhead cable tray segment along z, hung on rods off the deck */
-  function traySegment(x, zMid, len, y = 6.5) {
-    placeBox(x, y, zMid, 0.5, 0.1, len, mats.beam, false);
+  function traySegment(x, zMid, len) {
+    placeBox(x, 6.5, zMid, 0.5, 0.1, len, mats.beam, false);
     for (const dz of [-len * 0.4, len * 0.4]) {
-      placeBox(x, y + 0.1, zMid + dz, 0.05, 1.45, 0.05, mats.beam, false);
+      placeBox(x, 6.6, zMid + dz, 0.05, 1.45, 0.05, mats.beam, false);
     }
   }
 
@@ -241,23 +232,15 @@ export function buildExtraDressing(ctx) {
     addCollider(x, z, 0.7, 1.1, 0, 1.2);
   }
 
-  /* temp-power post — wood 4x4, gray boxes, orange cord drooping off */
+  // Temporary distribution is strapped to a stand beside the gear, with its
+  // supply cord continuously routed up into the supported overhead run.
   function tempPost(x, z, faceSign) {
-    const post = boxMesh(0.12, 2.2, 0.12, mats.wood);
-    post.position.set(x, 1.1, z);
+    const service = powerServicePosition(CB, faceSign > 0 ? 'west' : 'east', z);
+    const post = powerRouting.temporaryPower();
+    post.position.set(service.x, 0, z + 1.2);
+    post.rotation.y = service.yaw;
     scene.add(post);
-    for (let i = 0; i < 3; i++) {
-      const b = boxMesh(0.18, 0.28, 0.14, fdGray);
-      b.position.set(x + faceSign * 0.13, 1.0 + i * 0.38, z);
-      scene.add(b);
-    }
-    for (let i = 0; i < 4; i++) {
-      const seg = boxMesh(0.05, 0.05, 0.55, cordOrange);
-      seg.position.set(x + faceSign * 0.1, 1.95 - i * 0.44, z + 0.3 + i * 0.42);
-      seg.rotation.x = 0.6;
-      scene.add(seg);
-    }
-    addCollider(x, z, 0.3, 0.3, 0, 2.2);
+    addCollider(service.x, z + 1.2, .48, .6, 0, 2.2);
   }
 
   /* red DANGER tape between two posts */
@@ -420,30 +403,21 @@ export function buildExtraDressing(ctx) {
   scene.add(gbSign);
 
   /* ================================================================
-     2. ELECTRICAL CORRIDORS — feeder drops against the walls + tray
-        overhead. West wall clusters lean +x→wall(-x)?  west leans
-        toward x=-24 (positive rotation.z tips tops toward -x).
+     2. ELECTRICAL CORRIDORS — supported risers beside gear and tray
+        overhead. Hall centers remain free of decorative feeder bundles.
      ================================================================ */
   let ki = 0;
   for (let i = 0; i < CB.pods; i++) {
     const { mid } = podBand(i);
-    // west corridor, against the x=-24 wall — clear of panels (mid-6,
-    // mid-1, mid+4), the FA box spot (mid-3) and the FACP (pod 1 mid)
+    // The helper resolves the actual power-hall wall/gear face from CB.
+    // These are scenery; work task targets and required counts are unchanged.
     feederDrop(CB.elecWX, mid - 6, ki++, 1);
     feederDrop(CB.elecEX, mid + 6, ki++, -1);
 
     traySegment(CB.corX, mid, 20);
-    // no raised floor on this site — the data hall's cable runs live in
-    // tiers of overhead tray, like the reference photos: a run over each
-    // rack row plus the open bays either side
-    traySegment(CB.corX - 2.28, mid, 18, 6.9);
-    traySegment(CB.corX + 2.28, mid, 18, 6.9);
-    traySegment(CB.corX - 8, mid, 16, 6.7);
-    traySegment(CB.corX + 8, mid, 16, 6.7);
     traySegment(CB.westHallX, mid, 22);
     traySegment(CB.eastHallX, mid, 22);
-    traySegment(CB.elecWX, mid, 14);
-    traySegment(CB.elecEX, mid, 14);
+    // Power halls already have the continuous ladder tray from buildJobsiteOverhead.
   }
 
   /* ================================================================
@@ -460,7 +434,7 @@ export function buildExtraDressing(ctx) {
   }
 
   const tpSign = makeLabel("TEMP POWER", "#ffb03a");
-  tpSign.position.set(CB.elecWX, 2.45, podBand(0).mid - 6);
+  tpSign.position.set(CB.elecW0 + 1.35, 2.45, podBand(0).mid - 4.8);
   tpSign.rotation.y = Math.PI / 2;
   scene.add(tpSign);
 
@@ -505,22 +479,22 @@ export function buildExtraDressing(ctx) {
   /* ================================================================
      5. CB-5 LAYDOWN — Ferguson's iron, east of CB-4's mechanical wing.
      ================================================================ */
-  ibeamStack(CB.c5x0 + 12, 33, true, 8);
-  ibeamStack(CB.c5x0 + 12, 44, true, 8);
-  ibeamStack(CB.c5x0 + 26, 38.5, false, 7);
+  ibeamStack(CB.laydownX + 12, 33, true, 8);
+  ibeamStack(CB.laydownX + 12, 44, true, 8);
+  ibeamStack(CB.laydownX + 26, 38.5, false, 7);
 
-  deckingBundle(CB.c5x0 + 19.5, 30.5);
-  deckingBundle(CB.c5x0 + 20.5, 46);
-  deckingBundle(CB.c5x0 + 35, 41);
+  deckingBundle(CB.laydownX + 19.5, 30.5);
+  deckingBundle(CB.laydownX + 20.5, 46);
+  deckingBundle(CB.laydownX + 35, 41);
 
-  tapeSquare(CB.c5x0 + 16, 38.5, 3.4, 2.6);
-  palletLoad(CB.c5x0 + 16, 38.5, 0.2, "boxes"); // the hot pallet the tape guards
+  tapeSquare(CB.laydownX + 16, 38.5, 3.4, 2.6);
+  palletLoad(CB.laydownX + 16, 38.5, 0.2, "boxes"); // the hot pallet the tape guards
 
   const post = boxMesh(0.1, 2.4, 0.1, mats.beam);
-  post.position.set(CB.c5x0 + 16, 1.2, 34.6);
+  post.position.set(CB.laydownX + 16, 1.2, 34.6);
   scene.add(post);
   const ldSign = makeLabel("LAYDOWN — FERGUSON", "#ffb03a");
-  ldSign.position.set(CB.c5x0 + 16, 2.5, 34.75);
+  ldSign.position.set(CB.laydownX + 16, 2.5, 34.75);
   ldSign.rotation.y = Math.PI;
   scene.add(ldSign);
 

@@ -1,8 +1,58 @@
 // @ts-nocheck
 import * as THREE from "./vendor/three.module.min.js";
+import { createRenderBudget, readTouchMode, choosePostProcessing, observeMobileLayout } from './modules/mobile-runtime.mjs';
+const renderBudget = createRenderBudget({ touch: readTouchMode(window) });
+const mobileLifecycle = { suspended: false, contextLost: false, restoring: false };
 import * as BufferGeometryUtils from "./vendor/BufferGeometryUtils.js";
 import { buildExtraDressing } from "./props.js";
+import { PREVIEW_MODE, BUILD_VERSION, QUALITY } from "./modules/config.js";
+import { SCORE_VERSION, SIDE_POINT_CAP, points, finiteNumber, outcomeLabel, legacyOutcomeLabel,
+  canCompleteTask, settleRun, awardSidePoints, normalizeScoreRecord, newestPresenceRows,
+  PRESENCE_ACTIVE_MODES, stepRemotePose, populateRoster, disposeNameTag, sameShiftRow,
+  mergeDayScores, mergePreviewRun } from './modules/gameplay-runtime.mjs';
+import { createDialogueDirector } from './modules/dialogue-director.mjs';
+import { createPreviewFeedback } from './modules/preview-feedback.mjs';
+const previewFeedback = createPreviewFeedback();
+const PREVIEW_WORK_BOARD = 'lw_preview_work_board_v2';
+import { WORK_DOC_PREFIX, workScoreDocumentId, postLiveScore, liveBoardQuery, scoreSaveMessage } from './modules/live-scoring.mjs';
 
+import { createJobsitePhysics } from "./modules/jobsite-physics.mjs";
+import { createTelehandlerLod, createBoomLiftLod, telehandlerBodyContact } from './modules/yard-equipment.mjs';
+import { createTelehandlerPhysics } from './modules/yard-physics.mjs';
+import { upgradeEnvironment, projectWorldUVs } from "./modules/environment.js";
+
+import { createPhysicalProps } from "./modules/physical-props.mjs";
+import { loadUtahCharacter, loadCrewCharacters, makeUtahCharacter, makeCrewCharacter, disposeCharacter } from "./modules/characters.js";
+import { RoundedBoxGeometry } from "./vendor/addons/geometries/RoundedBoxGeometry.js";
+import { createIndustrialAssetFactory } from './modules/industrial-assets.mjs';
+import { createPowerRouting, powerServicePosition } from './modules/power-routing.mjs';
+let powerRouting = null;
+import { createScissorLiftLod, createUtvLod } from './modules/equipment-models.mjs';
+import { createParkedVehicleFleet } from './modules/parked-vehicles.mjs';
+const parkedVehiclePlacements = [];
+let parkedVehicles = null;
+import { createCabinetInstances } from './modules/cabinet-instances.js';
+import { createStaticSceneBatches } from './modules/static-scene-batches.mjs';
+let staticBatchController = null;
+const industrial = createIndustrialAssetFactory({ THREE, quality: 'balanced' });
+const cabinetPlacements = [];
+let cabinetInstances = null;
+import { createLandscape } from './modules/landscape.js';
+const treePlacements = [];
+let landscape = null;
+import { createCrewVisibility } from './modules/crew-visibility.js';
+const crewVisibility = createCrewVisibility(THREE);
+import { createBlackout } from './modules/blackout.js';
+import { loadMooseAssets, makeMoose as makeDetailedMoose } from './modules/moose.js';
+import { resolveWallMount, auditWallMount } from './modules/device-mounts.mjs';
+const wallSurfaces=[], deviceMounts=[];
+let blackout = null;
+let physicalProps = null;
+let physics = null;
+let patrolVehiclePhysics = null;
+let environment = null;
+const rebuildStatus = { version: BUILD_VERSION, physics: 'waiting', materials: 'waiting', character: 'waiting' };
+let frameSample = { start: performance.now(), frames: 0 };
 const PLAYER_R = 0.42;
 const INTERACT = 2.9;
 
@@ -34,7 +84,7 @@ function dayInfo(d) {
 }
 function jobsForDay(d) {
   const list = dayInfo(d).jobs;
-  return isTremont() ? list.filter((j) => !j.utahOnly) : list.slice();
+  return isTremont() ? list.filter((j) => !j.utahOnly) : list;
 }
 
 function setDay(d) {
@@ -49,7 +99,7 @@ function unlockedDays() {
     // Any finished day on this box unlocks the next one
     for (let d = 1; d <= LAST_DAY; d++) {
       for (const who of ["utah", "tremont"]) {
-        const b = loadBest(d, who);
+        const b = loadBest(d, who) || loadLegacyBest(d, who);
         if (b && (Number(b.watts) || 0) > 0) u = Math.max(u, Math.min(LAST_DAY, d + 1));
       }
     }
@@ -90,16 +140,23 @@ const COLORS = {
   skin: 0xc6865a,
   hair: 0x3a2a22,
   beard: 0x4a3428,
-  shirt: 0xc62828,
-  vest: 0xc6e03c,
-  stripe: 0xd8dce0,
+  shirt: 0xc45a32,
+  vest: 0xd4ea3c,
+  stripe: 0xe8ecf0,
   orange: 0xff6a1a,
-  jeans: 0x3b5678,
-  boot: 0x4a3424,
+  jeans: 0x3d5a82,
+  boot: 0x6b4a2e,
   steel: 0x6d7278,
   beam: 0x3a3d42,
 };
 
+const UTAH_HOME_JOBS = [
+  { id: "textlugo", name: "Text Lugo you're staying home", icon: "icon_tools.jpg", need: 1 },
+  { id: "countcash", name: "Count the cash", icon: "icon_box.jpg", need: 4 },
+  { id: "redass", name: "Ice the red ass", icon: "icon_tools.jpg", need: 1 },
+  { id: "ytd", name: "Check year goal", icon: "icon_facp.jpg", need: 1 },
+  { id: "ignorehall", name: "Ignore the hall", icon: "icon_strobe.jpg", need: 1 },
+];
 const DAY1_JOBS = [
   { id: "tools", name: "Grab pouch", icon: "icon_tools.jpg", need: 1 },
   { id: "conduit", name: "Run red conduit", icon: "icon_conduit.jpg", need: 6, fa: true },
@@ -298,8 +355,8 @@ function dayDisplayName(d) {
 
 const RADIO = {
   start: [
-    "Lugo on three. Utah, Book 2, O'Connell. 237's call. Fire alarm. Grab your pouch, y'all — I got your time.",
-    "CB-4 is four bays off a center corridor. Service wing west, data halls both sides. Red pipe first.",
+    "Lugo on three. Morning, Utah. O'Connell fire alarm, CB-4. Grab your pouch and meet me in the corridor.",
+    "CB-4. Data space in the middle, fan and power halls alongside it. Four pods to cover. Red pipe first.",
   ],
   tools: ["Pouch is on. Run red EMT through the hallways and electrical corridors. Don't mix it with power."],
   conduit: ["That's the last stick. Mount the FA boxes, then devices. All four pods, y'all."],
@@ -307,7 +364,7 @@ const RADIO = {
   smokes: ["Smokes are on the loop. Strobes and pulls at the doors, then the FACP in electrical one."],
   nac: ["NAC's loaded. VESDAs in the fan crawl next — land the aux off the print. Then FACP."],
   vesda: ["VESDAs are on the aux. Fault contacts stay hot in normal — don't kill 24V. FACP on the corridor, pod one."],
-  facp: ["Panel's green. All four halls are covered. That's a Book 2 fire alarm, brother."],
+  facp: ["Panel's green. All four pods are covered. Nice work, Utah. Let's get the checks done."],
   checks: ["Loop looks honest. Three pens: me on the hall, Drew in the yard, AHJ at the panel. Then we hit the big one."],
   signoffs: ["Cards are signed. FACP on the corridor, pod one. ENERGIZE, SILENCE, RESET."],
   magtest: ["Every smoke reads clean. That's a loop that'll pass paper."],
@@ -325,8 +382,8 @@ const RADIO = {
   wet: ["That's a puddle, not a spa."],
   shock: [
     "That's 277 looking for a path. Don't be the path.",
-    "Walk it off, y'all. Hair'll grow back.",
-    "If it sparks, it's working. If YOU spark, I fill out paperwork.",
+    "Utah, stop a minute. Let the crew know what happened and keep clear of that fault.",
+    "Something's wrong there. Keep people clear and get me over to it.",
   ],
   coffee: ["Wendel's finest. Tastes like a 345-kV splice and regret."],
   forklift: [
@@ -336,16 +393,16 @@ const RADIO = {
   ],
   idleAlways: [
     "Four bays off the corridor, Utah. Don't y'all get lost in the east hall.",
-    "We're Book 2 on a 237 call. Don't embarrass the travelers.",
-    "Ten hours, seven days. I got the book. Don't make me eat your time.",
-    "237's hall is Niagara. We're the ones filling it.",
+    "How are you fixed for couplings? Call it in before you're down to the last handful.",
+    "Check your hours before you leave. If something's missing, tell me today.",
+    "The Local 237 hands know this site. If you're turned around, ask one of them.",
     "Fan crawl's loud. That's the wall pushing air into the hall. VESDAs live in there.",
     "Rivera's lighting his boys up in the east hall. Walk wide, y'all.",
     "CB-5's all iron and mud. Stay out of Ferguson's laydown, y'all.",
     "Miner row's still humming. That's the old money paying for the new building.",
-    "See that stack up the shore? Old coal plant. This whole site ran on Somerset coal. Now it runs on megawatts.",
-    "Water's in the conex. Hydrate or die-drate, y'all.",
-    "Back in Texas we'd have this loop in by lunch. Y'all move like it's already snowing.",
+    "That old plant by the lake is Somerset. Quite a change of work out here.",
+    "Water's in the conex. Take a minute before you head back in.",
+    "You find a decent place to stay yet? Ask around before you book another week.",
     "UPS trailers and transformers are live-adjacent. Don't climb them for a photo, Utah.",
   ],
   facpNight: ["Utility's back, y'all. Halls stay lit. Kill the diesel on your way out."],
@@ -354,7 +411,7 @@ const RADIO = {
 
 const RADIO_LEMON = {
   start: [
-    "Lemon. Channel three. Tremont, you're on my book. Power, CB-4. Lighting and feeders. Pouch on. I got your time.",
+    "Lemon on three. Morning, Tremont. O'Connell power crew, CB-4. Get your pouch. We're starting with the EMT.",
     "Four bays. Service west, corridor down the middle, halls both sides. EMT first. Stay tight.",
   ],
   tools: ["Pouch is on. Run the EMT. Lighting and homeruns. Clean bends."],
@@ -380,8 +437,8 @@ const RADIO_LEMON = {
   wet: ["That's a puddle. Walk around it. You're not here to swim."],
   shock: [
     "That's 480 looking for a path. Don't be the path.",
-    "Walk it off. Then get back on the circuit.",
-    "If YOU spark, I fill out paperwork. Don't make me fill out paperwork.",
+    "Stop, Tremont. Keep clear of that circuit and let somebody know you got hit.",
+    "Leave that fault alone. Keep the next person away from it. I'm coming over.",
   ],
   coffee: ["Black coffee. That's it. Leave the sugar sludge."],
   forklift: [
@@ -392,19 +449,19 @@ const RADIO_LEMON = {
   idleAlways: [
     "Four bays. Don't get lost in the east hall.",
     "Water's in the conex. Hydrate like you mean it.",
-    "Book 2 on a 237 call. Don't embarrass the hall.",
-    "Ten hours, seven days. I got the book. Don't make me eat your time.",
-    "Form over force. Same rule on the iron and in the gym.",
+    "Keep a material list. I can get you fittings; I can't guess what you're short.",
+    "Check your hours before you leave. If something's missing, tell me today.",
+    "Check the bend against the print before you make the next three.",
     "If you need a break, make it water and air. Then get back on the stick.",
     "CB-5 is iron and mud. Stay out of Ferguson's laydown.",
     "Fan crawl's loud. That's the wall pushing air. Work through it.",
     "Rivera's lighting his boys up in the east hall. Walk wide. That's not our circus.",
-    "Stay productive. Stretching is for between circuits, not instead of them.",
+    "If the next area isn't ready, tell me. I'll find you work that is.",
     "Tremont's truck is the Ford in the south lot. Don't block it.",
-    "PowerBoost in the lot. Quiet on the gate, loud when I tow.",
+    "Make room for the next crew in the laydown. We all need to get through there.",
     "After the whistle I'm in the gym. Until then it's the circuit.",
     "Don't skip the work for a set. The set is the reward.",
-    "Water's in the conex. Not Squenchers. Water.",
+    "Long shift. Get some water before you head back into the data space.",
   ],
   facpNight: ["Utility's back. Halls stay lit. Shutdown the diesel when you walk out."],
 };
@@ -436,7 +493,7 @@ const WEEK2_START = {
   ],
   7: [
     "Turnover day. Week two energize. Same big one, new signatures.",
-    "The hall's watching CB-4 again. Checks, pens, then the green.",
+    "The turnover team is back at CB-4. Checks, signatures, then the panel.",
   ],
 };
 
@@ -534,30 +591,35 @@ const UTAH_LINE = {
   nac: "Device is landed.",
   vesda: "Vesda's on the aux.",
   facp: "Panel's green, Lugo.",
+  countcash: "That's the year. Why would I go in.",
+  redass: "Red ass. Ice it. Stay in bed.",
+  ytd: "One seventy-five was the number. We're past it.",
+  ignorehall: "Radio's going. I'm not.",
+  textlugo: "Hey Lugo. Staying home today. Don't wait on me.",
 };
 
 const TREMONT_LINE = {
-  tools: "Pouch on. Blood moving. Let's hang iron.",
-  conduit: "Stick's in. Form's solid.",
-  boxes: "Box is tight. Next set.",
-  smokes: "Lights are up. Don't skip the work either.",
-  nac: "Rec's landed. F-150's in the lot. Let's finish this.",
-  facp: "Gear's green, Lemon. Built different over here.",
+  tools: "Pouch is on. Let's get the first run in.",
+  conduit: "Stick's in. On to the next one.",
+  boxes: "Box is tight. What's next?",
+  smokes: "Lights are up. I'll check the next bay.",
+  nac: "Receptacle's landed. Moving on.",
+  facp: "Gear's green, Lemon. Ready for your check.",
 };
 
 const BARK = {
   foreman: [
     "Y'all good on material, Utah?",
     "Drew's asking. I'm stalling. Work faster.",
-    "I got your time. You get the work.",
+    "Need material or another set of hands? Tell me before you're stuck.",
   ],
   foremanLemon: [
     "Material good, Tremont? Don't wait on me.",
     "Drew's asking. I'm stalling. Finish the device.",
-    "I got the book. You get the work.",
+    "What's holding you up: material, access, or another trade?",
   ],
-  oconnell: ["Hey Utah.", "Book 2, O'Connell. Same stick.", "Watch your head on that tray."],
-  oconnellTremont: ["Hey Tremont.", "Book 2. Same stick.", "Watch your head on that tray."],
+  oconnell: ["Hey Utah.", "You're with O'Connell too? Grab the other end of this.", "Watch your head on that tray."],
+  oconnellTremont: ["Hey Tremont.", "You on Lemon's crew? We've got room on this cart.", "Watch your head on that tray."],
   ferguson: ["Ferguson, east electrical.", "You boys with O'Connell?", "We're landing gear. Stay in your lane."],
   pipe: ["Pipefitters, coming through.", "Hot work. Keep walking."],
   labor: ["Coming through.", "Yard's a mess today."],
@@ -568,6 +630,8 @@ const BARK = {
     "Who took the last wiener.",
     "I said wieners AND beer. Not just beer.",
     "Nate's got the cooler. Wieners first, then the beer.",
+    "I'm walking the yard. Cooler's still full.",
+    "You want a wiener, you come find Nate.",
     "Wieners AND beer. Both.",
   ],
   kenny: [
@@ -593,13 +657,8 @@ const BARK = {
     "Hot aisle. Don't camp in it.",
     "I'm Red Beard. That's the whole introduction.",
     "Row's tight. Squeeze through.",
-  ],
-  gibbs: [
-    "Where's my neck?",
-    "You seen my neck? Had it this morning.",
-    "WHERE. IS. MY. NECK.",
-    "Joe's Batman. Somebody's gotta be Robin.",
-    "Check the gang box. Maybe my neck's in there.",
+    "What are you guys doing.",
+    "Have you seen my guys?",
   ],
   andy: [
     "Sick and needy fund. You in?",
@@ -608,14 +667,34 @@ const BARK = {
     "Pass the hat. Somebody's out hurt.",
     "Local takes care of its own. Sick and needy fund.",
     "Folding money. Not IOUs.",
+    "Are you going to brotherhood night?",
+    "Buy a tip board and win for the sick and needy fund.",
+    "Want to buy a coin.",
+    "Come to brotherhood night.",
+  ],
+  david: [
+    "That's a moose. I'm David. Don't make it a thing.",
+    "He doesn't like the scissor.",
+    "Utah said put me on a moose. I put me on a moose.",
+    "Jobsite speed. Moose speed.",
+    "Watch the antlers in the doorway.",
+    "They covered a lot at orientation. The moose wasn't in it.",
   ],
   millwright: ["Millwrights. Hands off the pumps.", "That's our iron, sparkie."],
   insulator: ["Insulators wrapping. Give us room.", "CHW's hot. Don't lean on it."],
   cleaner: ["Data hall's wet. Watch your boots.", "We're wiping down. Go around."],
+  gibbs: [
+    "Where's my neck.",
+    "Has anyone seen my neck.",
+    "Joe. Where's my neck.",
+    "I'm Robin. He's Batman. I still don't have a neck.",
+    "Walking the hall. Still no neck.",
+    "If you find a neck, it's Gibbs's.",
+  ],
 };
 
 /* kit -> speakAs role. Default is crew. Set this when a new NPC gets their own baked voice. */
-const NPC_VOICE = { safety: "safety", redbeard: "redbeard", andy: "andy", nate: "nate", kenny: "kenny", gibbs: "gibbs" };
+const NPC_VOICE = { safety: "safety", redbeard: "redbeard", andy: "andy", david: "david", nate: "nate", kenny: "kenny", gibbs: "gibbs" };
 
 const CB = {
   pods: 4,
@@ -678,25 +757,37 @@ function crossList() {
   return list;
 }
 
-/** Hot hallway: ONLY the center cross corridor between Data Hall 2 and Data Hall 3. 110°+. */
-const HOT_CROSS = 2; // crossBand(2) = the corridor between pod index 1 (DH2) and pod index 2 (DH3)
+/** The only hot hallway: E-W cross between data hall 2 and 3 (pods 1 and 2). */
+function hotCross() {
+  return crossBand(2);
+}
+
+/** Center corridor between DH2 and DH3 — not the rack rooms, not other halls. */
 function inHotAisle(x, z) {
-  if (x < CB.data0 - 0.35 || x > CB.data1 + 0.35) return false;
-  const c = crossBand(HOT_CROSS);
-  return z >= c.z0 && z < c.z1;
+  const c = hotCross();
+  if (z < c.z0 || z >= c.z1) return false;
+  if (x < CB.data0 - 0.15 || x > CB.data1 + 0.15) return false;
+  return true;
+}
+function zInCross(z, pad = 0.5) {
+  for (const c of crossList()) {
+    if (z >= c.z0 - pad && z < c.z1 + pad) return true;
+  }
+  return false;
 }
 /** gaps in N-S walls where cross-halls punch through (full open, no door) */
 function crossGaps() {
   return crossList().map((c) => ({ z: c.mid, w: CB.cross - 0.3 }));
 }
 function zoneName(x, z) {
+  if (isUtahHome()) return state.done && state.done.ytd ? "BEDROOM · YEAR GOAL HIT" : "BEDROOM · STAY IN BED";
   if (x > 94 && x < 148 && z > -8 && z < 22) return "EAST PARKING";
   if (x > CB.c5x0) {
     if (z < 0) return "LOOP ROAD";
     return z > CB.z0 - 6 ? "CB-5 · IRON UP" : "CB-5 LAYDOWN";
   }
   if (x < -132 && z < 20) return "PARKING";
-  if (x < -168 && z > 42 && z < 174) return "LANDFILL · SXS"; // course runs to the big landing at z≈170
+  if (x < -168 && z > 42 && z < 138) return "LANDFILL · SXS";
   if (x < -148) {
     if (z > 130) return "COOLING PONDS";
     return "WEST FIELD";
@@ -708,7 +799,7 @@ function zoneName(x, z) {
     return "MINER ROW · LMD";
   }
   if (z < CB.z0 - 0.5) {
-    if (z < 16 && x > CB.west + 8 && x < 56) return "SOUTH PARKING"; // the lot pad spans to x≈56
+    if (z < 16 && x > CB.west + 8 && x < CB.east - 8) return "SOUTH PARKING";
     if (z < 18 && x < CB.west + 20) return "PARKING";
     return "YARD · GATE";
   }
@@ -724,11 +815,11 @@ function zoneName(x, z) {
   if (x >= CB.elecE1 && x < CB.east) return inCross ? `CROSS · POD ${p}` : "EAST HALLWAY";
   if (inCross) return `CROSS · POD ${p}`;
   if (x < CB.hallW0) return "MECHANICAL";
-  if (x < CB.fanW0) return `POD ${p} · ELECTRICAL`;
-  if (x < CB.data0) return `POD ${p} · FAN CRAWL`;
+  if (x < CB.fanW0) return "POWER HALL";
+  if (x < CB.data0) return "FAN HALL";
   if (x < CB.data1) return `POD ${p} · DATA`;
-  if (x < CB.fanE1) return `POD ${p} · FAN CRAWL`;
-  if (x < CB.elecE1) return `POD ${p} · ELECTRICAL`;
+  if (x < CB.fanE1) return "FAN HALL";
+  if (x < CB.elecE1) return "POWER HALL";
   return "EAST HALLWAY";
 }
 
@@ -938,7 +1029,11 @@ function sfx(name) {
 }
 
 /* jobsite boombox — west long hallway, first section. Hear it in that
-   hall; it dies before you leave the area. */
+   hall; it dies before you leave the area. Playlist, not one loop. */
+const RADIO_TRACKS = [
+  "/assets/red_ass_utah.mp3",
+  "/assets/gay_in_utah.mp3",
+];
 const SITE_RADIO = {
   x: CB.hallWX,
   z: 66, // pod 0 west hallway (zPod0..zPod0+podH)
@@ -946,39 +1041,44 @@ const SITE_RADIO = {
   outer: 17,
   max: 0.4,
   buf: null,
+  bufs: [],
+  i: 0,
   src: null,
   gain: null,
   loading: false,
 };
 
 function loadSiteRadio() {
-  if (SITE_RADIO.buf || SITE_RADIO.loading) return;
+  if (SITE_RADIO.bufs.length || SITE_RADIO.loading) return;
   SITE_RADIO.loading = true;
-  fetch("/assets/utah_is_gay.mp3")
-    .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(r.status)))
-    .then((ab) => {
-      ensureAudio();
-      return audio.ctx.decodeAudioData(ab.slice(0));
-    })
-    .then((buf) => {
-      SITE_RADIO.buf = buf;
-      if (state.mode === "play" || state.mode === "mag" || state.mode === "pull") startSiteRadio();
-    })
-    .catch(() => {
-      SITE_RADIO.loading = false;
-    });
+  ensureAudio();
+  Promise.all(
+    RADIO_TRACKS.map((url) =>
+      fetch(url)
+        .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(r.status)))
+        .then((ab) => audio.ctx.decodeAudioData(ab.slice(0)))
+        .catch(() => null)
+    )
+  ).then((bufs) => {
+    SITE_RADIO.bufs = bufs.filter(Boolean);
+    SITE_RADIO.buf = SITE_RADIO.bufs[0] || null;
+    SITE_RADIO.loading = false;
+    if (SITE_RADIO.bufs.length && (state.mode === "play" || state.mode === "mag" || state.mode === "pull")) startSiteRadio();
+  });
 }
 
 function startSiteRadio() {
   ensureAudio();
   if (SITE_RADIO.src) return;
-  if (!SITE_RADIO.buf) {
+  if (!SITE_RADIO.bufs.length) {
     loadSiteRadio();
     return;
   }
+  SITE_RADIO.i = SITE_RADIO.i % SITE_RADIO.bufs.length;
+  SITE_RADIO.buf = SITE_RADIO.bufs[SITE_RADIO.i];
   const src = audio.ctx.createBufferSource();
   src.buffer = SITE_RADIO.buf;
-  src.loop = true;
+  src.loop = false;
   const g = audio.ctx.createGain();
   g.gain.value = 0;
   src.connect(g);
@@ -987,7 +1087,17 @@ function startSiteRadio() {
   SITE_RADIO.src = src;
   SITE_RADIO.gain = g;
   src.onended = () => {
-    if (SITE_RADIO.src === src) SITE_RADIO.src = null;
+    if (SITE_RADIO.src !== src) return;
+    SITE_RADIO.src = null;
+    SITE_RADIO.i = (SITE_RADIO.i + 1) % SITE_RADIO.bufs.length;
+    try {
+      UTV_RADIO.src?.stop();
+    } catch (_) {}
+    UTV_RADIO.src = null;
+    if (state.mode === "play" || state.mode === "mag" || state.mode === "pull") {
+      startSiteRadio();
+      startUtvRadio();
+    }
   };
   startUtvRadio();
 }
@@ -999,7 +1109,7 @@ function startUtvRadio() {
   if (UTV_RADIO.src || !SITE_RADIO.buf || !audio.ctx) return;
   const src = audio.ctx.createBufferSource();
   src.buffer = SITE_RADIO.buf;
-  src.loop = true;
+  src.loop = false;
   const g = audio.ctx.createGain();
   g.gain.value = 0;
   src.connect(g);
@@ -1050,7 +1160,8 @@ function siteRadioLevel() {
 }
 
 function updateSiteRadio() {
-  const v = siteRadioLevel();
+  const duck=voice.src?.buffer?.duration?0.28:1;
+  const v = siteRadioLevel()*duck;
   if (SITE_RADIO.gain && audio.ctx) {
     SITE_RADIO.gain.gain.setTargetAtTime(v, audio.ctx.currentTime, 0.07);
   }
@@ -1059,7 +1170,7 @@ function updateSiteRadio() {
     led.material.color.setHex(v > 0.02 ? 0x3dff6a : 0x4a1a14);
   }
   if (!UTV_RADIO.src && SITE_RADIO.buf) startUtvRadio();
-  const uv = utvRadioLevel();
+  const uv = utvRadioLevel()*duck;
   if (UTV_RADIO.gain && audio.ctx) {
     UTV_RADIO.gain.gain.setTargetAtTime(uv, audio.ctx.currentTime, 0.07);
   }
@@ -1095,26 +1206,28 @@ function saveSettings() {
 
 /* one record slot per day AND traveler — Utah and Tremont don't share a PB */
 function bestKey(d, who) {
-  return "lw_best_d" + (d || day) + "_" + (who || getTraveler());
+  return (PREVIEW_MODE ? "lw_preview_work2_best_d" : "lw_work2_best_d") + (d || day) + "_" + (who || getTraveler());
 }
-function loadBest(d, who) {
+function loadLegacyBest(d, who) {
   who = who || getTraveler();
   try {
-    const per = JSON.parse(localStorage.getItem(bestKey(d, who)) || "null");
+    const per = JSON.parse(localStorage.getItem("lw_best_d" + (d || day) + "_" + who) || "null");
     if (per) return per;
-    // pre-split slots were Utah-only
     if (who === "utah") {
       const old = JSON.parse(localStorage.getItem("lw_best_d" + (d || day)) || "null");
       if (old) return old;
       if ((d || day) === 1) return JSON.parse(localStorage.getItem("lw_best") || "null");
     }
-    return null;
-  } catch (_) {
-    return null;
-  }
+  } catch (_) {}
+  return null;
+}
+function loadBest(d, who) {
+  try { return JSON.parse(localStorage.getItem(bestKey(d, who)) || "null"); }
+  catch (_) { return null; }
 }
 
 function saveBest(rec) {
+  if (state.scoreVersion !== SCORE_VERSION) return;
   try {
     localStorage.setItem(bestKey(day, getTraveler()), JSON.stringify({ ...rec, who: getTraveler() }));
   } catch (_) {}
@@ -1164,7 +1277,7 @@ function vib(pattern) {
 /*  THE GANG BOX — spend career PTS on drip                            */
 /* ------------------------------------------------------------------ */
 const STORE = [
-  { id: "shirt_red", slot: "shirt", name: "O'CONNELL RED TEE", price: 0 },
+  { id: "shirt_red", slot: "shirt", name: "RUST TEE · UTAH DEFAULT", price: 0 },
   { id: "shirt_pride", slot: "shirt", name: "PRIDE TEE · UTAH ONLY", price: 9000, utahOnly: true },
   { id: "shirt_black", slot: "shirt", name: "CRESCENT MOON BLACK", price: 7500 },
   { id: "shirt_blue", slot: "shirt", name: "LOCAL 237 BLUE", price: 7500 },
@@ -1228,6 +1341,9 @@ function getTraveler() {
 function isTremont() {
   return getTraveler() === "tremont";
 }
+function isUtahHome() {
+  return false;
+}
 function setTraveler(t) {
   try {
     localStorage.setItem("lw_traveler", t === "tremont" ? "tremont" : "utah");
@@ -1254,6 +1370,7 @@ function ownsItem(id) {
 
 /* analytics — no-op wherever gtag is absent (local dev, blockers, artifact) */
 function track(name, params) {
+  if (PREVIEW_MODE) return;
   try {
     window.gtag?.("event", name, params);
   } catch (_) {}
@@ -1265,8 +1382,8 @@ function track(name, params) {
 /* ------------------------------------------------------------------ */
 const FS_DOCS = "https://firestore.googleapis.com/v1/projects/livewire-lakemariner/databases/(default)/documents";
 const FS_KEY = "AIzaSyCXoDoOUxrhRgxUo9q1KMskl8khYCnyx-k";
-const BOARD_CACHE = "lw_board_v3";
-const BOARD_PENDING = "lw_board_pending";
+const BOARD_CACHE = "lw_board_work2_v1";
+const BOARD_PENDING = "lw_board_pending_work2";
 try { localStorage.removeItem("lw_board_v2"); } catch (_) {}
 const PLAYS_CACHE = "lw_plays_v1";
 /* last known good walk-on count — never paint 0 over a real cloud number */
@@ -1291,6 +1408,7 @@ function noteFsStatus(status) {
 }
 
 async function fsFetch(url, opt, force) {
+  if (PREVIEW_MODE) return new Response(JSON.stringify({ error: { message: 'Cloud features are unavailable in this review build.' } }), { status: 503, headers: { 'Content-Type': 'application/json' } });
   if (!force && fsCooling()) {
     const err = new Error("cool");
     err.status = 429;
@@ -1432,6 +1550,7 @@ function careerBest(rows) {
       level: Math.max(prev.level || prev.day || 0, level),
       local: keep.local || prev.local || r.local || "",
       rank: keep.rank || prev.rank || r.rank || "",
+      dayScores: mergeDayScores(prev.dayScores || {[prev.day]:prev}, r.dayScores || {[r.day]:r}),
       total: Math.max(ptsNum(keep.total), ptsNum(prev.total), ptsNum(keep.pts), ptsNum(prev.pts)),
     });
   }
@@ -1468,12 +1587,7 @@ function crewSlots(rows) {
 
 async function fsQuery(collectionId, limit) {
   async function run(order) {
-    const q = {
-      structuredQuery: {
-        from: [{ collectionId }],
-        limit,
-      },
-    };
+    const q = liveBoardQuery(collectionId, limit, FS_DOCS);
     if (order) q.structuredQuery.orderBy = [{ field: { fieldPath: "pts" }, direction: "DESCENDING" }];
     const r = await fsFetch(`${FS_DOCS}:runQuery?key=${FS_KEY}`, {
       method: "POST",
@@ -1488,6 +1602,7 @@ async function fsQuery(collectionId, limit) {
       if (!e.document || !e.document.fields) continue;
       if (collectionId === "hands") {
         const id = String(e.document.name || "").split("/").pop() || "";
+        if (!id.startsWith(WORK_DOC_PREFIX)) continue;
         const row = parseHandCareer(e.document.fields, id);
         if (row) out.push(row);
       } else {
@@ -1531,18 +1646,22 @@ function loadPending() {
 function savePending(rows) {
   try {
     localStorage.setItem(BOARD_PENDING, JSON.stringify(rows.slice(0, 40)));
-  } catch (_) {}
+    return true;
+  } catch (_) { return false; }
 }
 
 function queuePending(rec) {
   const rows = loadPending();
   rows.push(rec);
-  savePending(uniqueBest(rows, true));
+  return savePending(uniqueBest(rows, true));
 }
 
 function unqueuePending(rec) {
   const k = handKey(rec.name, rec.local, rec.who) + "|" + (rec.day || 1);
-  savePending(loadPending().filter((r) => handKey(r.name, r.local, r.who) + "|" + (r.day || 1) !== k));
+  savePending(loadPending().filter((r) => {
+    const same = handKey(r.name, r.local, r.who) + "|" + (r.day || 1) === k;
+    return !same || betterRun(r, rec); // a newer/better concurrent pending run must survive
+  }));
 }
 
 function localBestRows() {
@@ -1583,6 +1702,12 @@ function invalidateBoard() {
 }
 
 async function fetchBoard(force) {
+  if (PREVIEW_MODE) {
+    boardNote = 'Work scores saved on this device. Side activities go to the gang box.';
+    let rows = [];
+    try { rows = JSON.parse(localStorage.getItem(PREVIEW_WORK_BOARD) || '[]'); } catch (_) {}
+    return crewSlots(Array.isArray(rows) ? rows : []);
+  }
   boardNote = "";
   const fresh = !force && boardCloudOk && Date.now() - boardFetchedAt < BOARD_TTL_MS;
   let cloud = [];
@@ -1746,82 +1871,26 @@ function cloudNeedsWrite(fields, prevFields) {
 }
 
 async function postScore(rec) {
-  const started = !!rec.started;
-  rec = {
-    name: rec.name,
-    local: rec.local || "",
-    pts: ptsNum(rec.pts),
-    seconds: rec.seconds | 0,
-    rank: rec.rank || "",
-    day: rec.day || 1,
-    level: rec.level || rec.day || 1,
-    who: rec.who === "tremont" ? "tremont" : "utah",
-    started,
-  };
-  queuePending(rec);
-
-  const id = handId(rec.name, rec.local, rec.who);
-  const url = `${FS_DOCS}/hands/${encodeURIComponent(id)}?key=${FS_KEY}`;
-  const mask = (fields) =>
-    Object.keys(fields)
-      .map((k) => "updateMask.fieldPaths=" + encodeURIComponent(k))
-      .join("&");
-
-  for (let attempt = 0; attempt < 4; attempt++) {
+  const version = rec?.scoreVersion || 1;
+  rec = {...normalizeScoreRecord(rec, LAST_DAY), scoreVersion:version};
+  if (!rec.name) return {down:true,invalid:true};
+  if (version !== SCORE_VERSION) return {kept:true,legacy:true,local:true};
+  if (PREVIEW_MODE) {
     try {
-      const g = await fsFetch(url, undefined, true);
-      let prevFields = null;
-      if (g.ok) {
-        const doc = await g.json();
-        prevFields = doc.fields || null;
-      } else if (g.status === 404) {
-        prevFields = null;
-      } else {
-        await new Promise((ok) => setTimeout(ok, 280 * (attempt + 1)));
-        continue;
-      }
-      const fields = scoreFields(rec, prevFields);
-      if (!fields) {
-        unqueuePending(rec);
-        return { kept: true };
-      }
-      if (prevFields && !cloudNeedsWrite(fields, prevFields)) {
-        unqueuePending(rec);
-        return { kept: true };
-      }
-      // Never lower the overall high score in the payload itself
-      if (prevFields && fieldPts(fields.pts) < fieldPts(prevFields.pts)) {
-        fields.pts = prevFields.pts;
-        if (prevFields.seconds) fields.seconds = prevFields.seconds;
-      }
-      const r = await fsFetch(url + "&" + mask(fields), {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fields }),
-      }, true);
-      if (!r.ok) {
-        await new Promise((ok) => setTimeout(ok, 280 * (attempt + 1)));
-        continue;
-      }
-      const v = await fsFetch(url, undefined, true);
-      if (v.ok) {
-        const doc = await v.json();
-        const got = fieldPts(doc.fields && doc.fields.pts);
-        const gotBest = Number((doc.fields && doc.fields.bestDay && doc.fields.bestDay.integerValue) || 0);
-        const wantBest = Number((fields.bestDay && fields.bestDay.integerValue) || rec.level || rec.day || 0);
-        if (got >= fieldPts(fields.pts) && gotBest >= Math.min(wantBest, LAST_DAY)) {
-          unqueuePending(rec);
-          invalidateBoard();
-          return { kept: false, pts: got, level: gotBest };
-        }
-      }
-    } catch (_) {}
-    await new Promise((ok) => setTimeout(ok, 280 * (attempt + 1)));
+      const stored = JSON.parse(localStorage.getItem(PREVIEW_WORK_BOARD) || '[]');
+      const result = mergePreviewRun(Array.isArray(stored) ? stored : [], rec);
+      localStorage.setItem(PREVIEW_WORK_BOARD, JSON.stringify(result.rows));
+      return {kept:result.kept,legacy:result.legacy,local:true};
+    } catch (_) { return {down:true,local:true}; }
   }
-  return { kept: false, local: true, down: true };
+  const id = workScoreDocumentId(handId(rec.name, rec.local, rec.who));
+  const url = `${FS_DOCS}/hands/${encodeURIComponent(id)}?key=${FS_KEY}`;
+  return postLiveScore({ rec, url, fsFetch, scoreFields, cloudNeedsWrite,
+    queuePending, unqueuePending, invalidateBoard, lastDay: LAST_DAY });
 }
 
 async function flushPending() {
+  if (PREVIEW_MODE) return;
   if (flushing || fsCooling()) return;
   flushing = true;
   try {
@@ -1847,17 +1916,7 @@ function levelNum(r) {
 }
 
 function rankShort(rank) {
-  const r = String(rank || "").toUpperCase();
-  if (!r) return "—";
-  if (r.includes("TOP")) return "TOP HAND";
-  if (r.includes("LEAD")) return "LEADMAN";
-  if (r.includes("JOURNEY")) return "JOURNEYMAN";
-  if (r.includes("APPRENT")) return "APPRENTICE";
-  if (r.includes("RED")) return "RED TAG";
-  if (r.includes("SITE") || r.includes("WALK")) return "ON SITE";
-  if (r === "OT" || r.includes("LAYOFF")) return "OT";
-  if (r.includes("SLIP")) return "SLIP";
-  return r;
+  return legacyOutcomeLabel(rank);
 }
 
 /* Full career row: name, local, crew, highest level, best score, time, rank title */
@@ -2019,15 +2078,18 @@ const renderer = (() => {
     return new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "low-power" });
   }
 })();
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
-renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(renderBudget.pixelRatio(innerWidth, innerHeight, devicePixelRatio || 1));
+renderer.setSize(innerWidth, innerHeight, false);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
+renderer.toneMappingExposure = 1.12;
+renderer.shadowMap.enabled = !renderBudget.touch;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+let lookPass = null;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x8ea0ad);
-scene.fog = new THREE.Fog(0x8ea0ad, 70, 520);
+scene.background = new THREE.Color(0x8b9aaa);
+scene.fog = new THREE.Fog(0x8b9aaa, 48, 380);
 
 const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 560);
 const cam = { yaw: 0, pitch: -0.28, dist: 3.7 };
@@ -2049,16 +2111,23 @@ const keys = Object.create(null);
 const stick = { x: 0, y: 0, active: false };
 const look = { dragging: false, lx: 0, ly: 0, id: null };
 let holdSprint = false;
+let jumpHoldTimer = 0;
+let jumpPointer = null;
 
-let coarse = matchMedia("(pointer: coarse)").matches || innerWidth < 820;
-function isCoarse() {
-  return coarse;
-}
+let coarse = readTouchMode(window);
+document.documentElement.dataset.touch = String(coarse);
+function isCoarse() { return coarse; }
 function updateCoarse() {
-  coarse = matchMedia("(pointer: coarse)").matches || innerWidth < 820;
-  // keep the touch layer in lockstep so a desktop resize can't leave an
-  // invisible joystick eating left-half drags (or strand a phone without one)
-  if (state.mode !== "title") $("touch").classList.toggle("hidden", !coarse);
+  const changed = coarse !== readTouchMode(window);
+  coarse = readTouchMode(window);
+  renderBudget.setTouch(coarse);
+  document.documentElement.dataset.touch = String(coarse);
+  renderer.shadowMap.enabled = !coarse;
+  if (changed) {
+    resetTransientInput();
+    if (lookPass) { disposeLookPass(); installLookPass(); }
+  }
+  if (state.mode !== "title") $("touch").classList.toggle("hidden", !coarse && !(dayState.driving && !dayState.utv));
 }
 
 /* the walk zone (floating-stick spawn area); mirrored when thumbs are swapped */
@@ -2083,16 +2152,15 @@ function overlayOpen() {
 
 addEventListener("keydown", (e) => {
   if (typingInField(e.target) || overlayOpen()) return; // iPhone ADD TO THE GAME needs Space
-  if (e.repeat) return; // OS key-repeat must not spam interact/jump
   keys[e.code] = true;
-  if (state.mode === "play" && ["Space", "Tab"].includes(e.code)) e.preventDefault();
+  if (["Space", "Tab"].includes(e.code)) e.preventDefault();
   if (e.code === "KeyE" || e.code === "Enter") tryInteract();
   if (e.code === "Space") jump();
   if (e.code === "KeyT") openChat();
   if (e.code === "KeyV") sendWave();
 });
 addEventListener("keyup", (e) => {
-  // always clear — swallowing a keyup while an overlay has focus leaves the key stuck down
+  // Releasing a key while an overlay/field opens must still clear a held move.
   keys[e.code] = false;
 });
 
@@ -2100,9 +2168,13 @@ addEventListener("keyup", (e) => {
 function resetTransientInput() {
   for (const k in keys) keys[k] = false;
   holdSprint = false;
-  look.dragging = false;
+  clearTimeout(jumpHoldTimer); jumpHoldTimer = 0; jumpPointer = null;
+  stickCtl.reset();
+  look.dragging = false; look.id = null;
   dayState.liftUp = false;
   dayState.liftDn = false;
+  for (const id of ["btn-lift-up", "btn-lift-dn"]) $(id)?.dispatchEvent(new Event("lw-input-reset"));
+  pull.holding = false;
 }
 addEventListener("blur", resetTransientInput);
 
@@ -2117,7 +2189,12 @@ addEventListener("mousemove", (e) => {
   if (document.pointerLockElement === canvas) {
     cam.yaw -= e.movementX * 0.0032 * settings.sens;
     cam.pitch -= e.movementY * 0.0024 * settings.sens;
-    cam.pitch = THREE.MathUtils.clamp(cam.pitch, -0.7, 0.35);
+    if (isUtahHome()) {
+      cam.yaw = THREE.MathUtils.clamp(cam.yaw, -0.7, 1.95);
+      cam.pitch = THREE.MathUtils.clamp(cam.pitch, -0.95, 0.55);
+    } else {
+      cam.pitch = THREE.MathUtils.clamp(cam.pitch, -0.7, 0.35);
+    }
   }
 });
 
@@ -2128,6 +2205,7 @@ const stickCtl = (() => {
   const max = 38;
   const dead = 0.15;
   let pid = null;
+  let captureEl = null;
   let cx = 0;
   let cy = 0;
 
@@ -2145,6 +2223,7 @@ const stickCtl = (() => {
 
   function begin(e, capEl) {
     pid = e.pointerId;
+    captureEl = capEl;
     stick.active = true;
     root.classList.remove("idle");
     try {
@@ -2166,8 +2245,9 @@ const stickCtl = (() => {
     cx = e.clientX;
     cy = e.clientY;
     root.classList.add("floating");
-    root.style.left = cx - 60 + "px";
-    root.style.top = cy - 60 + "px";
+    const half = $("stick-base").getBoundingClientRect().width / 2;
+    root.style.left = cx - half + "px";
+    root.style.top = cy - half + "px";
     begin(e, canvas);
   }
 
@@ -2175,9 +2255,10 @@ const stickCtl = (() => {
     if (e.pointerId === pid) setFromEvent(e);
   }
 
-  function end(e) {
-    if (e.pointerId !== pid) return;
-    pid = null;
+  function reset() {
+    const prior = pid, owner = captureEl;
+    pid = null; captureEl = null;
+    try { if (prior !== null && owner?.hasPointerCapture?.(prior)) owner.releasePointerCapture(prior); } catch (_) {}
     stick.active = false;
     stick.x = 0;
     stick.y = 0;
@@ -2188,7 +2269,9 @@ const stickCtl = (() => {
     root.style.top = "";
   }
 
+  function end(e) { if (e.pointerId === pid) reset(); }
   root.addEventListener("pointerdown", (e) => {
+    if (state.mode !== "play") return;
     recoverAudio();
     startFixed(e);
     e.preventDefault();
@@ -2196,8 +2279,9 @@ const stickCtl = (() => {
   root.addEventListener("pointermove", move);
   root.addEventListener("pointerup", end);
   root.addEventListener("pointercancel", end);
+  root.addEventListener("lostpointercapture", end);
 
-  return { startFloating, move, end };
+  return { startFloating, move, end, reset };
 })();
 
 function bindLookSurface() {
@@ -2229,7 +2313,12 @@ function bindLookSurface() {
     look.ly = e.clientY;
     cam.yaw -= dx * 0.007 * settings.sens;
     cam.pitch -= dy * 0.005 * settings.sens;
-    cam.pitch = THREE.MathUtils.clamp(cam.pitch, -0.7, 0.35);
+    if (isUtahHome()) {
+      cam.yaw = THREE.MathUtils.clamp(cam.yaw, -0.7, 1.95);
+      cam.pitch = THREE.MathUtils.clamp(cam.pitch, -0.95, 0.55);
+    } else {
+      cam.pitch = THREE.MathUtils.clamp(cam.pitch, -0.7, 0.35);
+    }
   });
   const end = (e) => {
     stickCtl.end(e);
@@ -2237,56 +2326,65 @@ function bindLookSurface() {
   };
   el.addEventListener("pointerup", end);
   el.addEventListener("pointercancel", end);
+  el.addEventListener("lostpointercapture", end);
 }
 bindLookSurface();
 
 /* boot: tap to jump, keep holding to hustle */
 (() => {
   const b = $("btn-jump");
-  let holdTimer = 0;
   const release = (e) => {
-    clearTimeout(holdTimer);
+    if (jumpPointer !== null && e && e.pointerId !== jumpPointer) return;
+    clearTimeout(jumpHoldTimer); jumpHoldTimer = 0; jumpPointer = null;
     holdSprint = false;
-    if (e) b.releasePointerCapture?.(e.pointerId);
+    try { if (e && b.hasPointerCapture?.(e.pointerId)) b.releasePointerCapture(e.pointerId); } catch (_) {}
   };
   b.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    recoverAudio();
-    jump();
-    b.setPointerCapture?.(e.pointerId);
-    clearTimeout(holdTimer);
-    holdTimer = setTimeout(() => {
-      holdSprint = true;
+    if (state.mode !== "play" || jumpPointer !== null) return;
+    e.preventDefault(); recoverAudio(); jump();
+    jumpPointer = e.pointerId;
+    try { b.setPointerCapture?.(e.pointerId); } catch (_) {}
+    clearTimeout(jumpHoldTimer);
+    jumpHoldTimer = setTimeout(() => {
+      if (state.mode === "play" && jumpPointer === e.pointerId) holdSprint = true;
     }, 230);
   });
   b.addEventListener("pointerup", release);
   b.addEventListener("pointercancel", release);
+  b.addEventListener("lostpointercapture", release);
 })();
 
 $("btn-act").addEventListener("pointerdown", (e) => {
+  if (state.mode !== "play") return;
   e.preventDefault();
   recoverAudio();
   tryInteract();
 });
 
-/* the scissor's ▲▼ — only up while Utah's behind the wheel on a phone */
+/* Hold-to-run hydraulics: each button owns one pointer until release/cancel. */
 for (const [id, flag] of [
   ["btn-lift-up", "liftUp"],
   ["btn-lift-dn", "liftDn"],
 ]) {
   const b = $(id);
+  let owner = null;
   const off = (e) => {
+    if (e && owner !== e.pointerId) return;
+    const previous = owner; owner = null;
     dayState[flag] = false;
-    if (e) b.releasePointerCapture?.(e.pointerId);
+    try { if (previous !== null && b.hasPointerCapture?.(previous)) b.releasePointerCapture(previous); } catch (_) {}
   };
   b.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    recoverAudio();
-    dayState[flag] = true;
-    b.setPointerCapture?.(e.pointerId);
+    if (state.mode !== "play" || !dayState.driving || dayState.utv || overlayOpen() || owner !== null) return;
+    owner = e.pointerId;
+    e.preventDefault(); recoverAudio(); dayState[flag] = true;
+    try { b.setPointerCapture?.(e.pointerId); } catch (_) {}
   });
   b.addEventListener("pointerup", off);
   b.addEventListener("pointercancel", off);
+  b.addEventListener("lostpointercapture", off);
+  addEventListener("blur", () => off());
+  b.addEventListener("lw-input-reset", () => off());
 }
 
 /* viewport sizing — hardened for mobile rotation and browser-chrome resizes.
@@ -2320,6 +2418,7 @@ function unzoomIfNeeded() {
 
 function applySize() {
   unzoomIfNeeded();
+  updateCoarse();
   const w = innerWidth;
   const h = innerHeight;
   camera.aspect = w / h;
@@ -2331,12 +2430,17 @@ function applySize() {
         )
       : 62;
   camera.updateProjectionMatrix();
-  renderer.setSize(w, h, false);
-  updateCoarse();
+  const dpr = renderBudget.pixelRatio(w, h, devicePixelRatio || 1);
+  const changed = renderer.getPixelRatio() !== dpr || canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr);
+  if (changed) {
+    renderer.setPixelRatio(dpr);
+    renderer.setSize(w, h, false);
+    if (lookPass) resizeLookPass();
+  }
   // a fine↔coarse flip mid-drive must not strand the lift ▲▼ buttons
   if (window.LW) syncLiftBtns();
   // setSize clears the buffer; repaint if the loop isn't rendering right now
-  if (state.built && state.mode !== "play" && state.mode !== "end") renderer.render(scene, camera);
+  if (!mobileLifecycle.contextLost && state.built && state.mode !== "play" && state.mode !== "end") renderLook(clock.elapsedTime);
 }
 
 function lockIosZoom() {
@@ -2383,6 +2487,7 @@ function lockIosZoom() {
 
 addEventListener("resize", applySize);
 addEventListener("orientationchange", () => {
+  resetTransientInput();
   applySize();
   setTimeout(applySize, 300); // iOS reports stale dimensions at rotation time
 });
@@ -2392,6 +2497,8 @@ window.visualViewport?.addEventListener("scroll", () => {
 });
 lockIosZoom();
 applySize();
+const mobileLayout = observeMobileLayout(window, document);
+matchMedia('(any-pointer: coarse)').addEventListener?.('change', applySize);
 document.addEventListener("focusout", () => {
   setTimeout(() => {
     unzoomIfNeeded();
@@ -2410,7 +2517,7 @@ function loadTex(url, repeatX = 1, repeatY = 1) {
         t.colorSpace = THREE.SRGBColorSpace;
         t.wrapS = t.wrapT = THREE.RepeatWrapping;
         t.repeat.set(repeatX, repeatY);
-        t.anisotropy = 8;
+        t.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy() || 8);
         res(t);
       },
       undefined,
@@ -2482,10 +2589,112 @@ function primeTTS() {
    map.json is {role, text, file}[] — speakAs looks up role|text exactly */
 
 const voice = { map: null, el: null, src: null, buf: new Map() };
+const dialogue = createDialogueDirector({
+  now:()=>performance.now()/1000,
+  canPlay:()=>!document.hidden&&!mobileLifecycle.suspended&&!mobileLifecycle.contextLost&&['play','mag','pull','panel','facp','trouble','end'].includes(state.mode),
+  onStart:startDialogue,
+});
+
+function stopVoicePlayback() {
+  clearNpcDialogueCaption();
+  clearTimeout(radioTimer);
+  $('radio')?.classList.remove('show');
+  voice.gen=(voice.gen||0)+1;
+  try{voice.src?.stop();}catch{}
+  voice.src=null;
+  try{voice.el?.pause();}catch{}
+  if(window.speechSynthesis)speechSynthesis.cancel();
+}
+
+function startDialogue(item,done) {
+  stopVoicePlayback();
+  const gen=voice.gen,readSeconds=Math.min(9,Math.max(3.4,item.text.length*.052));
+  let closed=false,timer=0,source=null;
+  function cleanup(){
+    if(closed)return;closed=true;clearTimeout(timer);
+    if(source){source.onended=null;try{source.stop();}catch{}if(voice.src===source)voice.src=null;}
+    if(gen===voice.gen){clearNpcDialogueCaption();$('radio')?.classList.remove('show');voice.gen++;}
+  }
+  const finish=()=>{cleanup();done();};
+  if(item.radio){
+    sfx('radio');$('radio-line').textContent=item.text;paintRadioFace(item.speaker);$('radio').classList.add('show');
+  }else showNpcDialogueCaption(item.speaker,item.text);
+  function captionOnly(){if(closed)return;clearTimeout(timer);done.extend(readSeconds+1);timer=setTimeout(finish,readSeconds*1000);}
+  if(!settings.voice){captionOnly();return cleanup;}
+  recoverAudio();ensureAudio();
+  // A failed/slow file must never occupy the speaking channel indefinitely.
+  timer=setTimeout(finish,8000);done.extend(9);
+  const play=async()=>{
+    if(!voice.map)await loadVoicePack();
+    if(closed||gen!==voice.gen)return;
+    const url=voice.map?.[item.speaker+'|'+item.text];
+    if(!url||!audio.ctx||audio.ctx.state!=='running'){captionOnly();return;}
+    let buffer=voice.buf.get(url);
+    if(!buffer){const response=await fetch(url);if(!response.ok)throw new Error('Voice unavailable');buffer=loudnessFix(await audio.ctx.decodeAudioData(await response.arrayBuffer()));if(closed||gen!==voice.gen)return;voice.buf.set(url,buffer);if(voice.buf.size>48)voice.buf.delete(voice.buf.keys().next().value);}
+    if(closed||gen!==voice.gen)return;
+    clearTimeout(timer);source=audio.ctx.createBufferSource();source.buffer=buffer;source.connect(ensureVoiceBus());voice.src=source;
+    source.onended=finish;done.extend(buffer.duration+2);source.start();
+    timer=setTimeout(finish,(buffer.duration+1)*1000);
+  };
+  play().catch(()=>{if(!closed&&gen===voice.gen)captionOnly();});
+  return cleanup;
+}
+
+function nearbyDialogue(role,lines,mesh,radius=7,extra={}) {
+  const inRange=()=>state.mode==='play'&&mesh&&Math.hypot(player.position.x-mesh.position.x,player.position.z-mesh.position.z)<radius&&Math.abs(player.position.y-mesh.position.y)<6;
+  return dialogue.offer({speaker:role,lines,kind:'ambient',...extra,valid:()=>inRange()&&(!extra.valid||extra.valid())});
+}
+
+function offerCrewDialogue(c,t) {
+  if(state.mode!=='play'||t<4||(c.dialogueOfferAt||0)>t)return;
+  c.dialogueOfferAt=t+2.5+Math.random()*1.5;
+  const lines=c.kit==='foreman'?[...(isTremont()?(DAY_IDLE_LEMON[cycleDay(day)]||[]):(DAY_IDLE[cycleDay(day)]||[])),...(isTremont()?BARK.foremanLemon:BARK.foreman)]:c.kit==='oconnell'&&isTremont()?BARK.oconnellTremont:BARK[c.kit];
+  if(!lines?.length)return;
+  const role=c.kit==='foreman'?foremanWho():NPC_VOICE[c.kit]||'crew';
+  nearbyDialogue(role,lines,c.mesh,c.followLift&&dayState.driving?8:5.4);
+}
+
+
+// Revised dialogue: caption missing NPC recordings without substituting old audio.
+const REVISED_NPC_DIALOGUE = new Set([
+  "Need material or another set of hands? Tell me before you're stuck.",
+  "What's holding you up: material, access, or another trade?",
+  "You're with O'Connell too? Grab the other end of this.",
+  "You on Lemon's crew? We've got room on this cart.",
+  "They covered a lot at orientation. The moose wasn't in it.",
+  "Water's in the conex. Take a minute before you head back in.",
+  "Bring me the part that's holding you up. We'll sort it out.",
+  "What do you need, Tremont? Material or a second pair of hands?",
+  "Finish that connection, label it, then tell me what's left.",
+  "If the print and the field don't agree, bring it to me before you change anything.",
+  "Water's in the conex. Take care of yourself; it's a long shift.",
+  "Tremont's already planned the gym session. I've still got a material order to finish."
+]);
+const NPC_DIALOGUE_NAME = {
+  lugo: "Lugo", lemon: "Lemon", crew: "Crew", david: "David",
+  safety: "Safety", redbeard: "Red Beard", andy: "Andy", nate: "Nate",
+  kenny: "Kenny", gibbs: "Gibbs", drew: "Drew", joe: "Joe",
+};
+const npcDialogueCaption = { element: null, timer: 0, playerUntil: 0 };
+function clearNpcDialogueCaption() {
+  clearTimeout(npcDialogueCaption.timer);
+  npcDialogueCaption.element?.remove();
+  npcDialogueCaption.element = null;
+  npcDialogueCaption.timer = 0;
+}
+function showNpcDialogueCaption(role,text) {
+  const host=$('toasts');if(!host)return;
+  clearNpcDialogueCaption();
+  const element=document.createElement('div');element.className='toast mutter npc-dialogue';
+  element.setAttribute('role','status');element.style.cssText='max-width:min(92vw,38rem);white-space:normal;line-height:1.4;animation:none';
+  element.textContent=(NPC_DIALOGUE_NAME[role]||(role==='utah'?'Utah':role==='tremont'?'Tremont':role==='chris'?'Chris':role==='don'?'Don':'Crew'))+': '+text;
+  host.appendChild(element);npcDialogueCaption.element=element;
+}
+
 
 function loadVoicePack() {
   if (voice._loading) return voice._loading;
-  voice._loading = fetch("/assets/voice/map.json?v=126")
+  voice._loading = fetch("/assets/voice/map.json?v=dialogue-20260905")
     .then((r) => (r.ok ? r.json() : null))
     .then((rows) => {
       if (!Array.isArray(rows)) {
@@ -2496,11 +2705,7 @@ function loadVoicePack() {
       for (const e of rows) {
         if (e && e.role && e.text && e.file) voice.map[e.role + "|" + e.text] = e.file;
       }
-      if (voice.pending) {
-        const p = voice.pending;
-        voice.pending = null;
-        speakAs(p.role, p.text);
-      }
+
     })
     .catch(() => {
       voice._loading = null;
@@ -2510,15 +2715,8 @@ function loadVoicePack() {
 loadVoicePack();
 
 function stopVoice() {
-  voice.gen = (voice.gen || 0) + 1; // cancel clips still in flight
-  try {
-    voice.src?.stop();
-  } catch (_) {}
-  voice.src = null;
-  try {
-    if (voice.el) voice.el.pause();
-  } catch (_) {}
-  if (window.speechSynthesis) speechSynthesis.cancel();
+  dialogue.clear({keepHistory:true});
+  stopVoicePlayback();
 }
 
 /* clips play through the same AudioContext the SFX already unlocked
@@ -2537,137 +2735,46 @@ function prefetchLine(role, text) {
     .catch(() => {});
 }
 
-function playClip(url, role, text) {
-  ensureAudio();
-  recoverAudio();
-  const gen = (voice.gen = (voice.gen || 0) + 1); // stopVoice bumps this — stale async starts are dropped
-  const start = (buf) => {
-    if (gen !== voice.gen) return;
-    if (state.mode === "pause" || state.mode === "title") return; // a late clip must not talk over menus
-    try {
-      voice.src?.stop();
-    } catch (_) {}
-    const src = audio.ctx.createBufferSource();
-    src.buffer = loudnessFix(buf);
-    src.connect(ensureVoiceBus());
-    src.start();
-    voice.src = src;
-  };
-  const cached = voice.buf.get(url);
-  if (cached) {
-    start(cached);
-    return;
-  }
-  fetch(url)
-    .then((r) => r.arrayBuffer())
-    .then((ab) => audio.ctx.decodeAudioData(ab.slice(0)))
-    .then((buf) => {
-      voice.buf.set(url, loudnessFix(buf));
-      if (voice.buf.size > 48) voice.buf.delete(voice.buf.keys().next().value); // cap decoded PCM
-      start(buf);
-    })
-    .catch(() => {
-      // clip miss stays silent — browser TTS is the "robot radio" the hall hates
-      if (gen !== voice.gen) return;
-    });
-}
 
-function speakTTS(role, text) {
-  if (!window.speechSynthesis) return;
-  const u = new SpeechSynthesisUtterance(text);
-  u.volume = 1;
-  let delay = 0;
-  if (role === "lugo") {
-    delay = 60; // iOS drops an utterance queued in the same tick as cancel()
-    u.pitch = 0.62; // Texas gravel
-    u.rate = 0.9;
-  } else if (role === "drew") {
-    delay = 60;
-    u.pitch = 0.8; // slow, carrying paperwork
-    u.rate = 0.82;
-  } else if (role === "don") {
-    delay = 60;
-    u.pitch = 0.92;
-    u.rate = 1.08;
-  } else if (role === "chris") {
-    delay = 60;
-    u.pitch = 0.78; // Long Island accent, lighting foreman
-    u.rate = 0.86;
-  } else if (role === "joe") {
-    delay = 60;
-    u.pitch = 0.7; // loud, already mid-sentence
-    u.rate = 1.08;
-  } else if (role === "utah" || role === "tremont") {
-    u.pitch = getTraveler() === "tremont" ? 1.05 : 1.15;
-    u.rate = getTraveler() === "tremont" ? 1.02 : 1.1;
-  } else if (role === "lemon") {
-    delay = 60;
-    u.pitch = 0.55; // lower, gym-floor volume
-    u.rate = 0.92;
-  } else {
-    u.pitch = 0.88 + Math.random() * 0.25;
-    u.rate = 1.0;
-  }
-  u.voice = rosterVoice(role);
-  const go = () => {
-    try {
-      speechSynthesis.speak(u);
-    } catch (_) {}
-  };
-  if (delay) setTimeout(go, delay);
-  else go();
-}
 
-function speakAs(role, text, opts) {
-  if (!text || !settings.voice) return;
-  recoverAudio();
-  const url = voice.map && voice.map[role + "|" + text];
-  if (url) {
-    stopVoice();
-    playClip(url, role, text);
-    return;
-  }
-  if (!voice.map) {
-    voice.pending = { role, text };
-    loadVoicePack();
-    return;
-  }
-  // No baked clip for this line. Don't kill whatever's already playing, and
-  // put the words on screen so the character doesn't read as dead. Callers
-  // that already show the text (the radio HUD) pass shown:true.
-  if (!opts || !opts.shown) toast(text);
+
+
+function speakAs(role,text,options={}) {
+  return dialogue.offer({speaker:role,text,kind:'event',...options});
 }
 
 let radioWho = "";
 const RADIO_META = {
   lugo: { tag: "LUGO · CH. 3", src: "assets/lugo_portrait.jpg" },
   lemon: { tag: "LEMON · CH. 3", src: "assets/lemon_portrait.jpg?v=73" },
-  tremont: { tag: "TREMONT · BOOK 2", src: "assets/tremont_portrait.jpg" },
-  utah: { tag: "UTAH · BOOK 2", src: "assets/utah_portrait.jpg" },
+  tremont: { tag: "TREMONT · POWER", src: "assets/tremont_portrait.jpg" },
+  utah: { tag: "UTAH · FIRE ALARM", src: "assets/utah_portrait.jpg" },
   drew: { tag: "DREW · GENERAL FOREMAN", src: "assets/drew_portrait.jpg" },
-  joe: { tag: "JOE RIVERA", src: "assets/joe_portrait.jpg?v=126" },
-  chris: { tag: "CHRIS · LIGHTING", src: "assets/chris_portrait.jpg?v=126" },
-  don: { tag: "DON THE FOREMAN", src: "assets/don_portrait.jpg?v=126" },
+  joe: { tag: "JOE RIVERA", src: "assets/joe_portrait.jpg?v=116" },
+  chris: { tag: "CHRIS · LIGHTING", src: "assets/chris_portrait.jpg?v=116" },
+  don: { tag: "DON THE FOREMAN", src: "assets/don_portrait.jpg?v=116" },
   safety: { tag: "MARITZA · SITE SAFETY", src: "assets/safety_portrait.jpg" },
-  redbeard: { tag: "RED BEARD · DATA 1", src: "assets/redbeard_portrait.jpg?v=126" },
-  andy: { tag: "ANDY · SICK & NEEDY", src: "assets/andy_portrait.jpg?v=126" },
-  nate: { tag: "NATE · WIENERS", src: "assets/nate_portrait.jpg?v=126" },
-  kenny: { tag: "KENNY THE STEW", src: "assets/kenny_portrait.jpg?v=126" },
+  redbeard: { tag: "RED BEARD · DATA 1", src: "assets/redbeard_portrait.jpg?v=116" },
+  andy: { tag: "ANDY · SICK & NEEDY", src: "assets/andy_portrait.jpg?v=116" },
+  nate: { tag: "NATE · WIENERS", src: "assets/nate_portrait.jpg?v=116" },
+  kenny: { tag: "KENNY THE STEW", src: "assets/kenny_portrait.jpg?v=116" },
+  david: { tag: "DAVID · MOOSE", src: "assets/david_portrait.jpg?v=128" },
+  gibbs: { tag: "MIKE GIBBS · ROBIN", src: "assets/gibbs_portrait.jpg?v=137" },
 };
 
 const FACE_SRC = {
-  oconnell: "/assets/utah_face.jpg?v=126", // multiplayer ghosts of Utah players
-  redbeard: "/assets/redbeard_face.jpg?v=126",
-  andy: "/assets/andy_face.jpg?v=126",
-  nate: "/assets/nate_face.jpg?v=126",
-  kenny: "/assets/kenny_face.jpg?v=126",
-  safety: "/assets/safety_face.jpg?v=126",
-  gf: "/assets/drew_face.jpg?v=126",
-  joe: "/assets/joe_face.jpg?v=126",
-  chris: "/assets/chris_face.jpg?v=126",
-  don: "/assets/don_face.jpg?v=126",
-  lugo: "/assets/lugo_face.jpg?v=126",
-  lemon: "/assets/lemon_face.jpg?v=126",
+  redbeard: "/assets/redbeard_face.jpg?v=116",
+  andy: "/assets/andy_face.jpg?v=116",
+  nate: "/assets/nate_face.jpg?v=116",
+  kenny: "/assets/kenny_face.jpg?v=116",
+  safety: "/assets/safety_face.jpg?v=116",
+  gf: "/assets/drew_face.jpg?v=116",
+  joe: "/assets/joe_face.jpg?v=116",
+  chris: "/assets/chris_face.jpg?v=116",
+  don: "/assets/don_face.jpg?v=116",
+  lugo: "/assets/lugo_face.jpg?v=116",
+  lemon: "/assets/lemon_face.jpg?v=116",
+  utah: "/assets/utah_face.jpg?v=133",
 };
 
 function paintRadioFace(who) {
@@ -2686,6 +2793,9 @@ function radioPack() {
   return isTremont() ? RADIO_LEMON : RADIO;
 }
 function dayStartLines(d) {
+  if (isUtahHome()) {
+    return ["You coming in?", "Text me if you're staying home."];
+  }
   const c = cycleDay(d);
   if (weekOfDay(d) >= 2) {
     if (isTremont()) return WEEK2_START_LEMON[c] || RADIO_LEMON.start;
@@ -2700,10 +2810,14 @@ function idlePool() {
   const always = (isTremont() ? RADIO_LEMON.idleAlways : RADIO.idleAlways) || [];
   // night shift stays on diesel talk — don't drift into red-pipe / VESDA idle
   if (c === 4 && dayLines && dayLines.length) return dayLines;
-  if (dayLines && dayLines.length && Math.random() < 0.75) return dayLines;
-  return always.length ? always : dayLines || RADIO.idleAlways;
+  return [...new Set([...(dayLines || []), ...always])];
 }
 function jobCompleteRadio(id) {
+  if (id === "textlugo") return "You text me a callout from bed? Fine. Stay there.";
+  if (id === "countcash") return "You're counting money instead of pulling pipe?";
+  if (id === "redass") return "Ice your ass on your own time, Utah.";
+  if (id === "ytd") return "You hit a number and now the crew's short a hand.";
+  if (id === "ignorehall") return "I know you hear this radio.";
   if (cycleDay(day) === 4 && id === "facp") {
     const n = radioPack().facpNight;
     return n && n[0];
@@ -2720,17 +2834,11 @@ function radioFore(lugoText, lemonText) {
   radio(isTremont() ? lemonText : lugoText);
 }
 
-function radio(line, who) {
-  if (!who) who = foremanWho();
-  if (who === "lugo" && isTremont()) who = "lemon";
-  if (who === "lemon" && !isTremont()) who = "lugo";
-  sfx("radio");
-  $("radio-line").textContent = line;
-  paintRadioFace(who);
-  $("radio").classList.add("show");
-  speakAs(who, line, { shown: true });
-  clearTimeout(radioTimer);
-  radioTimer = setTimeout(() => $("radio").classList.remove("show"), 5200);
+function radio(line,who,options={}) {
+  if(!who)who=foremanWho();
+  if(who==='lugo'&&isTremont())who='lemon';
+  if(who==='lemon'&&!isTremont())who='lugo';
+  return speakAs(who,line,{radio:true,...options});
 }
 
 bootTTS();
@@ -2738,12 +2846,22 @@ bootTTS();
 const ui = { promptLabel: undefined, zone: "", clock: "", clockHot: null };
 
 function addWatts(n, label) {
-  const bonus = Math.round(n * (1 + state.combo * 0.08));
-  state.watts += bonus;
+  if (state.runSettled || state.mode === "end") return 0;
+  const base = points(n, 10000);
+  if (!base) return 0;
+  const bonus = Math.round(base * (1 + finiteNumber(state.combo, 0, 0, 100) * 0.08));
+  state.watts = points(points(state.watts) + bonus);
   const txt = state.watts.toLocaleString();
   $("watts").textContent = txt;
-  $("watts-mini").textContent = "PTS " + txt;
+  $("watts-mini").textContent = "WORK " + txt;
   if (label) toast(`${label}  +${bonus}`);
+  return bonus;
+}
+
+function addSidePoints(n, label, key = "") {
+  const earned = awardSidePoints(state, n, key);
+  if (earned && label) toast(`${label} · +${earned} TO THE GANG BOX`);
+  return earned;
 }
 
 function setHearts() {
@@ -2799,8 +2917,16 @@ function betterRun(a, b) {
 /* ------------------------------------------------------------------ */
 /*  WORLD PRIMITIVES                                                   */
 /* ------------------------------------------------------------------ */
+function smoothCylinder(radiusTop, radiusBottom, height, radialSegments = 24, heightSegments = 1, openEnded = false, thetaStart = 0, thetaLength = Math.PI*2) {
+  const radius=Math.max(radiusTop,radiusBottom);
+  const segments=Math.max(radialSegments,radius>.1?28:radius>.035?18:10);
+  return new THREE.CylinderGeometry(radiusTop,radiusBottom,height,segments,heightSegments,openEnded,thetaStart,thetaLength);
+}
 function boxMesh(w, h, d, mat) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  const smallest=Math.min(w,h,d);
+  const eligible=smallest>.07&&Math.max(w,h,d)<20;
+  const geometry=eligible?BufferGeometryUtils.mergeVertices(new RoundedBoxGeometry(w,h,d,1,Math.min(.022,smallest*.07))):new THREE.BoxGeometry(w,h,d);
+  const m = new THREE.Mesh(geometry, mat);
   m.castShadow = false;
   m.receiveShadow = false;
   return m;
@@ -2826,6 +2952,7 @@ function placeBox(x, y, z, w, h, d, mat, collide = true) {
 }
 
 function collideXZ(x, z, r, y = player.position.y) {
+  if (isUtahHome()) return { x, z };
   for (let i = 0; i < 3; i++) {
     for (const b of state.colliders) {
       if (y + 0.2 > b.y + b.h) continue;
@@ -2835,25 +2962,14 @@ function collideXZ(x, z, r, y = player.position.y) {
       let dz = z - nz;
       const d2 = dx * dx + dz * dz;
       if (d2 < r * r) {
-        const dist = Math.sqrt(d2);
-        if (dist < 1e-6) {
-          // center is inside the box — the clamp gives no direction, which used
-          // to make the wall inert; eject through the nearest face instead
-          const w = x - b.minx, e = b.maxx - x, s = z - b.minz, n = b.maxz - z;
-          const m = Math.min(w, e, s, n);
-          if (m === w) x = b.minx - r - 0.001;
-          else if (m === e) x = b.maxx + r + 0.001;
-          else if (m === s) z = b.minz - r - 0.001;
-          else z = b.maxz + r + 0.001;
-          continue;
-        }
+        const dist = Math.sqrt(d2) || 0.0001;
         const push = r - dist + 0.001;
         x += (dx / dist) * push;
         z += (dz / dist) * push;
       }
     }
   }
-  x = THREE.MathUtils.clamp(x, -233, 168);
+  x = THREE.MathUtils.clamp(x, -232, 168);
   z = THREE.MathUtils.clamp(z, -30, CB.z1 + 70);
   return { x, z };
 }
@@ -2881,12 +2997,27 @@ let sprintOn = false;
 let sprintTaught = false;
 
 function mat(color, opts = {}) {
-  return new THREE.MeshLambertMaterial({ color, ...opts });
+  return new THREE.MeshStandardMaterial({
+    color,
+    roughness: 0.78,
+    metalness: 0.08,
+    envMapIntensity: 0.5,
+    ...opts,
+  });
 }
 
 /* shared vertex-colored material — lets many flat-colored parts merge
    into a single draw call */
-const VERT_MAT = new THREE.MeshLambertMaterial({ vertexColors: true });
+const VERT_MAT = new THREE.MeshStandardMaterial({
+  vertexColors: true,
+  roughness: 0.8,
+  metalness: 0.06,
+  envMapIntensity: 0.45,
+});
+
+function isMergeMat(m) {
+  return !!(m && (m.isMeshLambertMaterial || m.isMeshStandardMaterial));
+}
 
 function colorizeGeo(geo, color) {
   const n = geo.attributes.position.count;
@@ -2909,7 +3040,7 @@ function mergeLambertChildren(g) {
     if (
       c.isMesh &&
       c.material &&
-      c.material.isMeshLambertMaterial &&
+      isMergeMat(c.material) &&
       !c.material.map &&
       !c.material.transparent &&
       (!c.material.emissive || c.material.emissive.getHex() === 0) &&
@@ -2932,12 +3063,15 @@ function mergeLambertChildren(g) {
 }
 
 function makeElectrician() {
+  if (getTraveler() === 'utah') {
+    const realistic = makeUtahCharacter(wornOutfit());
+    if (realistic) return realistic;
+  }
   const g = new THREE.Group();
   const fit = wornOutfit();
   const isTremont = getTraveler() === "tremont";
-  // Utah's default tee is the burnt orange from the site photos
-  const SHIRTC = { shirt_red: 0xc62828, shirt_black: 0x1c1c1c, shirt_blue: 0x1e3a6e }[fit.shirt] || (isTremont ? COLORS.shirt : 0xc86a32);
-  const PANTSC = { pants_jeans: 0x3b5678, pants_khaki: 0x8a7a5a, pants_black: 0x24262a }[fit.pants] || COLORS.jeans;
+  const SHIRTC = { shirt_red: 0xc45a32, shirt_black: 0x1c1c1c, shirt_blue: 0x1e3a6e }[fit.shirt] || COLORS.shirt;
+  const PANTSC = { pants_jeans: 0x3d5a82, pants_khaki: 0x8a7a5a, pants_black: 0x24262a }[fit.pants] || COLORS.jeans;
   const HATC = { hat_white: 0xf4f1ea, hat_black: 0x24262a, hat_cowboy: 0xc8a05a }[fit.hat] || COLORS.hat;
   const tw = isTremont ? 0.5 : 0.46;
   const td = isTremont ? 0.28 : 0.26;
@@ -2988,31 +3122,31 @@ function makeElectrician() {
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 14, 12), mat(COLORS.skin));
   head.position.set(0, 1.58, 0);
   g.add(head);
-  // tiny emissive keeps locks out of the vertex-color merge so they stay strands
-  const hmat = (c) => new THREE.MeshLambertMaterial({ color: c, emissive: c, emissiveIntensity: 0.1 });
-  function curlyLock(ox, oy, oz, len, radius, waves, phase, swayX, swayZ, m) {
-    const pts = [];
-    const n = 12;
-    for (let i = 0; i <= n; i++) {
-      const t = i / n;
-      const amp = 0.028 + t * 0.02;
-      pts.push(
-        new THREE.Vector3(
-          ox + Math.sin(t * waves * Math.PI * 2 + phase) * amp + t * swayX,
-          oy - t * len,
-          oz + Math.cos(t * waves * Math.PI * 2 + phase * 0.65) * amp * 0.7 + t * swayZ
-        )
-      );
-    }
-    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 12, radius, 5, false), m));
-  }
   if (isTremont) {
     const blonde = 0xe8c45c;
     const blondeDeep = 0xc49a38;
     const blondeLite = 0xf4dc8c;
+    // tiny emissive keeps locks out of the vertex-color merge so they stay strands
+    const hmat = (c) => new THREE.MeshLambertMaterial({ color: c, emissive: c, emissiveIntensity: 0.1 });
     const hairMat = hmat(blonde);
     const hairDeep = hmat(blondeDeep);
     const hairLite = hmat(blondeLite);
+    function curlyLock(ox, oy, oz, len, radius, waves, phase, swayX, swayZ, m) {
+      const pts = [];
+      const n = 12;
+      for (let i = 0; i <= n; i++) {
+        const t = i / n;
+        const amp = 0.028 + t * 0.02;
+        pts.push(
+          new THREE.Vector3(
+            ox + Math.sin(t * waves * Math.PI * 2 + phase) * amp + t * swayX,
+            oy - t * len,
+            oz + Math.cos(t * waves * Math.PI * 2 + phase * 0.65) * amp * 0.7 + t * swayZ
+          )
+        );
+      }
+      g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 12, radius, 5, false), m));
+    }
     const tones = [hairMat, hairDeep, hairLite];
     // nape fan — under the brim, hanging to the shoulders
     for (let i = 0; i < 13; i++) {
@@ -3073,125 +3207,61 @@ function makeElectrician() {
     bridge.position.set(0, 1.595, 0.15);
     g.add(bridge);
   } else {
-    // UTAH — built from the real site photos: his actual face (grin, safety
-    // specs over glasses, handlebar mustache), dark-auburn curls out the back
-    const ftex = loader.load("/assets/utah_face.jpg?v=126");
-    ftex.colorSpace = THREE.SRGBColorSpace;
-    const face = new THREE.Mesh(
-      new THREE.CircleGeometry(0.135, 24),
-      new THREE.MeshBasicMaterial({ map: ftex, transparent: true, depthWrite: true })
-    );
-    // the player's head is a sphere (NPCs use boxes): the plane must sit
-    // proud of the sphere's front bulge or the head pokes through the photo
-    face.position.set(0, 1.575, 0.168);
-    g.add(face);
-    const auburn = 0x46281a;
-    const auburnDeep = 0x301a0e;
-    const auburnLite = 0x6a4028;
-    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.165, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), hmat(auburn));
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.165, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), mat(COLORS.hair));
     hair.position.set(0, 1.62, 0);
     g.add(hair);
-    const tones = [hmat(auburn), hmat(auburnDeep), hmat(auburnLite)];
-    // short curls poking out the back of the lid, like the photos
-    for (let i = 0; i < 9; i++) {
-      const a = -0.85 + (i / 8) * 1.7;
-      curlyLock(
-        Math.sin(a) * 0.19,
-        1.58,
-        -Math.cos(a) * 0.19 - 0.02,
-        0.1 + (i % 3) * 0.02,
-        0.014,
-        2.4 + (i % 3) * 0.3,
-        i * 0.8,
-        Math.sin(a) * 0.04,
-        -0.03,
-        tones[i % 3]
-      );
+    // real Utah — mustache, no full beard, amber wraparounds
+    const stache = boxMesh(0.13, 0.03, 0.05, mat(0x3a2a22));
+    stache.position.set(0, 1.538, 0.148);
+    g.add(stache);
+    const amber = new THREE.MeshLambertMaterial({
+      color: 0xff7a14,
+      transparent: true,
+      opacity: 0.72,
+      emissive: 0xff5a00,
+      emissiveIntensity: 0.4,
+    });
+    const frameC = mat(0x1a1a1a);
+    for (const sx of [-0.072, 0.072]) {
+      const lens = boxMesh(0.095, 0.058, 0.022, amber);
+      lens.position.set(sx, 1.588, 0.15);
+      g.add(lens);
     }
-    // sideburns down past the ears
+    const bridge = boxMesh(0.042, 0.016, 0.018, frameC);
+    bridge.position.set(0, 1.588, 0.152);
+    g.add(bridge);
     for (const s of [-1, 1]) {
-      const burn = boxMesh(0.025, 0.09, 0.05, hmat(auburnDeep));
-      burn.position.set(s * 0.15, 1.55, 0.05);
-      g.add(burn);
-    }
-    // safety-spec temple arms so the profile still reads glasses
-    for (const s of [-1, 1]) {
-      const armT = boxMesh(0.015, 0.02, 0.14, mat(0x1a1c20));
-      armT.position.set(s * 0.152, 1.6, 0.07);
-      g.add(armT);
-    }
-    // handlebar tips push past the photo plane so the stache has depth
-    for (const s of [-1, 1]) {
-      const tip = boxMesh(0.035, 0.02, 0.03, mat(0x7a4a26));
-      tip.position.set(s * 0.078, 1.532, 0.146);
-      tip.rotation.z = s * -0.45;
-      g.add(tip);
+      const wrap = boxMesh(0.035, 0.05, 0.07, amber);
+      wrap.position.set(s * 0.125, 1.586, 0.118);
+      wrap.rotation.y = s * 0.55;
+      g.add(wrap);
     }
   }
 
-  // Utah's lid rides higher so the brim clears his eyes and the photo face reads
-  const hatY = isTremont ? 0 : 0.055;
   const hat = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), mat(HATC));
-  hat.position.set(0, 1.7 + hatY, 0);
+  hat.position.set(0, 1.7, 0);
   if (isTremont) hat.rotation.x = -0.14;
   g.add(hat);
-  const brim = new THREE.Mesh(new THREE.CylinderGeometry(fit.hat === "hat_cowboy" ? 0.31 : 0.22, fit.hat === "hat_cowboy" ? 0.31 : 0.22, 0.03, 16), mat(HATC));
-  brim.position.set(0, 1.64 + hatY, 0);
+  const brim = new THREE.Mesh(smoothCylinder(fit.hat === "hat_cowboy" ? 0.31 : 0.22, fit.hat === "hat_cowboy" ? 0.31 : 0.22, 0.03, 16), mat(HATC));
+  brim.position.set(0, 1.64, 0);
   if (isTremont) brim.rotation.x = -0.14;
   g.add(brim);
   const lamp = boxMesh(0.07, 0.05, 0.06, mat(0x222));
-  lamp.position.set(0, 1.76 + hatY, 0.14);
+  lamp.position.set(0, 1.76, 0.14);
   g.add(lamp);
   const lampG = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), mat(0xfff2c8, { emissive: 0xffe08a, emissiveIntensity: 0.8 }));
-  lampG.position.set(0, 1.76 + hatY, 0.18);
+  lampG.position.set(0, 1.76, 0.18);
   g.add(lampG);
-  // Utah wears a dark headband under the lid (the photos); Tremont keeps tan
-  const band = boxMesh(0.34, 0.04, 0.34, mat(isTremont ? 0x6b5a3a : 0x1c2230));
+  const band = boxMesh(0.34, 0.04, 0.34, mat(0x6b5a3a));
   band.position.set(0, 1.66, 0);
   g.add(band);
   const decal = boxMesh(0.05, 0.04, 0.01, mat(0xff8a1a));
-  decal.position.set(-0.08, 1.78 + hatY, 0.14);
+  decal.position.set(-0.08, 1.78, 0.14);
   g.add(decal);
   if (!isTremont) {
-    // "UTAH" in marker across the front of the white lid
-    const tc = document.createElement("canvas");
-    tc.width = 128;
-    tc.height = 64;
-    const tcx = tc.getContext("2d");
-    tcx.clearRect(0, 0, 128, 64);
-    tcx.fillStyle = "#15130f";
-    tcx.font = "bold 34px Oswald, Arial, sans-serif";
-    tcx.textAlign = "center";
-    tcx.textBaseline = "middle";
-    tcx.fillText("UTAH", 64, 34);
-    const ttex = new THREE.CanvasTexture(tc);
-    const hatTag = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.13, 0.065),
-      new THREE.MeshBasicMaterial({ map: ttex, transparent: true })
-    );
-    hatTag.position.set(0, 1.70 + hatY, 0.187); // proud of the 0.18-radius dome
-    hatTag.rotation.x = -0.15;
-    g.add(hatTag);
-    // sticker collection: gold star, pride bar, the cartoon crew
-    const star = boxMesh(0.035, 0.032, 0.008, mat(0xe8c437));
-    star.position.set(-0.105, 1.72 + hatY, 0.115);
-    star.rotation.y = -0.6;
+    const star = boxMesh(0.045, 0.045, 0.01, mat(0xf0d23c));
+    star.position.set(0.07, 1.78, 0.14);
     g.add(star);
-    const prideC = [0xd32f2f, 0xf57c00, 0xfbc02d, 0x388e3c, 0x1976d2, 0x7b1fa2];
-    prideC.forEach((pc, i) => {
-      const sbar = boxMesh(0.008, 0.026, 0.008, mat(pc));
-      sbar.position.set(0.082 + i * 0.0085, 1.72 + hatY, 0.118 - i * 0.004);
-      sbar.rotation.y = 0.6;
-      g.add(sbar);
-    });
-    const cart = boxMesh(0.028, 0.024, 0.008, mat(0xf4d848));
-    cart.position.set(0.045, 1.755 + hatY, 0.145);
-    cart.rotation.x = -0.35;
-    g.add(cart);
-    const cart2 = boxMesh(0.024, 0.02, 0.008, mat(0x6ab04c));
-    cart2.position.set(-0.05, 1.755 + hatY, 0.143);
-    cart2.rotation.x = -0.35;
-    g.add(cart2);
   }
   const muffL = new THREE.Mesh(new THREE.SphereGeometry(isTremont ? 0.042 : 0.055, 8, 6), mat(0x1a1a1a));
   muffL.scale.set(0.65, 1, 0.85);
@@ -3252,6 +3322,13 @@ function makeElectrician() {
   for (const h of [armL, armR, legL, legR]) mergeLambertChildren(h);
 
   g.userData = { armL, armR, legL, legR, blob };
+  g.traverse((o) => {
+    if (!o.isMesh) return;
+    o.castShadow = o.material !== blob.material;
+    o.receiveShadow = true;
+  });
+  blob.castShadow = false;
+  blob.material.opacity = renderer.shadowMap.enabled ? 0.16 : 0.32;
   return g;
 }
 
@@ -3262,12 +3339,7 @@ player.traverse((o) => (o.userData.noBake = true));
 
 function rebuildPlayerBody() {
   player.remove(body);
-  body.traverse((o) => {
-    if (o.isMesh) {
-      o.geometry?.dispose();
-      if (o.material && o.material !== VERT_MAT) o.material.dispose?.();
-    }
-  });
+  disposeCharacter(body);
   body = makeElectrician();
   player.add(body);
   player.traverse((o) => (o.userData.noBake = true));
@@ -3279,12 +3351,7 @@ function disposeTitlePreview() {
   if (titlePrev.raf) cancelAnimationFrame(titlePrev.raf);
   titlePrev.raf = 0;
   if (titlePrev.body && titlePrev.s) titlePrev.s.remove(titlePrev.body);
-  titlePrev.body?.traverse((o) => {
-    if (o.isMesh) {
-      o.geometry?.dispose();
-      if (o.material && o.material !== VERT_MAT) o.material.dispose?.();
-    }
-  });
+  disposeCharacter(titlePrev.body);
   titlePrev.body = null;
   if (titlePrev.r) {
     titlePrev.r.dispose();
@@ -3301,7 +3368,10 @@ function refreshTitlePreview() {
     if (!titlePrev.r) {
       titlePrev.r = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: "low-power" });
       titlePrev.r.setPixelRatio(Math.min(devicePixelRatio || 1, 1.25));
-      titlePrev.r.setSize(canvas.width, canvas.height, false);
+      // Recreating the title renderer must not multiply its old backing size by DPR again.
+      const previewWidth = Math.max(1, canvas.clientWidth || 100);
+      const previewHeight = Math.max(1, canvas.clientHeight || 140);
+      titlePrev.r.setSize(previewWidth, previewHeight, false);
       titlePrev.r.setClearColor(0x000000, 0);
       titlePrev.s = new THREE.Scene();
       titlePrev.s.add(new THREE.HemisphereLight(0xfff2d8, 0x2a3020, 1.2));
@@ -3311,26 +3381,22 @@ function refreshTitlePreview() {
       const rim = new THREE.DirectionalLight(0x88aa66, 0.4);
       rim.position.set(-2, 1.2, -1.5);
       titlePrev.s.add(rim);
-      titlePrev.c = new THREE.PerspectiveCamera(30, canvas.width / canvas.height, 0.1, 20);
+      titlePrev.c = new THREE.PerspectiveCamera(30, previewWidth / previewHeight, 0.1, 20);
       titlePrev.c.position.set(1.65, 1.18, 2.85);
       titlePrev.c.lookAt(0, 1.18, 0);
       const spin = () => {
         titlePrev.raf = requestAnimationFrame(spin);
         if (state.mode !== "title" || !titlePrev.r || !titlePrev.body) return;
         if (window.__lwTitleYaw != null) titlePrev.body.rotation.y = window.__lwTitleYaw;
-        else titlePrev.body.rotation.y += 0.012;
+        else titlePrev.body.rotation.y += 0.003;
+        titlePrev.body.userData.animate?.(1/60);
         titlePrev.r.render(titlePrev.s, titlePrev.c);
       };
       titlePrev.raf = requestAnimationFrame(spin);
     }
     if (titlePrev.body) {
       titlePrev.s.remove(titlePrev.body);
-      titlePrev.body.traverse((o) => {
-        if (o.isMesh) {
-          o.geometry?.dispose();
-          if (o.material && o.material !== VERT_MAT) o.material.dispose?.();
-        }
-      });
+      disposeCharacter(titlePrev.body);
     }
     titlePrev.body = makeElectrician();
     titlePrev.body.rotation.y = 0.7;
@@ -3341,6 +3407,10 @@ function refreshTitlePreview() {
 }
 
 function jump() {
+  if (isUtahHome()) {
+    toast("STAY IN BED", true);
+    return;
+  }
   if (state.mode !== "play") return;
   if (dayState.utv) {
     if (dayState.utvStun > 0) return;
@@ -3357,7 +3427,8 @@ function jump() {
     return;
   }
   if (grounded) {
-    pvel.y = 6.6;
+    if (physics && !physics.jump(4.3)) return;
+    pvel.y = physics ? 4.3 : 6.6;
     grounded = false;
     sfx("thud");
   }
@@ -3367,61 +3438,104 @@ function jump() {
 /*  BUILD WORLD                                                        */
 /* ------------------------------------------------------------------ */
 async function buildWorld() {
-  const [gravel, concrete, metal, panelTex, skyTex, refElec, refMech] = await Promise.all([
+  const [gravel, concrete, metal, panelTex, skyTex, osbTex, slabTex] = await Promise.all([
     loadTex("/assets/tex_gravel.jpg", 10, 8),
     loadTex("/assets/tex_concrete.jpg", 8, 8),
     loadTex("/assets/tex_metal.jpg", 3, 2),
     loadTex("/assets/tex_panel.jpg", 1, 1),
     loadTex("/assets/tex_sky.jpg", 1, 1),
-    loadTex("/assets/ref_elec.jpg", 1, 1),
-    loadTex("/assets/ref_mech.jpg", 1, 1),
+    loadTex("/assets/tex_osb.jpg", 1, 1),
+    loadTex("/assets/tex_slab.jpg", 16, 24),
   ]);
 
-  mats.gravel = new THREE.MeshLambertMaterial({ map: gravel, color: 0xd0c8b4 });
-  mats.concrete = new THREE.MeshLambertMaterial({ map: concrete, color: 0xc8c8c4 });
-  mats.metal = new THREE.MeshLambertMaterial({ map: metal, color: 0xb8bec4 });
-  mats.panel = new THREE.MeshLambertMaterial({ map: panelTex });
-  mats.dark = mat(0x3a3e44);
-  mats.beam = mat(0x6e747c);
+  mats.gravel = new THREE.MeshStandardMaterial({ map: gravel, color: 0xd0c8b4, roughness: 0.95, metalness: 0.02, envMapIntensity: 0.25 });
+  mats.concrete = new THREE.MeshStandardMaterial({ map: concrete, color: 0xc8c8c4, roughness: 0.92, metalness: 0.04, envMapIntensity: 0.3 });
+  mats.slab = slabTex
+    ? new THREE.MeshStandardMaterial({ map: slabTex, color: 0xc4c6c8, roughness: 0.28, metalness: 0.12, envMapIntensity: 0.75 })
+    : new THREE.MeshStandardMaterial({ map: concrete, color: 0xb8bcc0, roughness: 0.32, metalness: 0.1, envMapIntensity: 0.55 });
+  mats.metal = new THREE.MeshStandardMaterial({ map: metal, color: 0xb8bec4, roughness: 0.38, metalness: 0.72, envMapIntensity: 0.85 });
+  mats.panel = new THREE.MeshStandardMaterial({ map: panelTex, roughness: 0.55, metalness: 0.25, envMapIntensity: 0.6 });
+  mats.wall = mat(0xe6e3d8, { roughness: 0.9, metalness: 0.02, envMapIntensity: 0.18 });
+  mats.deck = mat(0xd4d2ca, { roughness: 0.72, metalness: 0.22, envMapIntensity: 0.35 });
+  mats.colBlk = mat(0x1c1c1e, { roughness: 0.5, metalness: 0.45 });
+  mats.tray = mat(0xc5c9ce, { roughness: 0.38, metalness: 0.72, envMapIntensity: 0.85 });
+  mats.duct = mat(0xb4b8bc, { roughness: 0.48, metalness: 0.55, envMapIntensity: 0.6 });
+  mats.osb = osbTex
+    ? new THREE.MeshStandardMaterial({ map: osbTex, roughness: 0.88, metalness: 0.02, envMapIntensity: 0.2 })
+    : mat(0xc4a46a, { roughness: 0.9, metalness: 0.02 });
+  if (osbTex) {
+    osbTex.wrapS = osbTex.wrapT = THREE.ClampToEdgeWrapping;
+    osbTex.repeat.set(1, 1);
+  }
+  mats.dark = mat(0x3a3e44, { roughness: 0.7, metalness: 0.2 });
+  mats.beam = mat(0x6e747c, { roughness: 0.42, metalness: 0.65 });
   mats.orange = mat(COLORS.orange);
-  mats.yellow = mat(0xf0d23c);
-  mats.wood = mat(0x8a6234);
-  mats.copper = mat(0xc46a22);
-  mats.redFA = mat(0xb71c1c);
-  mats.emt = mat(0xc2c6cb);
-  mats.pipeBlk = mat(0x2a2a2e);
-  mats.pump = mat(0x3d8a58);
-  mats.crah = mat(0xc9b89a);
-  mats.lake = new THREE.MeshLambertMaterial({ color: 0x6d8796 });
+  mats.yellow = mat(0xf0d23c, { roughness: 0.55, metalness: 0.15 });
+  mats.wood = mat(0x8a6234, { roughness: 0.88, metalness: 0.02 });
+  mats.copper = mat(0xc46a22, { roughness: 0.35, metalness: 0.78, envMapIntensity: 0.9 });
+  mats.greenBus = mat(0x3d8a4a, { roughness: 0.45, metalness: 0.25 });
+  mats.redFA = mat(0xb71c1c, { roughness: 0.55, metalness: 0.2 });
+  mats.emt = mat(0xc2c6cb, { roughness: 0.34, metalness: 0.78, envMapIntensity: 0.9 });
+  mats.pipeBlk = mat(0x2a2a2e, { roughness: 0.45, metalness: 0.55 });
+  mats.pump = mat(0x3d8a58, { roughness: 0.5, metalness: 0.25 });
+  mats.crah = mat(0xc9b89a, { roughness: 0.7, metalness: 0.12 });
+  mats.lake = new THREE.MeshStandardMaterial({ color: 0x6d8796, roughness: 0.18, metalness: 0.35, envMapIntensity: 1.1 });
   mats.tape = makeTapeMat();
-  mats.refElec = refElec
-    ? new THREE.MeshBasicMaterial({ map: refElec })
-    : mats.metal;
-  mats.refMech = refMech
-    ? new THREE.MeshBasicMaterial({ map: refMech })
-    : mats.metal;
-  if (refElec) {
-    refElec.wrapS = refElec.wrapT = THREE.ClampToEdgeWrapping;
-  }
-  if (refMech) {
-    refMech.wrapS = refMech.wrapT = THREE.ClampToEdgeWrapping;
-  }
 
   // phone GPUs pay for every light in every lit fragment — keep the count low.
-  // The 8 pod point lights are folded into stronger hemi/ambient fill.
-  const hemi = new THREE.HemisphereLight(0xccd8e2, 0x6e6850, 1.0);
+  const hemi = new THREE.HemisphereLight(0xd7e4f0, 0x5a5648, 0.72);
   scene.add(hemi);
-  const sun = new THREE.DirectionalLight(0xeef2f4, 0.95);
-  sun.position.set(-30, 40, 10);
+  const sun = new THREE.DirectionalLight(0xfff3e0, 1.55);
+  sun.position.set(-30, 48, 18);
+  sun.castShadow = !isCoarse();
+  if (sun.castShadow) {
+    const map = (devicePixelRatio || 1) >= 1.5 ? 2048 : 1536;
+    sun.shadow.mapSize.set(map, map);
+    sun.shadow.bias = -0.00045;
+    sun.shadow.normalBias = 0.038;
+    sun.shadow.radius = 2.2;
+    const cam = sun.shadow.camera;
+    cam.near = 2;
+    cam.far = 72;
+    cam.left = -16;
+    cam.right = 16;
+    cam.top = 16;
+    cam.bottom = -16;
+  }
   scene.add(sun);
-  const amb = new THREE.AmbientLight(0xa8b0a2, 0.42);
+  scene.add(sun.target);
+  const fill = new THREE.DirectionalLight(0x9eb4c8, 0.28);
+  fill.position.set(22, 18, -16);
+  scene.add(fill);
+  const amb = new THREE.AmbientLight(0x8f968c, 0.22);
   scene.add(amb);
-  dayLights = { hemi, sun, amb };
+  const hallKey = new THREE.PointLight(0xffefd2, 0, 22, 1.55);
+  hallKey.position.set(0, 5.7, 0);
+  scene.add(hallKey);
+  const heatKey = new THREE.PointLight(0xff6a28, 0, 12, 1.8);
+  heatKey.position.set(0, 3.2, 0);
+  scene.add(heatKey);
+  dayLights = { hemi, sun, amb, fill, hallKey, heatKey, env: null };
+
+  try {
+    if (renderer.extensions.has('EXT_color_buffer_float') || renderer.extensions.has('EXT_color_buffer_half_float')) {
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      const envScene = new THREE.Scene();
+      envScene.background = new THREE.Color(0xc5d4e2);
+      envScene.add(new THREE.HemisphereLight(0xf4f7fb, 0x5a5248, 1.45));
+      const env = pmrem.fromScene(envScene, 0.04).texture;
+      scene.environment = env;
+      dayLights.env = env;
+      pmrem.dispose();
+    }
+  } catch (err) {
+    console.warn("[LW] env map skip", err);
+  }
 
   // night-shift rig: dim pod lights + Utah's headlamp (only lit on day 4)
   nightRig = { pods: [], lamp: null };
   for (let i = 0; i < CB.pods; i++) {
-    for (const x of [CB.dataX, CB.hallWX, CB.hallEX, CB.elecWX]) {
+    for (const x of [CB.dataX, CB.hallWX, CB.hallEX, CB.elecWX, CB.fanWX, CB.fanEX, CB.mechX]) {
       const pl = new THREE.PointLight(0xffd9a0, 0.7, 22);
       pl.position.set(x, 6.2, podBand(i).mid);
       pl.visible = false;
@@ -3446,7 +3560,7 @@ async function buildWorld() {
 
   const bW = CB.east - CB.west;
   const bD = CB.z1 - CB.z0;
-  const hallFloor = new THREE.Mesh(new THREE.PlaneGeometry(bW + 2, bD + 2), mats.concrete);
+  const hallFloor = new THREE.Mesh(new THREE.PlaneGeometry(bW + 2, bD + 2), mats.slab);
   hallFloor.rotation.x = -Math.PI / 2;
   hallFloor.position.set((CB.west + CB.east) / 2, 0.01, (CB.z0 + CB.z1) / 2);
   scene.add(hallFloor);
@@ -3523,27 +3637,15 @@ async function buildWorld() {
   gull.traverse((o) => (o.userData.noBake = true));
   state.gull = { mesh: gull, flying: false, t: 0, home: gull.position.clone() };
 
-  if (skyTex) {
-    skyTex.wrapS = skyTex.wrapT = THREE.ClampToEdgeWrapping;
-    const backdrop = new THREE.Mesh(
-      new THREE.PlaneGeometry(420, 80),
-      new THREE.MeshBasicMaterial({ map: skyTex, fog: false })
-    );
-    backdrop.position.set(0, 28, CB.z1 + 195);
-    scene.add(backdrop);
-  }
-  for (let i = 0; i < 10; i++) {
-    const t = boxMesh(1.6 + Math.random(), 5 + Math.random() * 4, 1.6, mat(0x3d4a38));
-    t.position.set(-85 + Math.random() * 8, 2.8, CB.z1 + 8 + i * 2.2);
-    scene.add(t);
-    const t2 = t.clone();
-    t2.position.x = CB.east + 10 + Math.random() * 8;
-    scene.add(t2);
+  for (let i=0;i<10;i++) {
+    treePlacements.push({x:-85+Math.sin(i*5)*4,z:CB.z1+8+i*2.2,h:6+(i%3)});
+    treePlacements.push({x:CB.east+14+Math.cos(i*5)*4,z:CB.z1+8+i*2.2,h:6+(i%3)});
   }
 
   buildCB4();
   buildYardSet();
   buildPowerYard();
+  buildSouthYard();
   buildCrane();
   buildCoolers();
   buildInteractables();
@@ -3558,6 +3660,7 @@ async function buildWorld() {
 
   worldItems = state.interactables.slice();
   state.built = true;
+  installLookPass();
 }
 
 /* ------------------------------------------------------------------ */
@@ -3567,8 +3670,8 @@ async function buildWorld() {
 /* ------------------------------------------------------------------ */
 function buildOuterSite() {
   const z1 = CB.z1;
-  const grass = mat(0x4e6a40);
-  const grassDark = mat(0x3d5634);
+  const grass = mats.grass = mat(0xffffff);
+  const grassDark = mats.grassDark = mat(0xc4ceba);
   const asphalt = mat(0x3a3c40);
   const lotMat = mat(0x45474c);
   const stripe = mat(0xc8c8bc);
@@ -3606,25 +3709,11 @@ function buildOuterSite() {
   }
 
   function pickup(x, z, yaw, color) {
-    const body = boxMesh(1.9, 1.35, 4.4, mat(color));
-    body.position.set(x, 0.7, z);
-    body.rotation.y = yaw;
-    scene.add(body);
-    const cab = boxMesh(1.8, 0.55, 1.5, mat(0x1a1c20));
-    cab.position.set(x + Math.sin(yaw) * 0.95, 1.55, z + Math.cos(yaw) * 0.95);
-    cab.rotation.y = yaw;
-    scene.add(cab);
+    parkedVehiclePlacements.push({kind:'pickup',x,z,yaw,color});
   }
 
   function sedan(x, z, yaw, color) {
-    const body = boxMesh(1.7, 1.05, 4.0, mat(color));
-    body.position.set(x, 0.55, z);
-    body.rotation.y = yaw;
-    scene.add(body);
-    const roof = boxMesh(1.5, 0.4, 1.8, mat(0x1a1c20));
-    roof.position.set(x - Math.sin(yaw) * 0.15, 1.25, z - Math.cos(yaw) * 0.15);
-    roof.rotation.y = yaw;
-    scene.add(roof);
+    parkedVehiclePlacements.push({kind:'sedan',x,z,yaw,color});
   }
 
   function fleet(x0, z0, cols, rows, yaw, gapX, gapZ, seed) {
@@ -3639,11 +3728,8 @@ function buildOuterSite() {
         const wob = ((n % 5) - 2) * 0.012;
         if (n % 3 === 0) sedan(x, z, yaw + wob, col);
         else pickup(x, z, yaw + wob, col);
-        // collide per car, not per row — a row box walled off the empty
-        // stalls (the n%7 skips) and the walk-through gaps between cars
-        const sideways = Math.abs(Math.sin(yaw)) > 0.7;
-        addCollider(x, z, sideways ? 4.6 : 2.2, sideways ? 2.2 : 4.6, 0, 1.6);
       }
+      addCollider(x0 + ((cols - 1) * gapX) / 2, z0 + r * gapZ, cols * gapX + 1.2, 4.8, 0, 1.6);
     }
   }
 
@@ -3664,14 +3750,7 @@ function buildOuterSite() {
     scene.add(head);
   }
 
-  function tree(x, z, h) {
-    const trunk = boxMesh(0.45, h * 0.4, 0.45, mat(0x4a3a28));
-    trunk.position.set(x, h * 0.2, z);
-    scene.add(trunk);
-    const canopy = boxMesh(1.7 + (h - 5) * 0.15, h * 0.65, 1.7, mat(0x3d4a38));
-    canopy.position.set(x, h * 0.68, z);
-    scene.add(canopy);
-  }
+  function tree(x,z,h) {treePlacements.push({x,z,h});}
 
   for (const [w, d, x, z] of [
     [160, 220, -165, 70],
@@ -3792,14 +3871,14 @@ function buildOuterSite() {
     [c5x0 + 34, 40],
     [c5x0 + 18, 44],
   ]) {
-    const bundle = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 8, 8), mats.metal);
+    const bundle = new THREE.Mesh(smoothCylinder(0.5, 0.5, 8, 8), mats.metal);
     bundle.rotation.z = Math.PI / 2;
     bundle.position.set(x, 0.5, z);
     scene.add(bundle);
   }
 
   /* ---- miner halls west: three parallel N-S buildings (CB-1 / 2 / 3) ---- */
-  const minerNames = ["CB-1 · LIVE", "CB-2 · LIVE", "CB-3 · LIVE"];
+  const minerNames = ["MINING HALL", "MINING HALL", "MINING HALL"];
   for (let r = 0; r < 3; r++) {
     const mx = -90 - r * 24;
     const mz = 102;
@@ -3814,7 +3893,7 @@ function buildOuterSite() {
       scene.add(lv2);
     }
     for (let i = 0; i < 8; i++) {
-      const fan = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.3, 1, 10), mat(0x4a5056));
+      const fan = new THREE.Mesh(smoothCylinder(1.1, 1.3, 1, 10), mat(0x4a5056));
       fan.position.set(mx, 7.8, mz - 28 + i * 8);
       scene.add(fan);
     }
@@ -3829,7 +3908,7 @@ function buildOuterSite() {
   denSign.rotation.y = Math.PI;
   scene.add(denSign);
 
-  /* ---- old Somerset plant on the shore, stack and all ---- */
+  /* ---- legacy Somerset plant; stack demolished January 2025 ---- */
   placeBox(-112, 0, 162, 40, 24, 26, mat(0x6a6258), true);
   placeBox(-88, 0, 154, 14, 15, 14, mat(0x7a7268), true);
   placeBox(-130, 0, 148, 18, 10, 16, mat(0x5a564e), true);
@@ -3837,9 +3916,7 @@ function buildOuterSite() {
   conveyor.position.set(-74, 9, 160);
   conveyor.rotation.z = 0.32;
   scene.add(conveyor);
-  const stack = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 3.4, 64, 12), mat(0xb8b4ac));
-  stack.position.set(-124, 32, 170);
-  scene.add(stack);
+  // Current 2026 setting: the demolished smokestack is no longer present.
   const plantSign = makeLabel("SOMERSET STATION", "#c9d6de");
   plantSign.position.set(-98, 4.2, 147);
   scene.add(plantSign);
@@ -3863,7 +3940,7 @@ function buildOuterSite() {
 
   /* ---- tank farm, north between miners and CB-4 ---- */
   for (const tz of [152, 168]) {
-    const tank = new THREE.Mesh(new THREE.CylinderGeometry(6.5, 6.5, 11, 18), mat(0xe8e6e0));
+    const tank = new THREE.Mesh(smoothCylinder(6.5, 6.5, 11, 18), mat(0xe8e6e0));
     tank.position.set(-58, 5.5, tz);
     scene.add(tank);
     addCollider(-58, tz, 13.5, 13.5, 0, 11);
@@ -3943,7 +4020,9 @@ function wallAlongZ(x, z0, z1, gaps = []) {
   for (const p of segs) {
     const d = p.b - p.a;
     if (d < 0.35) continue;
-    placeBox(x, 0, (p.a + p.b) / 2, t, 8, d, mats.metal, true);
+    const wall = placeBox(x, 0, (p.a + p.b) / 2, t, 8, d, mats.wall, true);
+    wallSurfaces.push({axis:'x',plane:x,lo:p.a,hi:p.b,thickness:t,height:8});
+    wall.userData.staticOccluder = true;
   }
 }
 
@@ -3966,7 +4045,9 @@ function wallAlongX(z, x0, x1, gaps = []) {
   for (const p of segs) {
     const w = p.b - p.a;
     if (w < 0.35) continue;
-    placeBox((p.a + p.b) / 2, 0, z, w, 8, t, mats.metal, true);
+    const wall = placeBox((p.a + p.b) / 2, 0, z, w, 8, t, mats.wall, true);
+    wallSurfaces.push({axis:'z',plane:z,lo:p.a,hi:p.b,thickness:t,height:8});
+    wall.userData.staticOccluder = true;
   }
 }
 
@@ -4039,25 +4120,14 @@ function buildCB4() {
   // ── E-W walls on north & south of each SECTION (not in long-hall columns) ──
   // Doors into rooms face the cross-halls. Long hall columns stay open N-S.
   function roomFronts(z) {
-    // mech
-    wallAlongX(z, CB.west, CB.hallW0, [{ x: CB.mechX, w: roomDoor }]);
-    doorFrame(CB.mechX, z, false, roomDoor);
-    // west electrical
-    wallAlongX(z, CB.elecW0, CB.fanW0, [{ x: CB.elecWX, w: roomDoor }]);
-    doorFrame(CB.elecWX, z, false, roomDoor);
-    // west fan
-    wallAlongX(z, CB.fanW0, CB.data0, [{ x: CB.fanWX, w: roomDoor }]);
-    doorFrame(CB.fanWX, z, false, roomDoor);
+    // mech is a N-S hall — no E-W walls (video: tank / pump corridor)
+    // west electrical is a N-S power hallway — no E-W walls
+    // west fan + east fan are N-S hallways — no E-W walls (video: long CRAH corridor)
     // data hall
     wallAlongX(z, CB.data0, CB.data1, [{ x: CB.dataX, w: hallDoor }]);
     doorFrame(CB.dataX, z, false, hallDoor);
-    // east fan
-    wallAlongX(z, CB.data1, CB.fanE1, [{ x: CB.fanEX, w: roomDoor }]);
-    doorFrame(CB.fanEX, z, false, roomDoor);
-    // east electrical
-    wallAlongX(z, CB.fanE1, CB.elecE1, [{ x: CB.elecEX, w: roomDoor }]);
-    doorFrame(CB.elecEX, z, false, roomDoor);
-    // long hall columns intentionally have NO E-W wall — open into cross-halls
+    // east electrical is a N-S power hallway — no E-W walls
+    // long hall columns AND fan halls stay open N-S
   }
   for (let i = 0; i < CB.pods; i++) {
     const { z0: pz, z1: pz1 } = podBand(i);
@@ -4066,10 +4136,12 @@ function buildCB4() {
   }
 
   // ceiling
-  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(CB.east - CB.west + 1, z1 - z0 + 1), mats.metal);
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(CB.east - CB.west + 1, z1 - z0 + 1), mats.deck);
   ceil.rotation.x = Math.PI / 2;
   ceil.position.set((CB.west + CB.east) / 2, 8.05, (z0 + z1) / 2);
   scene.add(ceil);
+  buildCeilingLights();
+  buildJobsiteOverhead();
 
   // ── dressing per section ──
   for (let i = 0; i < CB.pods; i++) {
@@ -4080,44 +4152,29 @@ function buildCB4() {
 
     // conduit run in data hall
     const run = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.04, 0.04, 10, 6),
+      smoothCylinder(0.04, 0.04, 10, 6),
       isTremont() ? mats.emt : mats.redFA
     );
     run.rotation.x = Math.PI / 2;
-    run.position.set(CB.dataX + 2.0, 2.55, mid);
+    run.position.set(CB.dataX + 2.0, 7.45, mid);
     scene.add(run);
+    for(const z of [mid-3.8,mid+3.8]){
+      const rod=new THREE.Mesh(smoothCylinder(.012,.012,.56,6),mats.emt);rod.position.set(CB.dataX+2,7.75,z);scene.add(rod);
+      const clamp=boxMesh(.13,.03,.06,mats.emt);clamp.position.set(CB.dataX+2,7.45,z);scene.add(clamp);
+    }
 
-    // data hall columns + the E-W cross tray feeding the N-S runs
+    // data hall columns + tray
     for (const dx of [-10, 10]) {
       placeBox(CB.dataX + dx, 0, mid - 5, 0.4, 8, 0.4, mats.beam, true);
       placeBox(CB.dataX + dx, 0, mid + 5, 0.4, 8, 0.4, mats.beam, true);
     }
-    placeBox(CB.dataX, 7.2, mid, 28, 0.12, 0.5, mats.beam, false);
+    placeBox(CB.dataX, 7.2, mid, 28, 0.12, 0.5, mats.dark, false);
 
-    // fan units in both crawls
-    for (const fx of [CB.fanWX, CB.fanEX]) {
-      for (let k = 0; k < 2; k++) {
-        const fz = mid - 4 + k * 8;
-        const fan = boxMesh(1.5, 2.6, 2.2, mats.dark);
-        fan.position.set(fx, 1.4, fz);
-        scene.add(fan);
-        addCollider(fx, fz, 1.5, 2.2, 0, 2.6);
-        const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.18, 12), mats.beam);
-        ring.rotation.z = Math.PI / 2;
-        ring.position.set(fx + (fx < 0 ? 0.7 : -0.7), 1.5, fz);
-        scene.add(ring);
-      }
-      if (i === 0) {
-        const cSign = makeLabel("FAN CRAWL");
-        cSign.position.set(fx, 3.15, mid);
-        cSign.rotation.y = fx < 0 ? Math.PI / 2 : -Math.PI / 2;
-        scene.add(cSign);
-      }
-    }
+    // fan halls are built once after the pod loop (continuous CRAH corridor)
 
     // VESDA pipe in west fan crawl (Utah)
     if (!isTremont()) {
-      const samp = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.038, 12, 6), mats.orange);
+      const samp = new THREE.Mesh(smoothCylinder(0.038, 0.038, 12, 6), mats.orange);
       samp.rotation.x = Math.PI / 2;
       samp.position.set(CB.fanWX, 7.15, mid);
       scene.add(samp);
@@ -4126,43 +4183,15 @@ function buildCB4() {
         hole.position.set(CB.fanWX, 7.15, mid + h);
         scene.add(hole);
       }
-      const sampE = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.038, 12, 6), mats.orange);
+      const sampE = new THREE.Mesh(smoothCylinder(0.038, 0.038, 12, 6), mats.orange);
       sampE.rotation.x = Math.PI / 2;
       sampE.position.set(CB.fanEX, 7.15, mid);
       scene.add(sampE);
     }
 
-    // electrical gear lines both sides
-    for (const ex of [CB.elecWX, CB.elecEX]) {
-      for (let z = pz + 2.5; z < pz + CB.podH - 2; z += 4.2) {
-        placeBox(ex, 0, z, 1.1, 2.2, 1.5, mats.panel, true);
-      }
-      if (i === 0) {
-        const eSign = makeLabel("ELECTRICAL");
-        eSign.position.set(ex, 3.2, pz + 1.4);
-        scene.add(eSign);
-      }
-    }
+    // electrical / power halls built once after the pod loop
 
-    // mechanical pumps — west end, pod 1 only heavy, others light panels
-    if (i === 0) {
-      for (let k = 0; k < 2; k++) {
-        const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 7, 8), mats.pipeBlk);
-        pipe.rotation.z = Math.PI / 2;
-        pipe.position.set(CB.mechX, 2.1 + k * 0.85, mid);
-        scene.add(pipe);
-      }
-      const pump = boxMesh(1.2, 1.0, 1.7, mats.pump);
-      pump.position.set(CB.mechX - 1.5, 0.55, mid - 3);
-      scene.add(pump);
-      addCollider(CB.mechX - 1.5, mid - 3, 1.2, 1.7, 0, 1.1);
-      const mSign = makeLabel("MECHANICAL");
-      mSign.position.set(CB.mechX, 3.2, pz + 1.4);
-      scene.add(mSign);
-    } else {
-      placeBox(CB.mechX, 0, mid - 3, 1.3, 2.2, 1.4, mats.panel, true);
-      placeBox(CB.mechX, 0, mid + 3, 1.3, 2.2, 1.4, mats.panel, true);
-    }
+    // mechanical hall is built once after the pod loop
 
     // NAC loop decal in data hall
     const pts = [];
@@ -4179,20 +4208,11 @@ function buildCB4() {
     );
   }
 
-  // vistas
-  const mechVista = new THREE.Mesh(new THREE.PlaneGeometry(8, 6.2), mats.refMech);
-  mechVista.position.set(CB.mechX, 3.2, z1 - 0.35);
-  mechVista.rotation.y = Math.PI;
-  scene.add(mechVista);
-  const elecVista = new THREE.Mesh(new THREE.PlaneGeometry(8, 6.2), mats.refElec);
-  elecVista.position.set(CB.elecWX, 3.2, podBand(1).mid);
-  elecVista.rotation.y = Math.PI / 2;
-  scene.add(elecVista);
+  buildFanHalls();
+  buildMechHall();
+  buildPowerHalls();
 
-  addVistaLazy("/assets/vista_data.jpg", 8, 5, CB.dataX, 3.0, z1 - 0.35, Math.PI);
-  addVistaLazy("/assets/vista_data2.jpg", 8, 5, CB.dataX, 3.0, z0 + 0.35, 0);
-  addVistaLazy("/assets/vista_fan.jpg", 4.6, 6.1, CB.fanEX, 3.1, podBand(1).mid, -Math.PI / 2);
-  addVistaLazy("/assets/vista_hall.jpg", 3.6, 5.1, CB.hallWX + 0.2, 2.9, crossBand(1).mid, Math.PI / 2);
+  // Construction prints remain on the walls.
   addVistaLazy("/assets/prints_plan.jpg", 4.6, 3.3, CB.data0 + 0.22, 2.2, podBand(0).mid - 4, Math.PI / 2);
   addVistaLazy("/assets/prints_nac.jpg", 2.6, 1.9, CB.west + 0.32, 1.9, podBand(0).mid + 2, Math.PI / 2);
   if (!isTremont()) {
@@ -4263,6 +4283,8 @@ function addVistaLazy(url, w, h, x, y, z, rotY) {
     m.position.set(x, y, z);
     m.rotation.y = rotY || 0;
     scene.add(m);
+    state.vistas = state.vistas || [];
+    state.vistas.push(m);
   });
 }
 
@@ -4324,93 +4346,338 @@ function buildYardSet() {
 }
 
 function padTransformer(x, z, yaw) {
+  const olive = mat(0x3d4a32, { roughness: 0.55, metalness: 0.18 });
+  const oliveDk = mat(0x2c3626, { roughness: 0.5, metalness: 0.22 });
+  const grayBox = mat(0xb8bcc0, { roughness: 0.45, metalness: 0.25 });
   const g = new THREE.Group();
-  const tank = boxMesh(2.1, 1.7, 1.6, mat(0x4a5c3a));
-  tank.position.y = 0.9;
+  const pad = boxMesh(3.15, 0.42, 2.35, mats.concrete || mat(0xc4c4c0));
+  pad.position.y = 0.21;
+  g.add(pad);
+  const tank = boxMesh(2.35, 1.92, 1.62, olive);
+  tank.position.y = 1.38;
   g.add(tank);
-  const fin = boxMesh(0.12, 1.3, 1.4, mat(0x3a4a30));
-  fin.position.set(1.15, 0.9, 0);
-  g.add(fin);
-  const fin2 = fin.clone();
-  fin2.position.x = -1.15;
-  g.add(fin2);
-  const bush = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.55, 6), mat(0xddd));
-  bush.position.set(0.4, 2.05, 0);
-  g.add(bush);
-  const bush2 = bush.clone();
-  bush2.position.x = -0.4;
-  g.add(bush2);
+  const lid = boxMesh(2.38, 0.08, 1.66, oliveDk);
+  lid.position.y = 2.36;
+  g.add(lid);
+  // double doors
+  for (const sx of [-0.58, 0.58]) {
+    const door = boxMesh(1.05, 1.55, 0.04, oliveDk);
+    door.position.set(sx, 1.28, 0.84);
+    g.add(door);
+    const hdl = boxMesh(0.04, 0.14, 0.05, mats.dark);
+    hdl.position.set(sx * 0.18, 1.28, 0.88);
+    g.add(hdl);
+  }
+  // black radiator fins on the -x end
+  for (let i = 0; i < 11; i++) {
+    const fin = boxMesh(0.04, 1.35, 1.35, mat(0x1a1c1a, { roughness: 0.4, metalness: 0.45 }));
+    fin.position.set(-1.32 - i * 0.045, 1.28, 0);
+    g.add(fin);
+  }
+  // gray control boxes on the +x face — stacked like the Hitachi
+  for (const [bx, by, bz, bw, bh, bd] of [
+    [1.28, 1.85, 0.28, 0.22, 0.55, 0.55],
+    [1.28, 1.22, 0.28, 0.22, 0.55, 0.55],
+    [1.28, 1.85, -0.38, 0.22, 0.5, 0.48],
+    [1.28, 1.22, -0.38, 0.22, 0.5, 0.48],
+  ]) {
+    const b = boxMesh(bw, bh, bd, grayBox);
+    b.position.set(bx, by, bz);
+    g.add(b);
+  }
+  if (!mats.hitachi) {
+    const c = document.createElement("canvas");
+    c.width = 256;
+    c.height = 64;
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#c41e1a";
+    ctx.fillRect(0, 0, 256, 64);
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 36px Oswald, Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("HITACHI", 128, 34);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    mats.hitachi = new THREE.MeshBasicMaterial({ map: t });
+  }
+  const badge = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.14), mats.hitachi);
+  badge.position.set(-0.7, 2.18, 0.84);
+  g.add(badge);
   g.position.set(x, 0, z);
   g.rotation.y = yaw || 0;
   scene.add(g);
-  addCollider(x, z, 2.4, 1.9, 0, 2.2);
+  addCollider(x, z, 3.3, 2.5, 0, 2.4);
 }
 
 function powerTransformer(x, z, yaw) {
-  const g = new THREE.Group();
-  const tank = boxMesh(3.4, 2.6, 2.4, mat(0x6d7278));
-  tank.position.y = 1.4;
-  g.add(tank);
-  for (let i = -1; i <= 1; i++) {
-    const rad = boxMesh(0.18, 2.0, 2.2, mat(0x5a6066));
-    rad.position.set(1.85, 1.3, i * 0.7);
-    g.add(rad);
-  }
-  for (let i = -1; i <= 1; i++) {
-    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.14, 0.9, 6), mat(0xeee8d8));
-    b.position.set(i * 0.7, 3.15, 0);
-    g.add(b);
-  }
-  g.position.set(x, 0, z);
-  g.rotation.y = yaw || 0;
-  scene.add(g);
-  addCollider(x, z, 4.0, 2.8, 0, 3.2);
+  padTransformer(x, z, yaw);
 }
 
 function upsTrailer(x, z, yaw) {
+  const white = mats.wall || mat(0xe8e6de, { roughness: 0.88, metalness: 0.04 });
   const g = new THREE.Group();
-  const body = boxMesh(3.2, 2.8, 8.5, mat(0xd8dce0));
-  body.position.y = 1.55;
-  g.add(body);
-  const stripe = boxMesh(3.22, 0.18, 8.52, mat(0x1565c0));
-  stripe.position.y = 2.5;
-  g.add(stripe);
-  for (let i = -2; i <= 2; i++) {
-    const vent = boxMesh(0.08, 1.4, 1.1, mats.dark);
-    vent.position.set(1.62, 1.5, i * 1.45);
-    g.add(vent);
+  const L = 9.2;
+  const W = 3.85;
+  const H = 3.15;
+  // piers
+  for (const [px, pz] of [
+    [-W * 0.38, -L * 0.38],
+    [W * 0.38, -L * 0.38],
+    [-W * 0.38, L * 0.38],
+    [W * 0.38, L * 0.38],
+    [-W * 0.38, 0],
+    [W * 0.38, 0],
+  ]) {
+    const pier = boxMesh(0.55, 0.28, 0.55, mats.concrete || mat(0xc4c4c0));
+    pier.position.set(px, 0.14, pz);
+    g.add(pier);
   }
-  const ac = boxMesh(1.2, 0.45, 1.6, mats.dark);
-  ac.position.set(0, 3.15, 2.2);
-  g.add(ac);
-  const ac2 = ac.clone();
-  ac2.position.z = -2.2;
-  g.add(ac2);
+  const body = boxMesh(W, H, L, white);
+  body.position.y = 0.28 + H / 2;
+  g.add(body);
+  // vertical ribs on the long sides
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < 18; i++) {
+      const rib = boxMesh(0.035, H - 0.15, 0.04, white);
+      rib.position.set(side * (W / 2 + 0.02), 0.28 + H / 2, -L / 2 + 0.35 + i * ((L - 0.7) / 17));
+      g.add(rib);
+    }
+  }
+  const door = boxMesh(0.08, 2.15, 0.95, mat(0xf2f0ea));
+  door.position.set(W / 2 + 0.05, 1.5, -L * 0.18);
+  g.add(door);
+  const fa = boxMesh(0.08, 0.18, 0.12, mats.redFA);
+  fa.position.set(W / 2 + 0.06, 2.55, -L * 0.05);
+  g.add(fa);
+  const lamp = boxMesh(0.22, 0.1, 0.28, mats.dark);
+  lamp.position.set(W / 2 + 0.08, 2.85, -L * 0.05);
+  g.add(lamp);
+  const spout = boxMesh(0.06, H + 0.1, 0.06, mat(0xc8ccd0));
+  spout.position.set(W / 2 - 0.15, 0.28 + H / 2, L / 2 - 0.2);
+  g.add(spout);
   g.position.set(x, 0, z);
   g.rotation.y = yaw || 0;
   scene.add(g);
-  addCollider(x, z, yaw ? 8.8 : 3.4, yaw ? 3.4 : 8.8, 0, 3.2);
+  const alongZ = Math.abs(yaw || 0) < 0.2 || Math.abs((yaw || 0) - Math.PI) < 0.2;
+  addCollider(x, z, alongZ ? W + 0.4 : L + 0.4, alongZ ? L + 0.4 : W + 0.4, 0, 3.5);
+}
+
+function coneAt(x, z) {
+  const c = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.7, 8), mats.orange);
+  c.position.set(x, 0.35, z);
+  scene.add(c);
+}
+
+function woodMats(x, z, yaw) {
+  const g = new THREE.Group();
+  for (let i = 0; i < 8; i++) {
+    const plank = boxMesh(2.6, 0.07, 0.22, mats.wood);
+    plank.position.set(0, 0.05 + i * 0.02, -0.85 + i * 0.24);
+    g.add(plank);
+  }
+  g.position.set(x, 0, z);
+  g.rotation.y = yaw || 0;
+  scene.add(g);
+}
+
+function drainHose(x, z, yaw, len) {
+  const hose = new THREE.Mesh(
+    smoothCylinder(0.12, 0.12, len || 6.5, 8),
+    mat(0x1a1a1a, { roughness: 0.85, metalness: 0.05 })
+  );
+  hose.rotation.z = Math.PI / 2;
+  hose.position.set(x, 0.14, z);
+  hose.rotation.y = yaw || 0;
+  scene.add(hose);
+  const cuff = new THREE.Mesh(smoothCylinder(0.15, 0.15, 0.22, 8), mat(0xc8ccd0));
+  cuff.rotation.z = Math.PI / 2;
+  cuff.position.set(x + Math.cos(yaw || 0) * ((len || 6.5) / 2), 0.14, z);
+  scene.add(cuff);
+}
+
+function weeds(x, z, n) {
+  const g1 = mat(0x4a7a32);
+  const g2 = mat(0x3d6a28);
+  for (let i = 0; i < (n || 7); i++) {
+    const h = 0.35 + (i % 4) * 0.18;
+    const blade = boxMesh(0.08, h, 0.08, i % 2 ? g1 : g2);
+    blade.position.set(x + ((i * 1.7) % 1.6) - 0.7, h / 2, z + ((i * 1.1) % 1.4) - 0.6);
+    blade.rotation.y = i * 0.7;
+    blade.rotation.z = ((i % 3) - 1) * 0.18;
+    scene.add(blade);
+  }
+}
+
+function utilityPole(x, z) {
+  const wood = mat(0x6a4a32, { roughness: 0.92, metalness: 0 });
+  const pole = new THREE.Mesh(smoothCylinder(0.16, 0.2, 11.2, 8), wood);
+  pole.position.set(x, 5.6, z);
+  scene.add(pole);
+  const arm = boxMesh(2.6, 0.12, 0.12, wood);
+  arm.position.set(x, 10.4, z);
+  scene.add(arm);
+  for (const ox of [-1.05, 0, 1.05]) {
+    const ins = new THREE.Mesh(smoothCylinder(0.05, 0.06, 0.16, 6), mat(0xc8c4bc));
+    ins.position.set(x + ox, 10.55, z);
+    scene.add(ins);
+  }
+  const xf = boxMesh(0.55, 0.45, 0.4, mat(0x6a6e72));
+  xf.position.set(x + 0.45, 8.6, z);
+  scene.add(xf);
+}
+
+function telehandler(x, z, yaw) {
+  const yel = mat(0xf0b400, { roughness: 0.45, metalness: 0.12 });
+  const g = new THREE.Group();
+  const body = boxMesh(1.7, 1.35, 3.4, yel);
+  body.position.y = 1.05;
+  g.add(body);
+  const cab = boxMesh(1.15, 1.15, 1.2, mat(0x1a1c20));
+  cab.position.set(0, 2.05, 0.85);
+  g.add(cab);
+  const boom = boxMesh(0.28, 0.28, 4.6, yel);
+  boom.position.set(0.35, 2.15, -1.6);
+  boom.rotation.x = -0.55;
+  g.add(boom);
+  const fork = boxMesh(0.9, 0.08, 0.7, mats.dark);
+  fork.position.set(0.35, 3.55, -3.55);
+  g.add(fork);
+  for (const [lx, lz] of [
+    [-0.7, 1.15],
+    [0.7, 1.15],
+    [-0.7, -1.15],
+    [0.7, -1.15],
+  ]) {
+    const w = new THREE.Mesh(smoothCylinder(0.48, 0.48, 0.32, 8), mat(0x1a1a1a));
+    w.rotation.z = Math.PI / 2;
+    w.position.set(lx, 0.48, lz);
+    g.add(w);
+  }
+  g.position.set(x, 0, z);
+  g.rotation.y = yaw || 0;
+  scene.add(g);
+  addCollider(x, z, 2.2, 3.8, 0, 2.2);
+}
+
+function ribWallZ(x, outward) {
+  for (let z = CB.z0 + 0.3; z < CB.z1 - 0.3; z += 0.22) {
+    placeBox(x + outward * 0.26, 0.28, z, 0.05, 7.5, 0.045, mats.wall, false);
+  }
+}
+
+function yardGallery(side) {
+  // side +1 = east of CB-4, -1 = west. Matches the 11792 photo:
+  // white UPS modules on the wall, Hitachi pads in front, gravel drive, cones.
+  const wallX = side > 0 ? CB.east : CB.west;
+  const upsX = wallX + side * 3.95;
+  const walkX = wallX + side * 7.35;
+  const xfmrX = wallX + side * 11.4;
+  const roadX = wallX + side * 16.8;
+  const zA = CB.z0 + 4.5;
+  const zB = CB.z1 - 4.5;
+  const span = zB - zA;
+  const midZ = (zA + zB) / 2;
+
+  const lot = new THREE.Mesh(new THREE.PlaneGeometry(28, span + 16), mats.gravel);
+  lot.rotation.x = -Math.PI / 2;
+  lot.position.set(wallX + side * 14, 0.01, midZ);
+  lot.receiveShadow = true;
+  scene.add(lot);
+
+  const walk = new THREE.Mesh(new THREE.PlaneGeometry(5.2, span + 2), mats.slab || mats.concrete);
+  walk.rotation.x = -Math.PI / 2;
+  walk.position.set(walkX, 0.03, midZ);
+  walk.receiveShadow = true;
+  scene.add(walk);
+
+  const dirt = new THREE.Mesh(
+    new THREE.PlaneGeometry(8.5, span + 8),
+    mat(0x6a6358, { roughness: 0.95, metalness: 0 })
+  );
+  dirt.rotation.x = -Math.PI / 2;
+  dirt.position.set(roadX, 0.02, midZ);
+  scene.add(dirt);
+
+  ribWallZ(wallX, side);
+
+  let n = 0;
+  for (let z = zA + 2; z < zB - 2; z += 10.5) {
+    upsTrailer(upsX, z, 0);
+    n++;
+  }
+  n = 0;
+  for (let z = zA + 4.2; z < zB - 2; z += 8.6) {
+    padTransformer(xfmrX, z, side > 0 ? Math.PI / 2 : -Math.PI / 2);
+    coneAt(xfmrX + side * 2.1, z - 1.4);
+    coneAt(xfmrX + side * 2.1, z + 1.6);
+    if (n % 3 === 0) addPuddle(roadX, z + 1.2, 1.6);
+    n++;
+  }
+  for (let z = zA + 8; z < zB; z += 18) {
+    weeds(roadX + side * 5.4, z, 8);
+  }
+}
+
+function buildSouthYard() {
+  // concrete walk along the south face of CB-4 — doors stay clear
+  const walkW = CB.east - CB.west + 10;
+  const walk = new THREE.Mesh(new THREE.PlaneGeometry(walkW, 7.2), mats.slab || mats.concrete);
+  walk.rotation.x = -Math.PI / 2;
+  walk.position.set((CB.west + CB.east) / 2, 0.025, CB.z0 - 3.4);
+  walk.receiveShadow = true;
+  scene.add(walk);
+  for (let x = CB.west + 0.4; x < CB.east - 0.3; x += 0.22) {
+    const onDoor = Math.abs(x - CB.hallWX) < 2.0 || Math.abs(x - CB.hallEX) < 2.0;
+    if (onDoor) continue;
+    placeBox(x, 0.28, CB.z0 - 0.26, 0.045, 7.5, 0.05, mats.wall, false);
+  }
+  for (let x = CB.west + 2; x < CB.east; x += 4.2) {
+    placeBox(x, 0, CB.z0 + 0.15, 0.7, 0.28, 0.7, mats.concrete || mats.slab, false);
+  }
+  for (const x of [CB.west + 6, CB.hallWX + 4, CB.dataX, CB.hallEX - 4, CB.east - 5]) {
+    placeBox(x, 5.4, CB.z0 - 0.28, 0.28, 0.12, 0.22, mats.dark, false);
+    placeBox(x + 0.45, 4.7, CB.z0 - 0.28, 0.1, 0.18, 0.12, mats.redFA, false);
+  }
+  coneAt(CB.hallWX + 3.2, CB.z0 - 2.2);
+  coneAt(CB.dataX - 4, CB.z0 - 1.8);
+  coneAt(CB.hallEX - 2.5, CB.z0 - 2.4);
+  const tarp = boxMesh(1.8, 0.04, 1.1, mat(0x1e4a9a, { roughness: 0.7, metalness: 0.05 }));
+  tarp.position.set(CB.hallWX + 5.5, 0.04, CB.z0 - 2.6);
+  tarp.rotation.y = 0.3;
+  scene.add(tarp);
+  addPuddle(CB.hallWX + 1.2, CB.z0 - 2.4, 1.8);
+  woodMats(CB.west + 8, 28, 0.15);
+  woodMats(CB.west + 4, 22, -0.2);
+  drainHose(CB.hallWX - 8, 32, 0.4, 7.2);
+  weeds(CB.hallWX - 14, 26, 10);
+  weeds(CB.east - 6, 24, 8);
 }
 
 function buildPowerYard() {
-  // mission-critical UPS trailers east of CB-4
-  for (let i = 0; i < 6; i++) {
-    upsTrailer(54, 56 + i * 10, 0);
+  yardGallery(1);
+  yardGallery(-1);
+  // photo left: wood poles + yellow telehandler out on the gravel
+  for (let i = 0; i < 6; i++) utilityPole(CB.west - 24, CB.z0 + 6 + i * 16);
+  for (let i = 0; i < 4; i++) utilityPole(CB.east + 24, CB.z0 + 14 + i * 22);
+  // thin wires between west poles
+  for (let i = 0; i < 5; i++) {
+    const z0 = CB.z0 + 6 + i * 16;
+    const z1 = z0 + 16;
+    const wire = new THREE.Mesh(
+      smoothCylinder(0.018, 0.018, 16, 4),
+      mat(0x2a2a2a)
+    );
+    wire.rotation.x = Math.PI / 2;
+    wire.position.set(CB.west - 24 - 1.05, 10.62, (z0 + z1) / 2);
+    scene.add(wire);
   }
-  for (let i = 0; i < 4; i++) {
-    upsTrailer(62, 60 + i * 10, 0);
-  }
-  powerTransformer(-50, 58, 0.2);
-  powerTransformer(-50, 68, 0.15);
-  powerTransformer(-50, 78, 0.1);
-  padTransformer(-46, 36, 0.4);
-  padTransformer(-46, 42, 0.1);
-  padTransformer(-42, 30, -0.2);
-  padTransformer(22, 8, 0.6);
-  padTransformer(28, 10, 0.3);
-  padTransformer(-8, 6, 1.1);
-  padTransformer(44, 38, 0);
-  padTransformer(44, 44, 0);
+  telehandler(CB.west - 18, CB.z0 - 6, 0.35);
+  telehandler(CB.east + 20, CB.z0 + 22, -1.1);
+  woodMats(CB.west - 16, CB.z0 - 2, 0.08);
+  drainHose(CB.west - 12, CB.z0 + 8, 0.2, 8);
+  weeds(CB.west - 20, CB.z0 + 2, 12);
+  weeds(CB.east + 22, CB.z0 + 6, 9);
 }
 
 function buildCrane() {
@@ -4436,46 +4703,45 @@ function buildCrane() {
 }
 
 function fluidCooler(x, z) {
+  // rooftop adiabatic / dry-cooler bank from the 11792 photo
+  const white = mat(0xd8dce0, { roughness: 0.55, metalness: 0.18 });
+  const dark = mat(0x3a4046, { roughness: 0.5, metalness: 0.25 });
   const g = new THREE.Group();
-  const body = boxMesh(3.8, 2.15, 3.4, mat(0xa8b2b8));
-  body.position.y = 1.1;
+  const body = boxMesh(6.2, 2.35, 4.4, white);
+  body.position.y = 1.18;
   g.add(body);
-  for (let i = -4; i <= 4; i++) {
-    const louver = boxMesh(0.05, 1.85, 3.15, mat(0x7e868c));
-    louver.position.set(1.92, 1.08, i * 0.36);
-    g.add(louver);
-    const l2 = louver.clone();
-    l2.position.x = -1.92;
-    g.add(l2);
+  const top = boxMesh(6.3, 0.12, 4.5, dark);
+  top.position.y = 2.4;
+  g.add(top);
+  for (let i = -1; i <= 1; i++) {
+    for (const dz of [-1.05, 1.05]) {
+      const cowl = new THREE.Mesh(smoothCylinder(0.72, 0.78, 0.42, 8), dark);
+      cowl.position.set(i * 1.85, 2.62, dz);
+      g.add(cowl);
+      const hub = new THREE.Mesh(smoothCylinder(0.16, 0.16, 0.1, 6), mats.dark);
+      hub.position.set(i * 1.85, 2.84, dz);
+      g.add(hub);
+    }
   }
-  for (const dz of [-0.75, 0.75]) {
-    const cowl = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.78, 0.5, 10), mat(0x5c646a));
-    cowl.position.set(0, 2.42, dz);
-    g.add(cowl);
-    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.12, 8), mats.dark);
-    hub.position.set(0, 2.68, dz);
-    g.add(hub);
+  for (const sx of [-1, 1]) {
+    const louver = boxMesh(0.06, 1.7, 4.1, mat(0x9aa2a8));
+    louver.position.set(sx * 3.14, 1.15, 0);
+    g.add(louver);
   }
   g.position.set(x, 8.2, z);
   scene.add(g);
 }
 
 function buildCoolers() {
-  // one roof over the whole CB-4 strip
   const deck = boxMesh(CB.east - CB.west - 2, 0.18, CB.z1 - CB.z0 - 4, mat(0x6a7076));
   deck.position.set((CB.west + CB.east) / 2, 8.12, (CB.z0 + CB.z1) / 2);
   scene.add(deck);
-
-  for (let i = 0; i < CB.pods; i++) {
-    const { z0, z1 } = podBand(i);
-    for (const x of [CB.mechX, CB.dataX, CB.elecEX]) {
-      fluidCooler(x, z0 + 6);
-      fluidCooler(x, z1 - 6);
-    }
+  const xs = [CB.west + 12, CB.west + 28, CB.dataX, CB.east - 12];
+  for (let z = CB.z0 + 8; z < CB.z1 - 6; z += 9.4) {
+    for (const x of xs) fluidCooler(x, z);
   }
-
   const header = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.22, 0.22, CB.z1 - CB.z0 - 8, 8),
+    smoothCylinder(0.22, 0.22, CB.z1 - CB.z0 - 8, 8),
     mat(0x4a5056)
   );
   header.rotation.x = Math.PI / 2;
@@ -4486,12 +4752,12 @@ function buildCoolers() {
 function spoolMesh() {
   const g = new THREE.Group();
   const wood = mat(0x9a6a38);
-  const a = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.08, 12), wood);
+  const a = new THREE.Mesh(smoothCylinder(0.38, 0.38, 0.08, 12), wood);
   a.rotation.z = Math.PI / 2;
   a.position.x = -0.22;
   const b = a.clone();
   b.position.x = 0.22;
-  const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.36, 12), mats.copper);
+  const cable = new THREE.Mesh(smoothCylinder(0.28, 0.28, 0.36, 12), mats.copper);
   cable.rotation.z = Math.PI / 2;
   g.add(a, b, cable);
   g.position.y = 0.38;
@@ -4522,8 +4788,6 @@ function placeWorkMarker(mk, x, z, y) {
 function updateWorkMarkers(dt, t) {
   if (state.mode !== "play" && state.mode !== "end") return;
   const cur = currentJob();
-  // loop-invariant — building this Set per interactable per frame was pure GC churn
-  const jobIds = new Set((JOBS || []).map((j) => j.id));
   for (const it of state.interactables || []) {
     const mk = it.marker;
     if (!mk) continue;
@@ -4537,6 +4801,7 @@ function updateWorkMarkers(dt, t) {
     if (cycleDay(day) === 7 && it.sign) continue;
 
     // show every unfinished work diamond for the active jobs
+    const jobIds = new Set((JOBS || []).map((j) => j.id));
     const isWork = jobIds.has(it.id) || it.demo || it.battery || it.mag || it.pullGame || it.reelTarget || it.check || it.eol || it.high;
     if (isWork || (cur && it.id === cur.id)) {
       mk.visible = true;
@@ -4551,6 +4816,37 @@ function updateWorkMarkers(dt, t) {
 
 function smokeMesh() {
   return isTremont() ? lightMesh() : smokeFaMesh();
+}
+
+function placeWallDevice(mesh, spec) {
+  const mount=resolveWallMount(wallSurfaces,spec);
+  mesh.position.set(mount.x,spec.height,mount.z);
+  if(spec.rotate!==false)mesh.rotation.y=mount.yaw;
+  mesh.userData.wallMount=mount;
+  deviceMounts.push({mesh,mount});
+  // A surface box and strapped riser connect each device to the high-level run.
+  const group=new THREE.Group();group.name='Connected device conduit';
+  group.position.set(mount.axis==='x'?mount.surface:mount.x,0,mount.axis==='z'?mount.surface:mount.z);
+  group.rotation.y=mount.yaw;
+  const conduitMat=isTremont()?mats.emt:mats.redFA;
+  const box=boxMesh(Math.max(.16,Math.min(.3,spec.width||.3)),.19,.055,conduitMat);box.position.set(0,spec.height,.029);group.add(box);
+  const bottom=spec.height+.08,top=7.68;
+  const pipe=new THREE.Mesh(smoothCylinder(.018,.018,top-bottom,8),conduitMat);pipe.position.set(0,(top+bottom)/2,.031);group.add(pipe);
+  for(let y=bottom+.35;y<top;y+=1.35){const strap=boxMesh(.07,.035,.016,mats.emt);strap.position.set(0,y,.047);group.add(strap);}
+  const junction=boxMesh(.13,.13,.055,conduitMat);junction.position.set(0,top,.029);group.add(junction);
+  const trunk=new THREE.Mesh(smoothCylinder(.018,.018,mount.wall.hi-mount.wall.lo-.4,8),conduitMat);
+  trunk.rotation.z=Math.PI/2;const mid=(mount.wall.lo+mount.wall.hi)/2;
+  // Local X runs in the wall plane; its sign changes on opposite-facing walls.
+  trunk.position.set((mid-mount.at)*(mount.axis==='x'?-mount.normal:mount.normal),top,.031);group.add(trunk);
+  scene.add(group);
+  return mount;
+}
+
+function supportCeilingDevice(x,y,z){
+  const material=isTremont()?mats.emt:mats.redFA;
+  const box=boxMesh(.14,.08,.14,material);box.position.set(x,y+.065,z);scene.add(box);
+  const rise=8.01-(y+.105);
+  if(rise>0){const stem=new THREE.Mesh(smoothCylinder(.017,.017,rise,8),material);stem.position.set(x,y+.105+rise/2,z);scene.add(stem);}
 }
 function strobeMesh() {
   return isTremont() ? recMesh() : strobeFaMesh();
@@ -4576,9 +4872,9 @@ function vesdaMesh() {
   );
   led.position.set(0.18, 1.36, 0.19);
   const pipeH = 5.4;
-  const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.038, pipeH, 8), mats.orange);
+  const pipe = new THREE.Mesh(smoothCylinder(0.038, 0.038, pipeH, 8), mats.orange);
   pipe.position.set(-0.2, 1.45 + pipeH / 2, 0);
-  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.06, 8), mats.dark);
+  const cap = new THREE.Mesh(smoothCylinder(0.05, 0.05, 0.06, 8), mats.dark);
   cap.position.set(-0.2, 1.45 + pipeH, 0);
   g.add(cab, door, screen, led, pipe, cap);
   g.userData = { led, screen };
@@ -4587,7 +4883,7 @@ function vesdaMesh() {
 
 function smokeFaMesh() {
   const g = new THREE.Group();
-  const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.07, 16), mat(0x8a8884));
+  const disc = new THREE.Mesh(smoothCylinder(0.22, 0.22, 0.07, 16), mat(0x8a8884));
   const led = new THREE.Mesh(
     new THREE.SphereGeometry(0.03, 6, 6),
     new THREE.MeshLambertMaterial({ color: 0x331111, emissive: 0x000000 })
@@ -4600,9 +4896,9 @@ function smokeFaMesh() {
 
 function lightMesh() {
   const g = new THREE.Group();
-  const can = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.1, 12), mat(0x5a6068));
+  const can = new THREE.Mesh(smoothCylinder(0.16, 0.2, 0.1, 12), mat(0x5a6068));
   const disc = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.19, 0.19, 0.035, 16),
+    smoothCylinder(0.19, 0.19, 0.035, 16),
     new THREE.MeshLambertMaterial({ color: 0xa8adb4, emissive: 0x000000 })
   );
   disc.position.y = -0.07;
@@ -4665,22 +4961,18 @@ function switchMesh() {
   return g;
 }
 
-// shared on/off disc materials — allocating a fresh material per call leaked
-// one into the renderer caches every day transition, per device
-const SMOKE_LOOK = {
-  tremOn: new THREE.MeshLambertMaterial({ color: 0xfff4d6, emissive: 0xffe08a, emissiveIntensity: 0.7 }),
-  tremOff: new THREE.MeshLambertMaterial({ color: 0xa8adb4 }),
-  faOn: new THREE.MeshLambertMaterial({ color: 0xf4f1ea }),
-  faOff: new THREE.MeshLambertMaterial({ color: 0x8a8884 }),
-};
 function setSmokeLook(s, on) {
   if (!s || !s.userData.disc) return;
   if (isTremont()) {
-    s.userData.disc.material = on ? SMOKE_LOOK.tremOn : SMOKE_LOOK.tremOff;
+    s.userData.disc.material = new THREE.MeshLambertMaterial({
+      color: on ? 0xfff4d6 : 0xa8adb4,
+      emissive: on ? 0xffe08a : 0x000000,
+      emissiveIntensity: on ? 0.7 : 0,
+    });
     s.userData.led.material.emissive.setHex(on ? 0xffe8a0 : 0x000000);
     s.userData.led.material.emissiveIntensity = on ? 1.3 : 0;
   } else {
-    s.userData.disc.material = on ? SMOKE_LOOK.faOn : SMOKE_LOOK.faOff;
+    s.userData.disc.material = mat(on ? 0xf4f1ea : 0x8a8884);
     s.userData.led.material.emissive.setHex(on ? 0xff2a2a : 0x000000);
     s.userData.led.material.emissiveIntensity = on ? 0.9 : 0;
   }
@@ -4699,8 +4991,19 @@ function setStrobeLook(st, on) {
 }
 
 function hangConduitMesh() {
-  const p = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 2.2, 6), isTremont() ? mats.emt : mats.redFA);
-  p.rotation.z = Math.PI / 2;
+  const material=isTremont()?mats.emt:mats.redFA;
+  const geometry=smoothCylinder(.022,.022,1.94,10);geometry.rotateZ(Math.PI/2);
+  const p=new THREE.Mesh(geometry,material);p.name='Strapped wall EMT with device drop';
+  for(const x of [-.82,0,.82]){
+    const strap=boxMesh(.045,.085,.014,mats.emt);strap.position.set(x,0,.029);p.add(strap);
+  }
+  for(const x of [-.93,.84]){
+    const coupling=new THREE.Mesh(smoothCylinder(.03,.03,.085,10),material);coupling.rotation.z=Math.PI/2;coupling.position.x=x;p.add(coupling);
+  }
+  const curve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(.97,0,0),new THREE.Vector3(1.05,0,0),new THREE.Vector3(1.05,-.08,0));
+  p.add(new THREE.Mesh(new THREE.TubeGeometry(curve,8,.022,8,false),material));
+  const drop=new THREE.Mesh(smoothCylinder(.022,.022,.9,10),material);drop.position.set(1.05,-.53,0);p.add(drop);
+  const box=boxMesh(.18,.22,.075,material);box.position.set(1.05,-1.06,0);p.add(box);
   return p;
 }
 
@@ -4719,7 +5022,7 @@ function buildInteractables() {
     const post = boxMesh(0.07, 0.75, 0.07, cartRed);
     post.position.set(px, 0.58, pz);
     cart.add(post);
-    const caster = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.05, 8), mats.dark);
+    const caster = new THREE.Mesh(smoothCylinder(0.06, 0.06, 0.05, 8), mats.dark);
     caster.rotation.z = Math.PI / 2;
     caster.position.set(px, 0.09, pz);
     cart.add(caster);
@@ -4752,10 +5055,10 @@ function buildInteractables() {
 
   // high work — one device up on the tilt-up, scissor-only reach
   {
-    const hx = CB.westHallX;
+    const hx = CB.westHallX + 2.4;
     const s = smokeMesh();
     s.rotation.x = Math.PI / 2; // wall-mounted: disc axis onto Z, face out to the yard
-    s.position.set(hx, 5.2, CB.z0 - 0.55);
+    placeWallDevice(s,{axis:'z',plane:CB.z0,along:hx,height:5.2,normal:-1,width:.44,depth:.07,rotate:false});
     scene.add(s);
     const mk = marker(0xff5a4a);
     placeWorkMarker(mk, hx, CB.z0 - 0.9, 5.0);
@@ -4795,22 +5098,23 @@ function buildInteractables() {
     marker: toolMk,
   });
 
-  // EMT to hang — data hall + both long halls + electrical (red FA / silver EMT)
+  // Wall EMT: junction riser, strapped branch and bent drop to a device box.
   for (let i = 0; i < 2; i++) {
     const { mid } = podBand(i);
     const spots = [
-      [CB.dataX, mid - 4],
-      [CB.hallWX, mid],
-      [CB.hallEX, mid + 3],
-      [CB.elecWX, mid + 2],
+      [CB.data0, 1, mid - 4],
+      [CB.elecW0, -1, mid],
+      [CB.elecE1, 1, mid + 3],
+      [CB.fanW0, -1, mid + 2],
     ];
-    spots.forEach(([x, z]) => {
+    spots.forEach(([plane,normal,along]) => {
       const stub = hangConduitMesh();
-      stub.position.set(x, 2.55, z);
+      const mount=placeWallDevice(stub,{axis:'x',plane,along,height:2.55,normal,width:2.35,depth:.044});
+      const x=mount.x+normal*.65,z=mount.z;
       stub.visible = false;
       scene.add(stub);
       const mk = marker(0xff5a4a);
-      placeWorkMarker(mk, x, z, 2.55);
+      placeWorkMarker(mk, x, z, 3.0);
       scene.add(mk);
       addItem({
         id: "conduit",
@@ -4832,30 +5136,34 @@ function buildInteractables() {
       : { x: CB.cor1 + 0.4, z: mid + 3, rot: Math.PI / 2 };
     const { x, z, rot } = spec;
     const b = faBoxMesh();
-    b.position.set(x, 1.45, z);
-    b.rotation.y = rot;
+    const mount=placeWallDevice(b,{axis:'x',plane:i%2===0?CB.data0:CB.data1,along:z,height:1.45,normal:i%2===0?-1:1,width:.22,depth:.12});
     b.visible = false;
     scene.add(b);
     const mk = marker(0xff5a4a);
-    placeWorkMarker(mk, x, z, 2.35);
+    placeWorkMarker(mk, mount.x+mount.normal*.55, mount.z, 2.35);
     scene.add(mk);
     addItem({
       id: "boxes",
       mesh: b,
-      x,
-      z,
+      x:mount.x+mount.normal*.55,
+      z:mount.z,
       label: "Mount FA box",
       marker: mk,
       box: b,
     });
   }
 
-  // live yellow feeders in electrical — hazard only
+  // Open electrical service enclosures at gear faces — same hazard rules, clear aisle
   const addSpark = (x, z, d7) => {
-    const post = boxMesh(0.18, 1.1, 0.18, mats.dark);
-    post.position.set(x, 0.55, z);
-    post.userData.noBake = true;
+    const side = x < CB.dataX ? 'west' : 'east';
+    const service = powerServicePosition(CB, side, z);
+    x = service.x;
+    const post = getPowerRouting().hazardEnclosure();
+    post.position.set(x, 0, z);
+    post.rotation.y = service.yaw;
+    post.traverse(o => o.userData.noBake = true);
     scene.add(post);
+    addCollider(x, z, .42, .70, 0, 1.9);
     const tip = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), new THREE.MeshBasicMaterial({ color: 0x9cf6ff }));
     tip.position.set(x, 1.25, z);
     scene.add(tip);
@@ -4879,7 +5187,8 @@ function buildInteractables() {
       : [[CB.dataX, mid]];
     spots.forEach(([x, z]) => {
       const s = smokeMesh();
-      s.position.set(x, 7.35, z);
+      s.position.set(x, 7.86, z);
+      supportCeilingDevice(x,7.86,z);
       scene.add(s);
       const mk = marker(0xff5a4a);
       placeWorkMarker(mk, x, z, 5.6); // high enough to read as ceiling work
@@ -4897,71 +5206,73 @@ function buildInteractables() {
     });
   }
 
-  // strobes on the corridor walls BESIDE the hall doors (not in the opening)
+  // Mounted on each data room's real south wall, beside its door into the cross hall.
   for (let i = 0; i < CB.pods; i++) {
     const { mid } = podBand(i);
     const east = i % 2 === 1;
-    const x = east ? CB.data1 + 0.3 : CB.data0 - 0.3;
-    const z = podBand(i).z0 - 0.4;
     const s = strobeMesh();
-    s.position.set(x, 2.15, z);
-    s.rotation.y = east ? Math.PI / 2 : -Math.PI / 2;
+    const mount=placeWallDevice(s,{axis:'z',plane:podBand(i).z0,along:CB.dataX+(east?2.7:-2.7),height:2.25,normal:-1,width:.3,depth:.08});
+    const {x,z}=mount;
     scene.add(s);
     const mk = marker(0xff5a4a);
-    placeWorkMarker(mk, x + (east ? -0.4 : 0.4), z, 2.7);
+    placeWorkMarker(mk, x, z-.55, 2.7);
     scene.add(mk);
     const rec = { mesh: s, lens: s.userData.lens, mounted: false };
     state.strobes.push(rec);
     addItem({
       id: "nac",
       mesh: s,
-      x: x + (east ? -0.5 : 0.5),
-      z,
+      x,
+      z:z-.55,
       label: "Mount horn-strobe",
       marker: mk,
       strobe: rec,
     });
   }
   const pullSpots = [
-    { x: CB.dataX, z: CB.z0 + 0.7, rot: 0 },
-    { x: CB.hallWX, z: CB.z0 + 0.7, rot: 0 },
-    { x: CB.hallEX, z: CB.z0 + 0.7, rot: 0 },
+    {axis:'z',plane:podBand(0).z0,along:CB.dataX+2.55,height:1.15,normal:-1,width:.2,depth:.1},
+    {axis:'z',plane:CB.z0,along:CB.hallWX+2.4,height:1.15,normal:1,width:.2,depth:.1},
+    {axis:'z',plane:CB.z0,along:CB.hallEX-2.4,height:1.15,normal:1,width:.2,depth:.1},
   ];
-  pullSpots.forEach(({ x, z, rot }) => {
+  pullSpots.forEach(spec => {
     const p = pullMesh();
-    p.position.set(x, 1.35, z);
-    p.rotation.y = rot;
+    const mount=placeWallDevice(p,spec),{x,z}=mount;
     scene.add(p);
     const mk = marker(0xff5a4a);
-    placeWorkMarker(mk, x, z, 2.45);
+    placeWorkMarker(mk, x, z+mount.normal*.55, 2.45);
     scene.add(mk);
     addItem({
       id: "nac",
       mesh: p,
       x,
-      z,
+      z:z+mount.normal*.55,
       label: "Mount pull station",
       marker: mk,
       pull: true,
     });
   });
 
-  // FACP — corridor wall, pod 1, BESIDE the hall door (not in the opening)
-  const facpZ = podBand(0).z0 - 0.45;
-  const facpX = CB.dataX + 4;
-  const facp = placeBox(facpX, 0, facpZ, 0.45, 2.2, 1.4, mat(isTremont() ? 0x8a939c : 0xb71c1c), true);
-  const facpGlass = boxMesh(0.04, 0.35, 0.55, mat(0x111));
-  facpGlass.position.set(facpX + 0.24, 1.7, facpZ);
-  scene.add(facpGlass);
+  // Surface-mounted control panel faces the cross-hall, with clear space at the door.
+  const facp = new THREE.Group();facp.name='Fire alarm control panel';
+  const facpPaint=mat(isTremont()?0x8a939c:0xb71c1c);
+  facp.add(boxMesh(.78,1.1,.2,facpPaint));
+  const facpDoor=boxMesh(.72,1.03,.025,facpPaint);facpDoor.position.z=.112;facp.add(facpDoor);
+  const facpGlass=boxMesh(.51,.34,.018,mat(0x172024));facpGlass.position.set(0,.22,.134);facp.add(facpGlass);
+  for(let i=0;i<4;i++){const key=boxMesh(.055,.04,.016,mats.dark);key.position.set(-.22+i*.14,-.09,.137);facp.add(key);}
+  for(let i=0;i<3;i++){const status=boxMesh(.018,.018,.012,mat([0x4f915f,0xba982d,0x85362b][i]));status.position.set(-.2+i*.06,.17,.148);facp.add(status);}
+  const lock=new THREE.Mesh(smoothCylinder(.02,.02,.02,8),mats.emt);lock.rotation.x=Math.PI/2;lock.position.set(.31,-.27,.14);facp.add(lock);
+  const facpMount=placeWallDevice(facp,{axis:'z',plane:podBand(0).z0,along:CB.dataX+4,height:1.35,normal:-1,width:.78,depth:.2});
+  const facpX=facpMount.x,facpZ=facpMount.z;
+  scene.add(facp);
   const faMk = marker(0xff5a4a);
   facp.add(faMk);
-  faMk.position.set(0.35, 1.65, 0);
-  faMk.userData.baseY = 1.65;
+  faMk.position.set(0, 1.05, .48);
+  faMk.userData.baseY = 1.05;
   addItem({
     id: "facp",
     mesh: facp,
-    x: facpX + 0.8,
-    z: facpZ,
+    x: facpX,
+    z: facpZ-.8,
     label: "Commission FACP",
     marker: faMk,
     facp: true,
@@ -5019,7 +5330,7 @@ function buildInteractables() {
     [28, 49.5],
   ];
   const [tx, tz] = tSpots[Math.floor(Math.random() * tSpots.length)];
-  const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.02, 10), mat(0xf2efe4));
+  const plate = new THREE.Mesh(smoothCylinder(0.16, 0.16, 0.02, 10), mat(0xf2efe4));
   plate.position.set(tx, 0.16, tz);
   plate.userData.noBake = true;
   scene.add(plate);
@@ -5048,27 +5359,49 @@ const dayState = { ahjIdx: 0, ahjDwell: 0, corrections: 0, genT: GEN_FEED, carry
 let dayLights = null;
 let nightRig = null;
 
+function setCeilEmissive(k) {
+  if (nightRig?.ceilMats) {
+    nightRig.ceilMats[0].emissiveIntensity = 2.1 * k;
+    nightRig.ceilMats[1].emissiveIntensity = 1.7 * k;
+  }
+  if (nightRig?.bayMat) nightRig.bayMat.emissiveIntensity = 1.55 * k;
+}
+
 function setNight(on) {
   if (!dayLights) return;
+  if(!on)blackout?.restore();
   if (!on) {
-    dayLights.hemi.intensity = 1.0;
-    dayLights.sun.intensity = 0.95;
-    dayLights.amb.intensity = 0.42;
-    scene.background.setHex(0x8ea0ad);
-    scene.fog.color.setHex(0x8ea0ad);
-    scene.fog.near = 50;
-    scene.fog.far = 360;
+    dayLights.hemi.intensity = 0.72;
+    dayLights.hemi.color.set(0xd7e4f0);
+    dayLights.hemi.groundColor.set(0x5a5648);
+    dayLights.sun.intensity = 1.55;
+    dayLights.sun.color.set(0xfff3e0);
+    dayLights.amb.intensity = 0.22;
+    if (dayLights.fill) dayLights.fill.intensity = 0.28;
+    if (dayLights.hallKey) dayLights.hallKey.intensity = 0;
+    if (dayLights.env) scene.environment = dayLights.env;
+    scene.environmentIntensity = 0.7;
+    setCeilEmissive(1);
+    scene.background.setHex(0x8b9aaa);
+    scene.fog.color.setHex(0x8b9aaa);
+    scene.fog.near = 48;
+    scene.fog.far = 380;
+    renderer.toneMappingExposure = 1.12;
+    if (lookPass?.compMat) lookPass.compMat.uniforms.bloomAmt.value = isCoarse() ? 0 : 0.13;
     if (nightRig) {
       for (const L of nightRig.pods) L.visible = false;
       nightRig.lamp.visible = false;
     }
     applyGennyVisual(false, false);
+    for (const v of state.vistas || []) {
+      if (v.material && v.material.color) v.material.color.setRGB(1, 1, 1);
+    }
     const wrap = $("genny-wrap");
     if (wrap) wrap.classList.add("hidden");
     return;
   }
-  scene.background.setHex(0x0a0e16);
-  scene.fog.color.setHex(0x0a0e16);
+  scene.background.setHex(0x05070c);
+  scene.fog.color.setHex(0x05070c);
   applyNightPower();
 }
 
@@ -5076,27 +5409,70 @@ function applyNightPower(t) {
   if (cycleDay(day) !== 4 || !dayLights) return;
   const transferred = !!dayState.genTransferred;
   const fed = transferred || dayState.genT > 0;
+  const dead = !fed;
+  if(!dead)blackout?.restore();
   const low = !transferred && dayState.genT > 0 && dayState.genT < 18;
-  dayLights.hemi.intensity = fed ? 0.58 : 0.10;
-  dayLights.sun.intensity = fed ? 0.2 : 0.03;
-  dayLights.amb.intensity = fed ? 0.4 : 0.06;
-  scene.fog.near = fed ? 48 : 16;
-  scene.fog.far = fed ? 260 : 90;
+  // Night outside. Diesel ON = hall lights on (warm). Dead = headlamp black.
+  scene.environment = null;
+  if (scene.environmentIntensity != null) scene.environmentIntensity = 0;
+  dayLights.sun.color.set(0x3a4a6a);
+  dayLights.sun.intensity = dead ? 0 : transferred ? 0.08 : 0.05;
+  if (dayLights.fill) dayLights.fill.intensity = dead ? 0 : 0.12;
+  dayLights.hemi.color.set(dead ? 0x0c1422 : 0xffe6c0);
+  dayLights.hemi.groundColor.set(dead ? 0x08080a : 0x3a3228);
+  dayLights.hemi.intensity = dead ? 0 : transferred ? 0.7 : 0.55;
+  dayLights.amb.intensity = dead ? 0 : transferred ? 0.32 : 0.24;
+  if (dayLights.hallKey) {
+    dayLights.hallKey.position.set(player.position.x, 5.85, player.position.z);
+    dayLights.hallKey.color.set(transferred ? 0xfff4e4 : 0xffd090);
+    let hallI = dead ? 0 : transferred ? 2.2 : 1.9;
+    if (low && t != null) hallI *= 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * 14));
+    dayLights.hallKey.intensity = hallI;
+    dayLights.hallKey.distance = dead ? 1 : 28;
+  }
+  scene.fog.color.setHex(dead ? 0x000000 : 0x1a1814);
+  scene.fog.near = dead ? 2 : 18;
+  scene.fog.far = dead ? 14 : 95;
+  scene.background.setHex(dead ? 0x000000 : 0x0c1018);
+  renderer.toneMappingExposure = dead ? 0.18 : transferred ? 1.05 : 0.92;
+  if (lookPass?.compMat) lookPass.compMat.uniforms.bloomAmt.value = dead || isCoarse() ? 0 : 0.13;
+  let ceilK = dead ? 0 : transferred ? 1.15 : 1.0;
+  if (low && t != null) ceilK *= 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * 17));
+  setCeilEmissive(ceilK);
   if (nightRig) {
-    let podsOn = fed;
+    let podsOn = !dead;
     if (low && t != null) podsOn = Math.sin(t * 17) > -0.15;
     for (const L of nightRig.pods) {
-      // flicker with intensity, not visibility — toggling visible changes the
-      // light count and forces a full shader recompile for every lit material
-      L.visible = true;
-      L.intensity = fed && podsOn ? 1.4 : 0;
-      L.distance = 38;
+      L.color.set(transferred ? 0xfff0d8 : 0xffd9a0);
+      L.intensity = transferred ? 1.4 : 1.15;
+      L.distance = 28;
+      L.visible = podsOn;
     }
-    nightRig.lamp.visible = !!state.hasTools;
-    nightRig.lamp.intensity = fed && !low ? 0.7 : 2.5;
+    nightRig.lamp.visible = dead || !!state.hasTools;
+    nightRig.lamp.intensity = dead ? 16 : low ? 1.6 : 0.55;
+    nightRig.lamp.distance = dead ? 12 : 18;
+    nightRig.lamp.angle = dead ? 0.4 : 0.5;
+    nightRig.lamp.penumbra = 0.45;
+    nightRig.lamp.color.set(dead ? 0xffe6b8 : 0xfff2d8);
+    const beamYaw=cam.yaw-player.rotation.y;
+    nightRig.lamp.target.position.set(Math.sin(beamYaw)*8,1.25,Math.cos(beamYaw)*8);
+  }
+  const vistaK = dead ? 0 : transferred ? 0.85 : 0.55;
+  for (const v of state.vistas || []) {
+    if (v.material && v.material.color) v.material.color.setRGB(vistaK, vistaK, vistaK);
   }
   applyGennyVisual(fed && !transferred, low);
+  blackout ||= createBlackout(THREE,scene);
+  blackout.set(dead,nightRig?.lamp);
   updateGennyHud();
+}
+
+function nightNoPower(it) {
+  if (cycleDay(day) !== 4 || dayState.genTransferred || dayState.genT > 0) return false;
+  if (!it) return true;
+  if (it.genny || it.id === "genny" || it.id === "tools") return false;
+  if (it.coffee || it.utv || it.liftDrive || it.store) return false;
+  return true;
 }
 
 function applyGennyVisual(running, low) {
@@ -5178,17 +5554,7 @@ function npcWalk(rec, tx, tz, sp, dt) {
     let ddz = nz - cz;
     const d2 = ddx * ddx + ddz * ddz;
     if (d2 < 0.16) {
-      const dd = Math.sqrt(d2);
-      if (dd < 1e-6) {
-        // center inside the box — push out through the nearest face
-        const fw = nx - b.minx, fe = b.maxx - nx, fs = nz - b.minz, fn = b.maxz - nz;
-        const fm = Math.min(fw, fe, fs, fn);
-        if (fm === fw) nx = b.minx - 0.401;
-        else if (fm === fe) nx = b.maxx + 0.401;
-        else if (fm === fs) nz = b.minz - 0.401;
-        else nz = b.maxz + 0.401;
-        continue;
-      }
+      const dd = Math.sqrt(d2) || 0.0001;
       nx += (ddx / dd) * (0.4 - dd + 0.001);
       nz += (ddz / dd) * (0.4 - dd + 0.001);
     }
@@ -5299,7 +5665,7 @@ function snackItems() {
   return worldItems
     .filter((i) => {
       if (tremont && i.candy) return false; // Tremont does not run the candy bag
-      return i.coffee || i.tender || i.candy || i.cartGrab || i.liftDrive || i.andyFund;
+      return i.coffee || i.tender || i.candy || i.cartGrab || i.liftDrive;
     })
     .map((i) => {
       const copy = { ...i, done: false };
@@ -5613,14 +5979,826 @@ function storeInteractable() {
 }
 
 /* set the world + interactable list to match the current day */
+/* ------------------------------------------------------------------ */
+/*  UTAH STAYS HOME — bedroom, bed, pipes of cash, text Lugo           */
+/* ------------------------------------------------------------------ */
+const HOME = { x: 380, y: 0, z: 0 };
+
+function cashTex() {
+  if (mats._cash) return mats._cash;
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 128;
+  const g = c.getContext("2d");
+  g.fillStyle = "#0f4a24";
+  g.fillRect(0, 0, 256, 128);
+  g.fillStyle = "#1f7a3c";
+  g.fillRect(6, 6, 244, 116);
+  g.fillStyle = "#2f9a52";
+  g.fillRect(14, 14, 228, 100);
+  g.strokeStyle = "#d4e8c0";
+  g.lineWidth = 3;
+  g.strokeRect(18, 18, 220, 92);
+  g.fillStyle = "#e8f6d8";
+  g.beginPath();
+  g.arc(64, 64, 28, 0, Math.PI * 2);
+  g.fill();
+  g.fillStyle = "#14532d";
+  g.font = "bold 22px Georgia, serif";
+  g.fillText("100", 46, 72);
+  g.font = "bold 42px Georgia, serif";
+  g.fillStyle = "#eaf8d8";
+  g.fillText("$100", 108, 78);
+  g.font = "11px Georgia, serif";
+  g.fillText("SERIES 2026", 110, 98);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  mats._cash = t;
+  return t;
+}
+
+function cashBrickTex() {
+  if (mats._brick) return mats._brick;
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 128;
+  const g = c.getContext("2d");
+  g.fillStyle = "#166534";
+  g.fillRect(0, 0, 256, 128);
+  for (let i = 0; i < 18; i++) {
+    g.fillStyle = i % 2 ? "#1f7a3c" : "#15803d";
+    g.fillRect(0, i * 7, 256, 6);
+    g.fillStyle = "#14532d";
+    g.fillRect(0, i * 7 + 6, 256, 1);
+  }
+  g.fillStyle = "#bbf7d0";
+  g.font = "bold 28px Georgia, serif";
+  g.fillText("$10,000", 70, 72);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  mats._brick = t;
+  return t;
+}
+
+function phoneTex() {
+  if (mats._phone) return mats._phone;
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 512;
+  const g = c.getContext("2d");
+  g.fillStyle = "#0b0c10";
+  g.fillRect(0, 0, 256, 512);
+  g.fillStyle = "#111827";
+  g.fillRect(10, 28, 236, 460);
+  g.fillStyle = "#e8edda";
+  g.font = "bold 22px IBM Plex Mono, monospace";
+  g.fillText("LUGO", 20, 64);
+  g.font = "16px IBM Plex Mono, monospace";
+  g.fillStyle = "#9aa386";
+  g.fillText("CH. 3 · FOREMAN", 20, 88);
+  g.fillStyle = "#1f2933";
+  g.fillRect(16, 110, 180, 56);
+  g.fillStyle = "#d6f04a";
+  g.font = "15px IBM Plex Mono, monospace";
+  g.fillText("You coming in?", 28, 144);
+  g.fillStyle = "#243018";
+  g.fillRect(60, 180, 180, 72);
+  g.fillStyle = "#e8edda";
+  g.fillText("Staying home.", 72, 214);
+  g.fillText("Don't wait.", 72, 236);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  mats._phone = t;
+  return t;
+}
+
+function homeTex(key, w, h, draw, rx, ry) {
+  if (mats[key]) return mats[key];
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  draw(c.getContext("2d"), w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  if (rx) {
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(rx, ry || rx);
+  }
+  mats[key] = t;
+  return t;
+}
+
+function floorTex() {
+  return homeTex("_floor", 512, 512, (g, w, h) => {
+    g.fillStyle = "#6a4328";
+    g.fillRect(0, 0, w, h);
+    const plank = 48;
+    for (let x = 0; x < w; x += plank) {
+      const shade = 0.88 + ((x * 13) % 7) * 0.02;
+      g.fillStyle = `rgb(${Math.floor(122 * shade)},${Math.floor(78 * shade)},${Math.floor(42 * shade)})`;
+      g.fillRect(x, 0, plank - 2, h);
+      g.fillStyle = "rgba(40,22,10,0.45)";
+      g.fillRect(x + plank - 2, 0, 2, h);
+      for (let y = ((x * 5) % 90); y < h; y += 92) {
+        g.fillRect(x, y, plank - 2, 2);
+      }
+      g.strokeStyle = "rgba(90,50,24,0.25)";
+      for (let i = 0; i < 8; i++) {
+        g.beginPath();
+        g.moveTo(x + 6 + i * 4, 0);
+        g.lineTo(x + 4 + i * 5, h);
+        g.stroke();
+      }
+    }
+  }, 8, 8);
+}
+
+function wallTex() {
+  return homeTex("_wall", 256, 256, (g, w, h) => {
+    g.fillStyle = "#e8d8c4";
+    g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 900; i++) {
+      g.fillStyle = `rgba(180,150,120,${0.04 + Math.random() * 0.05})`;
+      g.fillRect(Math.random() * w, Math.random() * h, 2, 2);
+    }
+    g.fillStyle = "rgba(255,244,220,0.12)";
+    g.fillRect(0, 0, w, 40);
+  }, 4, 3);
+}
+
+function linenTex() {
+  return homeTex("_linen", 256, 256, (g, w, h) => {
+    g.fillStyle = "#f3ebe0";
+    g.fillRect(0, 0, w, h);
+    g.strokeStyle = "rgba(190,175,155,0.35)";
+    g.lineWidth = 1;
+    for (let i = 0; i < w; i += 4) {
+      g.beginPath();
+      g.moveTo(i, 0);
+      g.lineTo(i, h);
+      g.stroke();
+    }
+    g.strokeStyle = "rgba(210,195,175,0.28)";
+    for (let i = 0; i < h; i += 5) {
+      g.beginPath();
+      g.moveTo(0, i);
+      g.lineTo(w, i);
+      g.stroke();
+    }
+  }, 2, 2);
+}
+
+function duvetTex() {
+  return homeTex("_duvet", 256, 256, (g, w, h) => {
+    g.fillStyle = "#2c3a4e";
+    g.fillRect(0, 0, w, h);
+    g.fillStyle = "#35465c";
+    for (let y = 0; y < h; y += 32) {
+      for (let x = 0; x < w; x += 32) {
+        if (((x + y) / 32) % 2) g.fillRect(x, y, 32, 32);
+      }
+    }
+    g.strokeStyle = "rgba(20,28,40,0.25)";
+    for (let i = 0; i < w; i += 8) {
+      g.beginPath();
+      g.moveTo(i, 0);
+      g.lineTo(i, h);
+      g.stroke();
+    }
+  }, 3, 4);
+}
+
+function woodTex() {
+  return homeTex("_woodfurn", 256, 256, (g, w, h) => {
+    g.fillStyle = "#5a3824";
+    g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 18; i++) {
+      g.strokeStyle = i % 2 ? "rgba(90,55,30,0.5)" : "rgba(30,16,8,0.35)";
+      g.beginPath();
+      g.moveTo(0, i * 14 + 4);
+      g.bezierCurveTo(80, i * 14, 160, i * 14 + 10, 256, i * 14 + 2);
+      g.stroke();
+    }
+  }, 2, 2);
+}
+
+function rugTex() {
+  return homeTex("_rug", 256, 256, (g, w, h) => {
+    g.fillStyle = "#6b2a22";
+    g.fillRect(0, 0, w, h);
+    g.strokeStyle = "#c4a36a";
+    g.lineWidth = 10;
+    g.strokeRect(16, 16, w - 32, h - 32);
+    g.strokeStyle = "#3a1410";
+    g.lineWidth = 4;
+    g.strokeRect(28, 28, w - 56, h - 56);
+    g.fillStyle = "#8a3a2c";
+    g.beginPath();
+    g.moveTo(w / 2, 48);
+    g.lineTo(w - 48, h / 2);
+    g.lineTo(w / 2, h - 48);
+    g.lineTo(48, h / 2);
+    g.closePath();
+    g.fill();
+  }, 1, 1);
+}
+
+function skyTex() {
+  return homeTex("_sky", 256, 256, (g, w, h) => {
+    const grd = g.createLinearGradient(0, 0, 0, h);
+    grd.addColorStop(0, "#7eb6d8");
+    grd.addColorStop(0.55, "#f0c48a");
+    grd.addColorStop(1, "#d9e6c8");
+    g.fillStyle = grd;
+    g.fillRect(0, 0, w, h);
+    g.fillStyle = "#4a7a3a";
+    g.beginPath();
+    g.moveTo(0, h);
+    g.lineTo(0, h * 0.62);
+    g.quadraticCurveTo(60, h * 0.4, 120, h * 0.58);
+    g.quadraticCurveTo(180, h * 0.38, 256, h * 0.55);
+    g.lineTo(256, h);
+    g.fill();
+  });
+}
+
+function pillowTex() {
+  return homeTex("_pillow", 128, 128, (g, w, h) => {
+    g.fillStyle = "#f6f0e6";
+    g.fillRect(0, 0, w, h);
+    g.fillStyle = "rgba(210,198,180,0.4)";
+    for (let i = 0; i < 80; i++) g.fillRect(Math.random() * w, Math.random() * h, 3, 2);
+  });
+}
+
+function buildUtahBedroom() {
+  if (state.homeRoot) {
+    scene.remove(state.homeRoot);
+    state.homeRoot.traverse((o) => {
+      if (o.geometry) o.geometry.dispose?.();
+    });
+  }
+  const g = new THREE.Group();
+  g.position.set(HOME.x, HOME.y, HOME.z);
+
+  const wallM = new THREE.MeshLambertMaterial({ map: wallTex() });
+  const woodM = new THREE.MeshLambertMaterial({ map: woodTex() });
+  const floorM = new THREE.MeshLambertMaterial({ map: floorTex() });
+  const sheetM = new THREE.MeshLambertMaterial({ map: linenTex() });
+  const duvetM = new THREE.MeshLambertMaterial({ map: duvetTex() });
+  const pillowM = new THREE.MeshLambertMaterial({ map: pillowTex() });
+  const rugM = new THREE.MeshLambertMaterial({ map: rugTex() });
+  const skyM = new THREE.MeshLambertMaterial({ map: skyTex(), emissive: 0xffd19a, emissiveIntensity: 0.45 });
+  const brassM = mat(0xb08a4a, { emissive: 0x3a2a10, emissiveIntensity: 0.2 });
+  const shadeM = new THREE.MeshLambertMaterial({ color: 0xf2e2c4, emissive: 0xffc878, emissiveIntensity: 0.55, side: THREE.DoubleSide });
+
+  const W = 5.8, D = 6.6, H = 2.72;
+
+  const floor = boxMesh(W, 0.08, D, floorM);
+  floor.position.set(0, 0.04, 0);
+  g.add(floor);
+  const ceil = boxMesh(W, 0.1, D, mat(0xf3ece2));
+  ceil.position.set(0, H, 0);
+  g.add(ceil);
+  const walls = [
+    [0, H / 2, -D / 2, W, H, 0.14],
+    [0, H / 2, D / 2, W, H, 0.14],
+    [-W / 2, H / 2, 0, 0.14, H, D],
+    [W / 2, H / 2, 0, 0.14, H, D],
+  ];
+  for (const [x, y, z, w, h, d] of walls) {
+    const m = boxMesh(w, h, d, wallM);
+    m.position.set(x, y, z);
+    g.add(m);
+  }
+  // baseboards
+  const bases = [
+    [0, 0.12, -D / 2 + 0.1, W - 0.2, 0.16, 0.06],
+    [0, 0.12, D / 2 - 0.1, W - 0.2, 0.16, 0.06],
+    [-W / 2 + 0.1, 0.12, 0, 0.06, 0.16, D - 0.2],
+    [W / 2 - 0.1, 0.12, 0, 0.06, 0.16, D - 0.2],
+  ];
+  for (const [x, y, z, w, h, d] of bases) {
+    const b = boxMesh(w, h, d, woodM);
+    b.position.set(x, y, z);
+    g.add(b);
+  }
+
+  // window — left wall, morning
+  const sky = boxMesh(0.04, 1.35, 1.7, skyM);
+  sky.position.set(-W / 2 + 0.09, 1.58, 0.15);
+  g.add(sky);
+  const frame = [
+    [-W / 2 + 0.12, 2.28, 0.15, 0.08, 0.08, 1.86],
+    [-W / 2 + 0.12, 0.88, 0.15, 0.08, 0.08, 1.86],
+    [-W / 2 + 0.12, 1.58, -0.72, 0.08, 1.48, 0.08],
+    [-W / 2 + 0.12, 1.58, 1.02, 0.08, 1.48, 0.08],
+    [-W / 2 + 0.12, 1.58, 0.15, 0.06, 1.48, 0.05],
+  ];
+  for (const [x, y, z, w, h, d] of frame) {
+    const m = boxMesh(w, h, d, woodM);
+    m.position.set(x, y, z);
+    g.add(m);
+  }
+  const sill = boxMesh(0.22, 0.05, 1.9, woodM);
+  sill.position.set(-W / 2 + 0.22, 0.86, 0.15);
+  g.add(sill);
+  // curtains
+  for (const z of [-0.85, 1.12]) {
+    for (let i = 0; i < 4; i++) {
+      const ctn = boxMesh(0.04, 1.85, 0.22, mat(i % 2 ? 0xe8d4b8 : 0xdecaa8));
+      ctn.position.set(-W / 2 + 0.2 + i * 0.015, 1.55, z + (i - 1.5) * 0.04);
+      ctn.rotation.y = (i - 1.5) * 0.08;
+      g.add(ctn);
+    }
+  }
+  const rod = boxMesh(0.04, 0.04, 2.15, brassM);
+  rod.position.set(-W / 2 + 0.18, 2.48, 0.15);
+  g.add(rod);
+
+  // rug
+  const rug = boxMesh(2.6, 0.025, 3.4, rugM);
+  rug.position.set(0.1, 0.09, 0.2);
+  g.add(rug);
+
+  // ——— bed ———
+  const BX = 0.12, BZ = 0.12;
+  // legs
+  for (const [lx, lz] of [[-0.78, -1.05], [1.02, -1.05], [-0.78, 1.18], [1.02, 1.18]]) {
+    const leg = boxMesh(0.1, 0.34, 0.1, woodM);
+    leg.position.set(BX + lx, 0.2, BZ + lz);
+    g.add(leg);
+  }
+  const platform = boxMesh(1.92, 0.12, 2.35, woodM);
+  platform.position.set(BX, 0.38, BZ);
+  g.add(platform);
+  const railL = boxMesh(0.08, 0.22, 2.3, woodM);
+  railL.position.set(BX - 0.94, 0.52, BZ);
+  g.add(railL);
+  const railR = boxMesh(0.08, 0.22, 2.3, woodM);
+  railR.position.set(BX + 0.94, 0.52, BZ);
+  g.add(railR);
+  // headboard
+  const hb = boxMesh(2.05, 1.18, 0.1, woodM);
+  hb.position.set(BX, 1.02, BZ - 1.2);
+  g.add(hb);
+  const pad = boxMesh(1.72, 0.72, 0.07, duvetM);
+  pad.position.set(BX, 1.05, BZ - 1.14);
+  g.add(pad);
+  const cap = boxMesh(2.12, 0.08, 0.14, woodM);
+  cap.position.set(BX, 1.64, BZ - 1.2);
+  g.add(cap);
+  // footboard, low
+  const fb = boxMesh(1.95, 0.42, 0.09, woodM);
+  fb.position.set(BX, 0.58, BZ + 1.22);
+  g.add(fb);
+
+  const matt = boxMesh(1.78, 0.2, 2.18, sheetM);
+  matt.position.set(BX, 0.58, BZ + 0.02);
+  g.add(matt);
+  // sheet hang
+  const hangL = boxMesh(0.04, 0.18, 2.1, sheetM);
+  hangL.position.set(BX - 0.9, 0.5, BZ);
+  g.add(hangL);
+  const hangR = boxMesh(0.04, 0.18, 2.1, sheetM);
+  hangR.position.set(BX + 0.9, 0.5, BZ);
+  g.add(hangR);
+
+  // rumpled duvet toward the foot — leave chest/pillows open
+  const cover = boxMesh(1.72, 0.09, 1.58, duvetM);
+  cover.position.set(BX, 0.7, BZ + 0.38);
+  g.add(cover);
+  for (let i = 0; i < 6; i++) {
+    const fold = boxMesh(1.35 - i * 0.04, 0.045, 0.28, duvetM);
+    fold.position.set(BX + (i % 2 ? 0.06 : -0.05), 0.75, BZ + 0.05 + i * 0.22);
+    fold.rotation.x = i % 2 ? -0.08 : 0.06;
+    fold.rotation.z = (i % 2 ? 0.04 : -0.03);
+    g.add(fold);
+  }
+  // turned-down sheet at the chest
+  const turn = boxMesh(1.55, 0.03, 0.38, sheetM);
+  turn.position.set(BX, 0.73, BZ - 0.28);
+  turn.rotation.x = -0.12;
+  g.add(turn);
+
+  // pillows — spheres, not boxes
+  const pgeo = new THREE.SphereGeometry(0.28, 14, 10);
+  function pillow(x, y, z, yaw, sx) {
+    const m = new THREE.Mesh(pgeo, pillowM);
+    m.scale.set(sx || 1.45, 0.4, 1.05);
+    m.position.set(x, y, z);
+    m.rotation.y = yaw || 0;
+    m.rotation.z = (Math.random() - 0.5) * 0.12;
+    g.add(m);
+    return m;
+  }
+  pillow(-0.28, 0.78, BZ - 0.78, -0.15, 1.5);
+  pillow(0.5, 0.78, BZ - 0.78, 0.18, 1.5);
+  pillow(-0.08, 0.86, BZ - 0.92, 0.4, 1.15);
+  pillow(0.38, 0.85, BZ - 0.9, -0.25, 1.12);
+
+  // piles of cash on the duvet
+  const cashM = new THREE.MeshLambertMaterial({ map: cashTex() });
+  const brickM = new THREE.MeshLambertMaterial({ map: cashBrickTex() });
+  const billGeo = new THREE.BoxGeometry(0.156, 0.004, 0.068);
+  const brickGeo = new THREE.BoxGeometry(0.17, 0.055, 0.078);
+  function addBrick(parent, x, y, z, yaw, tilt) {
+    const m = new THREE.Mesh(brickGeo, brickM);
+    m.position.set(x, y, z);
+    m.rotation.set(tilt || 0, yaw || 0, (Math.random() - 0.5) * 0.08);
+    parent.add(m);
+  }
+  function addBill(parent, x, y, z, yaw, pitch, roll) {
+    const m = new THREE.Mesh(billGeo, cashM);
+    m.position.set(x, y, z);
+    m.rotation.set(pitch || 0, yaw || 0, roll || 0);
+    parent.add(m);
+  }
+  function pile(cx, cz, n, h0) {
+    const grp = new THREE.Group();
+    grp.position.set(cx, 0, cz);
+    for (let i = 0; i < n; i++) {
+      const col = i % 4;
+      const row = Math.floor(i / 4) % 3;
+      const layer = Math.floor(i / 12);
+      const x = (col - 1.5) * 0.09 + (Math.random() - 0.5) * 0.04;
+      const z = (row - 1) * 0.09 + (Math.random() - 0.5) * 0.04;
+      const y = h0 + layer * 0.056 + Math.random() * 0.01;
+      addBrick(grp, x, y, z, (Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.12);
+    }
+    for (let i = 0; i < 14; i++) {
+      addBill(
+        grp,
+        (Math.random() - 0.5) * 0.42,
+        h0 + 0.08 + Math.random() * 0.16,
+        (Math.random() - 0.5) * 0.38,
+        Math.random() * Math.PI,
+        (Math.random() - 0.5) * 0.7,
+        (Math.random() - 0.5) * 0.8
+      );
+    }
+    g.add(grp);
+    return grp;
+  }
+  const pileA = pile(-0.28, 0.28, 18, 0.84);
+  const pileB = pile(0.42, 0.22, 16, 0.84);
+  const pileC = pile(0.08, 0.68, 20, 0.84);
+  const pileD = pile(0.48, 0.78, 14, 0.83);
+  pile(-0.38, 0.78, 10, 0.83);
+  pile(0.18, 1.05, 8, 0.82);
+
+  function nightstand(x, z) {
+    const top = boxMesh(0.52, 0.05, 0.44, woodM);
+    top.position.set(x, 0.56, z);
+    g.add(top);
+    const body = boxMesh(0.46, 0.32, 0.4, woodM);
+    body.position.set(x, 0.38, z);
+    g.add(body);
+    const knob = boxMesh(0.04, 0.03, 0.03, brassM);
+    knob.position.set(x, 0.4, z + 0.22);
+    g.add(knob);
+    for (const lx of [-0.18, 0.18]) {
+      for (const lz of [-0.14, 0.14]) {
+        const leg = boxMesh(0.05, 0.22, 0.05, woodM);
+        leg.position.set(x + lx, 0.14, z + lz);
+        g.add(leg);
+      }
+    }
+  }
+  nightstand(1.28, -0.88);
+  nightstand(-1.05, -0.88);
+
+  // lamp
+  const stem = new THREE.Mesh(smoothCylinder(0.018, 0.022, 0.32, 8), brassM);
+  stem.position.set(1.38, 0.74, -0.92);
+  g.add(stem);
+  const shade = new THREE.Mesh(smoothCylinder(0.11, 0.16, 0.18, 12, 1, true), shadeM);
+  shade.position.set(1.38, 0.96, -0.92);
+  g.add(shade);
+  const shadeTop = new THREE.Mesh(smoothCylinder(0.11, 0.11, 0.02, 12), shadeM);
+  shadeTop.position.set(1.38, 1.05, -0.92);
+  g.add(shadeTop);
+  const lampGlow = new THREE.PointLight(0xffd4a0, 1.35, 7.5);
+  lampGlow.position.set(1.38, 0.98, -0.92);
+  g.add(lampGlow);
+
+  const phone = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.16, 0.01), new THREE.MeshLambertMaterial({ map: phoneTex(), emissive: 0x223018, emissiveIntensity: 0.35 }));
+  phone.position.set(1.14, 0.62, -0.72);
+  phone.rotation.x = -1.2;
+  phone.rotation.z = 0.18;
+  g.add(phone);
+  const ice = boxMesh(0.15, 0.035, 0.2, new THREE.MeshLambertMaterial({ color: 0x6ad4e0, emissive: 0x1a6a88, emissiveIntensity: 0.45 }));
+  ice.position.set(1.16, 0.6, -0.96);
+  g.add(ice);
+  const radioBox = new THREE.Group();
+  radioBox.position.set(1.4, 0.66, -0.72);
+  radioBox.rotation.y = -0.4;
+  const rb = boxMesh(0.07, 0.13, 0.045, new THREE.MeshLambertMaterial({ color: 0x1f2418, emissive: 0x2a3218, emissiveIntensity: 0.15 }));
+  radioBox.add(rb);
+  const face = boxMesh(0.05, 0.04, 0.01, new THREE.MeshLambertMaterial({ color: 0x9aaa4a, emissive: 0x6a7a20, emissiveIntensity: 0.4 }));
+  face.position.set(0, 0.03, 0.024);
+  radioBox.add(face);
+  const ant = boxMesh(0.012, 0.07, 0.012, mat(0x3a4038));
+  ant.position.set(0.018, 0.1, 0);
+  radioBox.add(ant);
+  const led = boxMesh(0.018, 0.012, 0.012, new THREE.MeshLambertMaterial({ color: 0xff5a4a, emissive: 0xff2a1a, emissiveIntensity: 0.9 }));
+  led.position.set(-0.016, 0.055, 0.024);
+  radioBox.add(led);
+  g.add(radioBox);
+
+  const ring = new THREE.Mesh(
+    new THREE.RingGeometry(0.16, 0.24, 24),
+    new THREE.MeshBasicMaterial({ color: 0xd6f04a, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+  );
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.set(0, 0.8, 0.2);
+  ring.visible = false;
+  g.add(ring);
+
+  // left stand: clock + glass
+  const clockFace = boxMesh(0.12, 0.12, 0.05, mat(0x1a1c16, { emissive: 0x222818, emissiveIntensity: 0.2 }));
+  clockFace.position.set(-1.05, 0.66, -0.82);
+  g.add(clockFace);
+  const glass = new THREE.Mesh(smoothCylinder(0.035, 0.03, 0.1, 10), new THREE.MeshLambertMaterial({ color: 0xb8d4e8, transparent: true, opacity: 0.45, emissive: 0x88b8d0, emissiveIntensity: 0.2 }));
+  glass.position.set(-0.92, 0.66, -0.78);
+  g.add(glass);
+
+  // boots + pouch
+  const bootL = boxMesh(0.12, 0.14, 0.32, mat(0x3a2418));
+  bootL.position.set(-1.55, 0.14, 1.35);
+  g.add(bootL);
+  const bootR = boxMesh(0.12, 0.14, 0.32, mat(0x3a2418));
+  bootR.position.set(-1.34, 0.14, 1.4);
+  g.add(bootR);
+  const pouch = boxMesh(0.34, 0.12, 0.22, mat(0xc62828));
+  pouch.position.set(-1.45, 0.18, 1.8);
+  g.add(pouch);
+  const hat = boxMesh(0.28, 0.08, 0.28, mat(0xf4f1ea));
+  hat.position.set(-1.45, 0.26, 1.8);
+  g.add(hat);
+
+  // door on foot wall
+  const door = boxMesh(0.9, 2.05, 0.08, woodM);
+  door.position.set(1.4, 1.1, D / 2 - 0.1);
+  g.add(door);
+  const dknob = boxMesh(0.05, 0.05, 0.05, brassM);
+  dknob.position.set(1.05, 1.05, D / 2 - 0.14);
+  g.add(dknob);
+
+  // framed print over foot
+  const pic = boxMesh(0.7, 0.5, 0.04, mat(0x4a5a3a));
+  pic.position.set(-0.4, 1.7, D / 2 - 0.1);
+  g.add(pic);
+  const picf = boxMesh(0.78, 0.58, 0.05, woodM);
+  picf.position.set(-0.4, 1.7, D / 2 - 0.12);
+  g.add(picf);
+
+  // ceiling fan
+  const fan = new THREE.Group();
+  fan.position.set(0.1, H - 0.14, 0.15);
+  const hub = new THREE.Mesh(smoothCylinder(0.1, 0.1, 0.08, 10), brassM);
+  fan.add(hub);
+  for (let i = 0; i < 4; i++) {
+    const blade = boxMesh(1.2, 0.02, 0.18, woodM);
+    blade.position.x = 0.58;
+    const arm = new THREE.Group();
+    arm.rotation.y = (i * Math.PI) / 2;
+    arm.add(blade);
+    fan.add(arm);
+  }
+  g.add(fan);
+
+  const sun = new THREE.DirectionalLight(0xffe0b8, 0.7);
+  sun.position.set(-4, 3.4, -0.4);
+  g.add(sun);
+  const windowFill = new THREE.PointLight(0xffc888, 0.85, 8);
+  windowFill.position.set(-2.2, 1.6, 0.15);
+  g.add(windowFill);
+  const amb = new THREE.AmbientLight(0xffe8d4, 0.48);
+  g.add(amb);
+
+  g.traverse((o) => {
+    o.userData.noBake = true;
+    o.castShadow = false;
+    o.receiveShadow = false;
+  });
+  scene.add(g);
+  state.homeRoot = g;
+  state.homeFan = fan;
+  state.homePhone = phone;
+  state.homeIce = ice;
+  state.homeRadio = radioBox;
+  state.homeLed = led;
+  state.homeRing = ring;
+  state.homePiles = [
+    { mesh: pileA, lx: -0.28, lz: 0.28, amt: 42000 },
+    { mesh: pileB, lx: 0.42, lz: 0.22, amt: 38000 },
+    { mesh: pileC, lx: 0.08, lz: 0.68, amt: 51000 },
+    { mesh: pileD, lx: 0.48, lz: 0.78, amt: 53200 },
+  ];
+}
+
+function enterUtahBedroom() {
+  buildUtahBedroom();
+  if (state.homeRoot) state.homeRoot.visible = true;
+  if (typeof body !== "undefined" && body) body.visible = false;
+  player.position.set(HOME.x + 0.15, 0.72, HOME.z - 0.55);
+  pvel.x = pvel.y = pvel.z = 0;
+  kick.x = kick.z = 0;
+  cam.yaw = 1.72;
+  cam.pitch = -0.38;
+  cam.dist = 0.01;
+  facing = 1.72;
+  scene.background = new THREE.Color(0xd8c8ae);
+  scene.fog = new THREE.Fog(0xd8c8ae, 5.5, 16);
+  renderer.toneMappingExposure = 1.0;
+  document.body.classList.add("bed-day");
+  $("compass")?.classList.add("hidden");
+  if (dayLights) {
+    if (dayLights.hemi) dayLights.hemi.intensity = 0.15;
+    if (dayLights.sun) dayLights.sun.intensity = 0.05;
+    if (dayLights.amb) dayLights.amb.intensity = 0.2;
+  }
+  const clk = $("clock");
+  if (clk) {
+    ui.clock = "OFF";
+    clk.textContent = "OFF";
+    clk.style.color = "#d6f04a";
+  }
+  dayState.utahNag = 0;
+  dayState.textSent = false;
+}
+
+function leaveUtahBedroom() {
+  if (state.homeRoot) state.homeRoot.visible = false;
+  if (typeof body !== "undefined" && body) body.visible = true;
+  scene.background = new THREE.Color(0x8b9aaa);
+  scene.fog = new THREE.Fog(0x8b9aaa, 48, 380);
+  renderer.toneMappingExposure = 1.12;
+  renderer.toneMappingExposure = 1.05;
+  document.body.classList.remove("bed-day");
+  cam.dist = 3.7;
+  if (dayLights) {
+    if (dayLights.hemi) dayLights.hemi.intensity = 0.72;
+    if (dayLights.sun) dayLights.sun.intensity = 1.55;
+    if (dayLights.amb) dayLights.amb.intensity = 0.22;
+    if (dayLights.fill) dayLights.fill.intensity = 0.28;
+  }
+}
+
+function openUtahText() {
+  const el = $("imsg");
+  if (!el) {
+    sendUtahText();
+    return;
+  }
+  el.classList.remove("hidden");
+  $("prompt")?.classList.add("hidden");
+}
+
+function utahLookDot(it) {
+  const cx = camera.position.x;
+  const cy = camera.position.y;
+  const cz = camera.position.z;
+  const dx = it.x - cx;
+  const dy = (it.y || 0.9) - cy;
+  const dz = it.z - cz;
+  const len = Math.hypot(dx, dy, dz) || 1;
+  const lx = Math.sin(cam.yaw) * Math.cos(cam.pitch);
+  const ly = Math.sin(cam.pitch);
+  const lz = Math.cos(cam.yaw) * Math.cos(cam.pitch);
+  return (dx * lx + dy * ly + dz * lz) / len;
+}
+
+function openUtahBank() {
+  const el = $("bank");
+  if (!el) {
+    confirmUtahBank();
+    return;
+  }
+  el.classList.remove("hidden");
+  $("prompt")?.classList.add("hidden");
+}
+
+function confirmUtahBank() {
+  if (state.done.ytd) {
+    $("bank")?.classList.add("hidden");
+    return;
+  }
+  $("bank")?.classList.add("hidden");
+  toast("YTD $184,200 · GOAL HIT", true);
+  const it = (state.interactables || []).find((i) => i.id === "ytd");
+  if (it) it.done = true;
+  completeTick("ytd", "GOAL HIT", 2800);
+}
+
+function iceUtahAss() {
+  if (state.done.redass) return;
+  const ice = state.homeIce;
+  if (ice) {
+    ice.position.set(0.12, 0.74, -0.22);
+    ice.rotation.z = 0.35;
+  }
+  toast("RED ASS ICED", true);
+  const it = (state.interactables || []).find((i) => i.id === "redass");
+  if (it) it.done = true;
+  completeTick("redass", "RED ASS", 1900);
+}
+
+function ignoreUtahHall() {
+  if (state.done.ignorehall) return;
+  if (state.homeLed?.material) {
+    state.homeLed.material.emissive.setHex(0x143018);
+    state.homeLed.material.color.setHex(0x3a4030);
+    state.homeLed.material.emissiveIntensity = 0.2;
+  }
+  toast("RADIO OFF · STAYING IN BED", true);
+  const it = (state.interactables || []).find((i) => i.id === "ignorehall");
+  if (it) it.done = true;
+  completeTick("ignorehall", "IGNORED THE HALL", 2100);
+}
+
+function countUtahCash(it) {
+  if (!it || it.done || it.id !== "countcash") return;
+  it.done = true;
+  const amt = it.amt || 40000;
+  toast("$" + amt.toLocaleString(), true);
+  if (it.mesh) it.mesh.scale.set(1.08, 1.12, 1.08);
+  completeTick("countcash", "$" + amt.toLocaleString(), 2400);
+  if (state.done.countcash) toast("YTD $184,200 · YEAR'S MADE", true);
+}
+
+function sendUtahText() {
+  if (dayState.textSent) return;
+  if (!jobReady("textlugo") || state.done.textlugo) return;
+  dayState.textSent = true;
+  $("imsg")?.classList.add("hidden");
+  toast("SENT · LUGO", true);
+  const it = (state.interactables || []).find((i) => i.id === "textlugo");
+  if (it) it.done = true;
+  completeTick("textlugo", "CALLED OUT", 2370);
+}
+
 function rebuildDayItems() {
+  if (isUtahHome()) {
+    enterUtahBedroom();
+    const piles = state.homePiles || [];
+    state.interactables = piles.map((p, i) => ({
+      id: "countcash",
+      x: HOME.x + p.lx,
+      z: HOME.z + p.lz,
+      y: 0.95,
+      label: "COUNT THIS PILE",
+      amt: p.amt,
+      mesh: p.mesh,
+      done: false,
+    })).concat([
+      {
+        id: "redass",
+        x: HOME.x + 1.16,
+        z: HOME.z - 0.96,
+        y: 0.62,
+        label: "ICE THE RED ASS",
+        mesh: state.homeIce,
+        done: false,
+      },
+      {
+        id: "ytd",
+        x: HOME.x + 1.14,
+        z: HOME.z - 0.72,
+        y: 0.64,
+        label: "CHECK YEAR GOAL",
+        mesh: state.homePhone,
+        done: false,
+      },
+      {
+        id: "ignorehall",
+        x: HOME.x + 1.4,
+        z: HOME.z - 0.72,
+        y: 0.7,
+        label: "SILENCE THE RADIO · DON'T GET UP",
+        mesh: state.homeRadio,
+        done: false,
+      },
+      {
+        id: "textlugo",
+        x: HOME.x + 1.14,
+        z: HOME.z - 0.72,
+        y: 0.64,
+        label: "TEXT LUGO · STAYING HOME",
+        phone: true,
+        mesh: state.homePhone,
+        done: false,
+      },
+    ]);
+    return;
+  }
+  leaveUtahBedroom();
   // drop leftover day-7 sign diamonds so a re-run doesn't stack them
   for (const it of state.interactables || []) {
-    if (it.sign && it.marker && it.marker.parent) {
-      it.marker.parent.remove(it.marker);
-      it.marker.geometry?.dispose?.();
-      it.marker.material?.dispose?.();
-    }
+    if (it.sign && it.marker && it.marker.parent) it.marker.parent.remove(it.marker);
   }
   // clear day-3's blue/orange repaints and last run's leftover spools
   for (const it of worldItems) {
@@ -5628,7 +6806,7 @@ function rebuildDayItems() {
   }
   for (const sp of state.placedSpools || []) sp.parent?.remove(sp);
   state.placedSpools = [];
-  if (day === 1) {
+  if (day === 1 || (!DAYS[day] && cycleDay(day) === 1)) {
     const tremont = getTraveler() === "tremont";
     state.interactables = worldItems
       .filter((i) => !i.store && !(tremont && i.candy))
@@ -5663,7 +6841,6 @@ function rebuildDayItems() {
 const CREW = {
   gf: { hat: 0xffffff, shirt: 0x00338d, vest: 0xc6e03c, jeans: 0x1a2744, decal: 0xc60c30 },
   joe: { hat: 0xf4f1ea, shirt: 0x3a2418, vest: 0xc6e03c, jeans: 0x5c5346, decal: 0xc62828 },
-  gibbs: { hat: 0xf4f1ea, shirt: 0x2e4a8a, vest: 0xc6e03c, jeans: 0x3b5678, decal: 0x24262a },
   chris: { hat: 0xffffff, shirt: 0x1b2a4a, vest: 0xc6e03c, jeans: 0x2e2a26, decal: 0xc60c30 },
   foreman: { hat: 0xf4f1ea, shirt: 0xc8b088, vest: 0xd6e33c, jeans: 0x2e2a26, decal: 0xff6a1a },
   ahj: { hat: 0xffffff, shirt: 0xd8e2ea, vest: 0xff8a3a, jeans: 0x4a4a52, decal: 0x1565c0 },
@@ -5671,11 +6848,13 @@ const CREW = {
   ferguson: { hat: 0xf5d76e, shirt: 0x1c1c1c, vest: 0xe85d04, jeans: 0x3b5678, decal: 0xe85d04 },
   pipe: { hat: 0x2e7d32, shirt: 0x546e7a, vest: 0xf0d23c, jeans: 0x37474f, decal: 0x2e7d32 },
   labor: { hat: 0xff6a1a, shirt: 0x6d4c41, vest: 0xc6e03c, jeans: 0x3b5678, decal: 0xff6a1a },
-  nate: { hat: 0xff6a1a, shirt: 0x5c3317, vest: 0xc6e03c, jeans: 0x2a2a28, decal: 0xc60c30 },
-  kenny: { hat: 0xff2d55, shirt: 0xffcc00, vest: 0x5ac8fa, jeans: 0x1a1a1a, decal: 0xaf52de },
+  nate: { hat: 0xf5cd32, shirt: 0x951a24, vest: 0xc6e03c, jeans: 0x2a2a28, decal: 0xc60c30 },
+  gibbs: { hat: 0xf4f1ea, shirt: 0x1a1a1a, vest: 0xc6e03c, jeans: 0x2a2a28, decal: 0x1565c0 },
+  kenny: { hat: 0xf5cd32, shirt: 0xffffff, vest: 0xc6e03c, jeans: 0x1a1a1a, decal: 0xaf52de },
   safety: { hat: 0xf4f1ea, shirt: 0x1a365d, vest: 0xff6a1a, jeans: 0x2a2a32, decal: 0xc62828 },
   redbeard: { hat: 0xc62828, shirt: 0x4a1515, vest: 0xc6e03c, jeans: 0x1a1a1a, decal: 0xc62828 },
   andy: { hat: 0xf4f1ea, shirt: 0x1565c0, vest: 0xc6e03c, jeans: 0x2e2a26, decal: 0xc60c30 },
+  david: { hat: 0xff6a1a, shirt: 0x3d4a38, vest: 0xc6e03c, jeans: 0x2a3340, decal: 0xff6a1a },
   millwright: { hat: 0xd4a017, shirt: 0x3e2723, vest: 0xc6e03c, jeans: 0x212121, decal: 0xd4a017 },
   insulator: { hat: 0xf4f1ea, shirt: 0xe8e0d4, vest: 0xf0d23c, jeans: 0x90a4ae, decal: 0x90caf9 },
   cleaner: { hat: 0x4fc3f7, shirt: 0x0277bd, vest: 0xc6e03c, jeans: 0x37474f, decal: 0x29b6f6 },
@@ -5685,6 +6864,27 @@ const HAIRS = [0x3a2a22, 0x1a1a1a, 0x6b4423, 0x4a3428, 0xe8d48a];
 
 function makeWorker(kitName, opts = {}) {
   const kit = CREW[kitName] || CREW.labor;
+  if(opts.mount){
+    const rider=makeCrewCharacter(kitName,kit,{...opts,mount:false});
+    if(rider){
+      const mount=new THREE.Group(),seat=new THREE.Vector3();mount.name='David and moose';mount.add(rider);
+      mount.userData={...rider.userData,rider,noBake:true,
+        animate(dt,{speed=0}={}){
+          const animal=mount.userData.moose;
+          const distance=Math.hypot(mount.position.x-player.position.x,mount.position.z-player.position.z);
+          animal?.userData.animate(dt,{speed,distance});
+          if(animal)rider.position.copy(animal.userData.getSeatPosition(seat)).add(animal.position);
+          rider.userData.animate(dt,{seated:true});
+        },
+        dispose(){rider.userData.dispose();mount.userData.moose?.userData.dispose();}
+      };
+      return mount;
+    }
+  }
+  if (kitName !== 'safety' && !opts.mount) {
+    const realistic = makeCrewCharacter(kitName,kit,opts);
+    if (realistic) return realistic;
+  }
   const skin = SKINS[opts.skin || 0];
   const hairC = HAIRS[opts.hair || 0];
   const g = new THREE.Group();
@@ -5783,7 +6983,7 @@ function makeWorker(kitName, opts = {}) {
     const hat = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), mat(kit.hat));
     hat.position.set(0, 1.68, 0);
     g.add(hat);
-    const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.03, 10), mat(kit.hat));
+    const brim = new THREE.Mesh(smoothCylinder(0.2, 0.2, 0.03, 10), mat(kit.hat));
     brim.position.set(0, 1.62, 0);
     g.add(brim);
     const decal = boxMesh(0.05, 0.035, 0.01, mat(kit.decal));
@@ -5794,6 +6994,16 @@ function makeWorker(kitName, opts = {}) {
       lamp.position.set(0.06, 1.74, 0.13);
       g.add(lamp);
     }
+  }
+  if (kitName === "gibbs") {
+    // no neck — head sits in the vest. That's the gag.
+    g.traverse((o) => {
+      if (o !== g && o.position && o.position.y > 1.45) o.position.y -= 0.2;
+    });
+    const cape = boxMesh(0.4, 0.52, 0.05, mat(0x14141c));
+    cape.position.set(0, 1.12, -0.17);
+    cape.rotation.x = 0.18;
+    g.add(cape);
   }
   if (kitName === "chris") {
     // Chris — O'Connell lighting, Long Island, blonde combover, long red tie
@@ -5875,7 +7085,7 @@ function makeWorker(kitName, opts = {}) {
     g.add(numBar);
   }
   if (opts.hold === "pipe") {
-    const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 1.6, 6), mats.copper);
+    const pipe = new THREE.Mesh(smoothCylinder(0.035, 0.035, 1.6, 6), mats.copper);
     pipe.rotation.z = Math.PI / 2;
     pipe.position.set(0, -0.42, 0.15);
     armR.add(pipe);
@@ -5894,13 +7104,13 @@ function makeWorker(kitName, opts = {}) {
     armR.rotation.x = -0.7;
   }
   if (opts.hold === "wrap") {
-    const roll = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.28, 8), mat(0xf5f5f0));
+    const roll = new THREE.Mesh(smoothCylinder(0.08, 0.08, 0.28, 8), mat(0xf5f5f0));
     roll.position.set(0, -0.42, 0.08);
     armR.add(roll);
     armR.rotation.x = -0.5;
   }
   if (opts.hold === "broom") {
-    const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.1, 5), mats.wood);
+    const stick = new THREE.Mesh(smoothCylinder(0.025, 0.025, 1.1, 5), mats.wood);
     stick.position.set(0, -0.7, 0.05);
     armR.add(stick);
     armR.rotation.x = 0.35;
@@ -5909,7 +7119,7 @@ function makeWorker(kitName, opts = {}) {
     const wt = boxMesh(0.06, 0.14, 0.05, mat(0x1a1a1a));
     wt.position.set(0, -0.4, 0.1);
     armR.add(wt);
-    const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.12, 4), mat(0x111111));
+    const ant = new THREE.Mesh(smoothCylinder(0.008, 0.008, 0.12, 4), mat(0x111111));
     ant.position.set(0, -0.3, 0.1);
     armR.add(ant);
     armR.rotation.x = -1.25; // walkie up, mid-transmission
@@ -5968,6 +7178,7 @@ function placeWorker(kit, x, z, yaw, extra = {}) {
     lift: extra.lift || false,
     joeGuy: extra.joeGuy || false,
     followLift: extra.followLift || false,
+    mount: extra.mount || false,
     said: false,
   });
   return w;
@@ -5975,57 +7186,9 @@ function placeWorker(kit, x, z, yaw, extra = {}) {
 
 let scissorReturn = null; // last-built lift group, for the drivable one
 function scissorLift(x, z, yaw, height, color, kit, rise) {
-  const col = mat(color);
-  const g = new THREE.Group();
-  const base = boxMesh(1.35, 0.42, 2.5, col);
-  base.position.y = 0.28;
-  g.add(base);
-  for (const [wx, wz] of [
-    [-0.5, 0.95],
-    [0.5, 0.95],
-    [-0.5, -0.95],
-    [0.5, -0.95],
-  ]) {
-    const wh = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.14, 8), mats.dark);
-    wh.rotation.z = Math.PI / 2;
-    wh.position.set(wx, 0.16, wz);
-    g.add(wh);
-  }
   const h = Math.max(0.9, height);
-  const sc = new THREE.Group();
-  sc.position.y = 0.48;
-  const span = Math.max(0.5, h - 0.55);
-  const ang = 0.52;
-  const barLen = span / Math.cos(ang);
-  for (const side of [-0.4, 0.4]) {
-    for (const bay of [-0.55, 0.55]) {
-      const a = boxMesh(0.08, barLen, 0.08, mats.dark);
-      a.position.set(side, span * 0.5, bay);
-      a.rotation.z = ang;
-      const b = a.clone();
-      b.rotation.z = -ang;
-      sc.add(a, b);
-    }
-  }
-  g.add(sc);
-  const plat = new THREE.Group();
-  plat.position.y = h;
-  plat.add(boxMesh(1.32, 0.1, 2.35, col));
-  for (const [px, pz, sx, sz] of [
-    [0, 1.12, 1.28, 0.06],
-    [0, -1.12, 1.28, 0.06],
-    [0.62, 0, 0.06, 2.2],
-    [-0.62, 0, 0.06, 2.2],
-  ]) {
-    const rail = boxMesh(sx, 0.9, sz, mats.dark);
-    rail.position.set(px, 0.5, pz);
-    plat.add(rail);
-  }
-  const stripe = boxMesh(1.34, 0.06, 0.08, mat(kit === "ferguson" ? 0xe85d04 : kit === "oconnell" ? 0x1565c0 : 0x2e7d32));
-  stripe.position.set(0, 0.12, 1.2);
-  plat.add(stripe);
-  g.add(plat);
-  g.userData.liftBits = { sc, plat, span }; // the drivable one raises — see applyLift()
+  const g = createScissorLiftLod({ THREE, color, deckHeight: h, kit });
+  const { plat, sc } = g.userData.liftBits;
   if (kit) {
     const wr = makeWorker(kit, { skin: (x + z) & 3, hair: Math.abs(z) & 3, hold: kit === "pipe" ? "pipe" : "drill", lift: true });
     wr.position.set(0, 0.05, 0);
@@ -6055,12 +7218,19 @@ function applyLift() {
   if (!L || !L.userData.liftBits) return;
   const u = L.userData.liftBits;
   const H = LIFT_STOW + (dayState.liftH || 0);
-  u.plat.position.y = H;
-  u.sc.scale.y = Math.max(0.06, H - 0.55) / u.span;
+  u.setHeight(H);
+  const label = `PLATFORM · ${(H * 3.28084).toFixed(1)} FT`;
+  if ($("lift-height").textContent !== label) $("lift-height").textContent = label;
 }
 function syncLiftBtns() {
-  $("lift-btns").classList.toggle("hidden", !(dayState.driving && !dayState.utv && isCoarse()));
-  $("btn-jump").classList.toggle("hidden", dayState.driving && !dayState.utv && isCoarse());
+  const riding = !!(dayState.driving && !dayState.utv);
+  $("lift-btns").classList.toggle("hidden", !riding);
+  $("btn-jump").classList.toggle("hidden", riding);
+  if (state.mode !== "title") $("touch").classList.toggle("hidden", !(isCoarse() || riding));
+  $("lift-help").textContent = isCoarse() ? "Hold to move · release to stop" : "Hold buttons · Space raises · C lowers";
+  if (!riding) {
+    for (const id of ["btn-lift-up", "btn-lift-dn"]) $(id).dispatchEvent(new Event("lw-input-reset"));
+  }
 }
 
 function groundH(x, z) {
@@ -6146,53 +7316,13 @@ function buildLandfillCourse() {
 }
 
 function makeUtv(color) {
-  const g = new THREE.Group();
-  const body = boxMesh(1.55, 0.72, 2.55, mat(color));
-  body.position.y = 0.78;
-  g.add(body);
-  const nose = boxMesh(1.4, 0.38, 0.55, mat(0x1a1a1c));
-  nose.position.set(0, 0.72, 1.4);
-  g.add(nose);
-  const bed = boxMesh(1.45, 0.32, 0.7, mat(0x2a2a28));
-  bed.position.set(0, 0.95, -1.15);
-  g.add(bed);
-  const cageC = mat(0x222226);
-  for (const [x, z] of [[-0.62, 0.85], [0.62, 0.85], [-0.62, -0.55], [0.62, -0.55]]) {
-    const p = boxMesh(0.07, 1.15, 0.07, cageC);
-    p.position.set(x, 1.35, z);
-    g.add(p);
-  }
-  const roof = boxMesh(1.5, 0.06, 1.7, cageC);
-  roof.position.set(0, 1.95, 0.15);
-  g.add(roof);
-  const bar = boxMesh(1.35, 0.08, 0.12, mat(0xf4f1ea));
-  bar.position.set(0, 2.02, 0.85);
-  g.add(bar);
-  const seatL = boxMesh(0.42, 0.28, 0.48, mat(0x3a2218));
-  seatL.position.set(-0.32, 1.05, 0.15);
-  g.add(seatL);
-  const seatR = seatL.clone();
-  seatR.position.x = 0.32;
-  g.add(seatR);
+  const g = createUtvLod({ THREE, color });
   const dashRadio = makeBoombox();
-  dashRadio.scale.setScalar(0.42);
-  dashRadio.position.set(0, 1.18, 0.72);
-  dashRadio.rotation.y = Math.PI;
-  g.add(dashRadio);
-  const wheelGeo = new THREE.CylinderGeometry(0.38, 0.38, 0.28, 8);
-  const rubber = mat(0x1a1a1a);
-  const wheels = [];
-  for (const [x, z] of [[-0.78, 0.95], [0.78, 0.95], [-0.78, -0.95], [0.78, -0.95]]) {
-    const w = new THREE.Mesh(wheelGeo, rubber);
-    w.rotation.z = Math.PI / 2;
-    w.position.set(x, 0.38, z);
-    g.add(w);
-    wheels.push(w);
-  }
-  g.userData.wheels = wheels;
-  g.traverse((o) => (o.userData.noBake = true));
+  dashRadio.scale.setScalar(.42);
+  g.userData.radioMount.add(dashRadio);
   return g;
 }
+
 
 function buildUtvs() {
   state.utvs = [];
@@ -6340,8 +7470,8 @@ function updateUtv(dt, ix, iz, mag, fx, fz) {
       const pitchOk = Math.abs(dayState.utvPitch) < 0.85;
       if (nm && clean && pitchOk) {
         const pts = 80 + Math.round(dayState.utvAir * 90) + (nm === "BACKFLIP" ? 180 : nm === "360" ? 140 : nm === "WHIP" ? 90 : 40);
-        addWatts(pts, nm);
-        toast(nm + " · +" + pts);
+        addSidePoints(pts, nm);
+        toast(nm + " · SIDE ACTIVITY");
         sfx("pickup");
       } else if (!clean || !pitchOk) {
         dayState.utvStun = 1.3;
@@ -6350,7 +7480,7 @@ function updateUtv(dt, ix, iz, mag, fx, fz) {
         vib(18);
         pvel.y = 0;
       } else if (dayState.utvAir > 0.45) {
-        addWatts(40, "AIRTIME");
+        addSidePoints(40, "AIRTIME");
       }
     }
     dayState.utvAir = 0;
@@ -6397,68 +7527,18 @@ function updateUtv(dt, ix, iz, mag, fx, fz) {
 
 
 function boomLift(x, z, yaw, color, kit, swing) {
-  const col = mat(color);
-  const g = new THREE.Group();
-  const base = boxMesh(1.7, 0.55, 2.8, col);
-  base.position.y = 0.38;
-  g.add(base);
-  for (const [wx, wz] of [
-    [-0.65, 1.05],
-    [0.65, 1.05],
-    [-0.65, -1.05],
-    [0.65, -1.05],
-  ]) {
-    const wh = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.16, 8), mats.dark);
-    wh.rotation.z = Math.PI / 2;
-    wh.position.set(wx, 0.2, wz);
-    g.add(wh);
-  }
-  const turret = new THREE.Group();
-  turret.position.y = 0.85;
-  const house = boxMesh(1.1, 0.9, 1.2, col);
-  house.position.y = 0.2;
-  turret.add(house);
-  const arm = new THREE.Group();
-  arm.rotation.x = -0.52;
-  const boom = boxMesh(0.28, 0.28, 7.2, col);
-  boom.position.z = 3.5;
-  arm.add(boom);
-  const arm2 = new THREE.Group();
-  arm2.position.z = 7.1;
-  arm2.rotation.x = 0.85;
-  const boom2 = boxMesh(0.22, 0.22, 5.2, col);
-  boom2.position.z = 2.5;
-  arm2.add(boom2);
-  const basket = new THREE.Group();
-  basket.position.z = 5.3;
-  basket.rotation.x = -0.33;
-  basket.add(boxMesh(1.15, 0.08, 0.85, col));
-  for (const [bx, bz] of [
-    [0.52, 0],
-    [-0.52, 0],
-    [0, 0.38],
-    [0, -0.38],
-  ]) {
-    const rail = boxMesh(bx === 0 ? 1.1 : 0.06, 0.85, bz === 0 ? 0.06 : 0.8, mats.dark);
-    rail.position.set(bx, 0.46, bz);
-    basket.add(rail);
-  }
+  const g = createBoomLiftLod({THREE, color});
+  const {turret,basket} = g.userData;
   if (kit) {
     const wr = makeWorker(kit, { skin: 1, hair: 2, hold: "drill", lift: true });
     wr.position.set(0, 0.05, 0);
     basket.add(wr);
     state.crew.push({ mesh: wr, lift: true, work: false, phase: Math.random() * 8, path: null });
   }
-  arm2.add(basket);
-  arm.add(arm2);
-  turret.add(arm);
-  g.add(turret);
-  g.position.set(x, 0, z);
-  g.rotation.y = yaw;
-  scene.add(g);
-  g.traverse((o) => (o.userData.noBake = true));
-  addCollider(x, z, 2.0, 3.0, 0, 1.4);
-  state.lifts.push({ mesh: g, turret, swing: !!swing, baseYaw: 0, t: Math.random() * 8 });
+  g.position.set(x,0,z); g.rotation.y=yaw; scene.add(g);
+  g.traverse(o=>o.userData.noBake=true);
+  addCollider(x,z,2.0,3.0,0,1.4);
+  state.lifts.push({mesh:g,turret,swing:!!swing,baseYaw:0,t:Math.random()*8});
 }
 
 function buildSiteTraffic() {
@@ -6483,14 +7563,13 @@ function buildSiteTraffic() {
   boomLift(-18, 106, 2.8, 0xf0d23c, "oconnell", false);
 
   // parked extra forklift
-  const fk = boxMesh(1.3, 1.1, 2.2, mats.yellow);
-  fk.position.set(30, 0.7, 34);
-  scene.add(fk);
-  addCollider(30, 34, 1.4, 2.3, 0, 1.3);
+  const fk=createTelehandlerLod({THREE,color:0xc6aa53});
+  fk.position.set(30,0,34);scene.add(fk);
+  addCollider(30,34,2.44,4.76,0,2.85);
 
   // pipe racks
   for (let i = 0; i < 6; i++) {
-    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 3.4, 6), i % 2 ? mats.copper : mats.dark);
+    const p = new THREE.Mesh(smoothCylinder(0.07, 0.07, 3.4, 6), i % 2 ? mats.copper : mats.dark);
     p.rotation.z = Math.PI / 2;
     p.position.set(-22, 0.22 + i * 0.12, 40);
     scene.add(p);
@@ -6682,14 +7761,14 @@ function buildSiteTraffic() {
   gen.add(hitch);
   for (const sx of [-0.85, 0.95]) {
     for (const sz of [-0.72, 0.72]) {
-      const wh = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.18, 10), mat(0x1a1a1a));
+      const wh = new THREE.Mesh(smoothCylinder(0.28, 0.28, 0.18, 10), mat(0x1a1a1a));
       wh.rotation.z = Math.PI / 2;
       wh.position.set(sx, 0.28, sz);
       gen.add(wh);
     }
   }
   const stack = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.09, 0.11, 0.85, 8),
+    smoothCylinder(0.09, 0.11, 0.85, 8),
     new THREE.MeshLambertMaterial({ color: 0x2a2a2a, emissive: 0x331800, emissiveIntensity: 0.5 })
   );
   stack.position.set(1.15, 2.15, -0.2);
@@ -6759,6 +7838,7 @@ function buildSiteTraffic() {
 
   // Lugo walks the center corridor, walkie up, checking the fire-alarm run
   state.lugoMesh = placeWorker("foreman", CB.corX, CB.z0 + 6, 0, {
+    character: isTremont() ? 'lemon' : 'lugo',
     path: [
       [CB.corX, CB.z0 + 4],
       [CB.corX, CB.z1 - 4],
@@ -6779,6 +7859,7 @@ function buildSiteTraffic() {
 
   buildDrew();
   buildJoe();
+  buildGibbs();
   buildChris();
   buildDon();
   buildNate();
@@ -6787,6 +7868,7 @@ function buildSiteTraffic() {
   buildSafetyLady();
   buildRedBeard();
   buildAndy();
+  buildDavidMoose();
   buildSiteRadio();
 }
 
@@ -6799,7 +7881,7 @@ function makeBoombox() {
   stripe.position.y = 0.35;
   g.add(stripe);
   for (const sx of [-0.18, 0.18]) {
-    const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.05, 10), mat(0x2a2a2a));
+    const sp = new THREE.Mesh(smoothCylinder(0.09, 0.09, 0.05, 10), mat(0x2a2a2a));
     sp.rotation.x = Math.PI / 2;
     sp.position.set(sx, 0.2, 0.12);
     g.add(sp);
@@ -6851,11 +7933,16 @@ function buildNate() {
   const nate = placeWorker("nate", 12.4, 20.5, 0.4, {
     path: [
       [12.4, 20.5],
-      [18.5, 24],
-      [8.2, 28.5],
-      [14, 16.8],
+      [22.0, 26.2],
+      [20.4, 36.0],
+      [8.0, 46.6],
+      [-10.0, 47.2],
+      [-28.0, 46.4],
+      [-22.0, 34.0],
+      [-6.0, 26.0],
+      [6.0, 18.6],
     ],
-    speed: 1.35,
+    speed: 1.42,
     skin: 2,
     hair: 1,
   });
@@ -6883,7 +7970,1004 @@ function buildKenny() {
   kenny.add(tag);
 }
 
+function buildCeilingLights() {
+  const led = new THREE.MeshStandardMaterial({
+    color: 0xf7f4ea,
+    emissive: 0xfff6e4,
+    emissiveIntensity: 2.1,
+    roughness: 0.32,
+    metalness: 0.08,
+  });
+  const lens = new THREE.MeshStandardMaterial({
+    color: 0xe8eef4,
+    emissive: 0xd8e6f4,
+    emissiveIntensity: 1.7,
+    roughness: 0.28,
+    metalness: 0.1,
+  });
+  const rows = [
+    { x: CB.hallWX, cool: false },
+    { x: CB.hallEX, cool: false },
+    { x: CB.elecWX, cool: false },
+    { x: CB.elecEX, cool: false },
+    { x: CB.dataX, cool: true },
+    { x: CB.fanWX, cool: true },
+    { x: CB.fanEX, cool: true },
+    { x: CB.mechX, cool: false },
+  ];
+  if (nightRig) nightRig.ceilMats = [led, lens];
+  for (const row of rows) {
+    const m = row.cool ? lens : led;
+    for (let z = CB.z0 + 2.4; z < CB.z1 - 2; z += 5.2) {
+      const pan = boxMesh(row.cool ? 0.95 : 1.35, 0.05, 0.32, m);
+      pan.position.set(row.x, 7.78, z);
+      scene.add(pan);
+      const can = boxMesh(row.cool ? 1.02 : 1.42, 0.07, 0.38, mats.dark);
+      can.position.set(row.x, 7.9, z);
+      scene.add(can);
+    }
+  }
+}
+
+function emtBundle(x, y, z0, z1, n, spread) {
+  const len = z1 - z0;
+  const mid = (z0 + z1) / 2;
+  for (let i = 0; i < n; i++) {
+    const pipe = new THREE.Mesh(smoothCylinder(0.042, 0.042, len, 6), mats.emt);
+    pipe.rotation.x = Math.PI / 2;
+    pipe.position.set(x + (i - (n - 1) / 2) * spread, y + (i % 3) * 0.095, mid);
+    scene.add(pipe);
+  }
+}
+
+function ladderTrayRun(x, y, z0, z1, w) {
+  const len = z1 - z0;
+  const mid = (z0 + z1) / 2;
+  placeBox(x - w / 2, y, mid, 0.05, 0.09, len, mats.tray, false);
+  placeBox(x + w / 2, y, mid, 0.05, 0.09, len, mats.tray, false);
+  const n = Math.max(8, Math.floor(len / 0.34));
+  const geo = new THREE.BoxGeometry(w - 0.04, 0.03, 0.045);
+  const mesh = new THREE.InstancedMesh(geo, mats.tray, n);
+  mesh.userData.noBake = true;
+  const dummy = new THREE.Object3D();
+  for (let i = 0; i < n; i++) {
+    dummy.position.set(x, y + 0.04, z0 + 0.25 + i * (len / n));
+    dummy.updateMatrix();
+    mesh.setMatrixAt(i, dummy.matrix);
+  }
+  scene.add(mesh);
+  for (let z = z0 + 2.8; z < z1 - 1; z += 5.8) {
+    placeBox(x, y, z, 0.04, 8.0 - y, 0.04, mats.beam, false);
+  }
+}
+
+function roundDuct(x, y, z0, z1, r) {
+  const len = z1 - z0;
+  const mid = (z0 + z1) / 2;
+  const d = new THREE.Mesh(smoothCylinder(r, r, len, 10), mats.duct);
+  d.rotation.x = Math.PI / 2;
+  d.position.set(x, y, mid);
+  scene.add(d);
+}
+
+function peligroFlags(x, y, z0, z1) {
+  if (!mats.peligro) {
+    const c = document.createElement("canvas");
+    c.width = 96;
+    c.height = 384;
+    const g = c.getContext("2d");
+    g.fillStyle = "#c41e1a";
+    g.fillRect(0, 0, 96, 384);
+    g.fillStyle = "#fff8f0";
+    g.font = "bold 26px Oswald, Arial, sans-serif";
+    g.save();
+    g.translate(48, 192);
+    g.rotate(-Math.PI / 2);
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.fillText("PELIGRO  ·  DANGER", 0, 0);
+    g.restore();
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    mats.peligro = new THREE.MeshBasicMaterial({ map: t, side: THREE.DoubleSide });
+  }
+  for (let z = z0 + 3; z < z1 - 2; z += 3.4) {
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(0.11, 1.55), mats.peligro);
+    f.position.set(x, y - 0.85, z);
+    scene.add(f);
+  }
+}
+
+function osbCleatWall(x, z, yaw) {
+  const sheet = new THREE.Mesh(new THREE.PlaneGeometry(2.44, 2.44), mats.osb);
+  sheet.position.set(x, 1.55, z);
+  sheet.rotation.y = yaw;
+  scene.add(sheet);
+  const lumber = mats.wood;
+  const rail = boxMesh(2.15, 0.09, 0.09, lumber);
+  rail.position.set(x + Math.sin(yaw) * 0.06, 1.05, z + Math.cos(yaw) * 0.06);
+  rail.rotation.y = yaw;
+  scene.add(rail);
+  for (const [lx, ly] of [
+    [-0.85, 1.05],
+    [-0.15, 1.05],
+    [0.55, 1.05],
+    [-0.55, 1.85],
+    [0.35, 1.7],
+  ]) {
+    const peg = boxMesh(0.09, 0.55, 0.09, lumber);
+    const cx = x + Math.cos(yaw) * lx + Math.sin(yaw) * 0.08;
+    const cz = z - Math.sin(yaw) * lx + Math.cos(yaw) * 0.08;
+    peg.position.set(cx, ly, cz);
+    peg.rotation.y = yaw;
+    scene.add(peg);
+  }
+}
+
+function bakerScaffold(x, z, yaw) {
+  const yel = mats.yellow;
+  const g = new THREE.Group();
+  for (const [px, pz] of [
+    [-0.55, -0.35],
+    [0.55, -0.35],
+    [-0.55, 0.35],
+    [0.55, 0.35],
+  ]) {
+    const post = boxMesh(0.05, 2.15, 0.05, yel);
+    post.position.set(px, 1.08, pz);
+    g.add(post);
+    const wh = new THREE.Mesh(smoothCylinder(0.07, 0.07, 0.05, 8), mats.dark);
+    wh.rotation.z = Math.PI / 2;
+    wh.position.set(px, 0.08, pz);
+    g.add(wh);
+  }
+  for (const hy of [0.55, 1.15, 1.85]) {
+    const deck = boxMesh(1.18, 0.04, 0.78, mats.wood);
+    deck.position.set(0, hy, 0);
+    g.add(deck);
+    for (const s of [-1, 1]) {
+      const rail = boxMesh(1.18, 0.04, 0.04, yel);
+      rail.position.set(0, hy + 0.38, s * 0.38);
+      g.add(rail);
+    }
+  }
+  g.position.set(x, 0, z);
+  g.rotation.y = yaw || 0;
+  scene.add(g);
+  addCollider(x, z, 1.3, 0.95, 0, 2.2);
+}
+
+function fergusonBox(x, z, yaw) {
+  const lime = mat(0x8fbf22, { roughness: 0.55, metalness: 0.12 });
+  const g = new THREE.Group();
+  const body = boxMesh(1.15, 1.85, 0.72, lime);
+  body.position.y = 0.95;
+  g.add(body);
+  const door = boxMesh(0.02, 1.55, 0.62, mat(0x7aaa1c));
+  door.position.set(0.58, 0.95, 0);
+  g.add(door);
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 128;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#8fbf22";
+  ctx.fillRect(0, 0, 256, 128);
+  ctx.fillStyle = "#fff";
+  ctx.font = "bold 42px Oswald, Arial, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("ferguson", 128, 52);
+  ctx.font = "22px IBM Plex Mono, monospace";
+  ctx.fillText("716-852-2000", 128, 92);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.35), new THREE.MeshBasicMaterial({ map: tex }));
+  sign.position.set(0.59, 1.55, 0);
+  sign.rotation.y = Math.PI / 2;
+  g.add(sign);
+  g.position.set(x, 0, z);
+  g.rotation.y = yaw || 0;
+  scene.add(g);
+  addCollider(x, z, 1.25, 0.9, 0, 1.9);
+}
+
+function faCart(x, z, yaw) {
+  const red = mats.redFA;
+  const g = new THREE.Group();
+  const bed = boxMesh(0.72, 0.12, 1.15, red);
+  bed.position.y = 0.42;
+  g.add(bed);
+  const lip = boxMesh(0.76, 0.28, 1.18, red);
+  lip.position.y = 0.62;
+  g.add(lip);
+  for (const [px, pz] of [
+    [-0.28, 0.45],
+    [0.28, 0.45],
+    [-0.28, -0.45],
+    [0.28, -0.45],
+  ]) {
+    const wh = new THREE.Mesh(smoothCylinder(0.08, 0.08, 0.05, 8), mats.dark);
+    wh.rotation.z = Math.PI / 2;
+    wh.position.set(px, 0.1, pz);
+    g.add(wh);
+  }
+  const handle = boxMesh(0.05, 0.7, 0.05, mats.dark);
+  handle.position.set(0, 1.05, -0.58);
+  g.add(handle);
+  const bar = boxMesh(0.55, 0.05, 0.05, mats.dark);
+  bar.position.set(0, 1.38, -0.58);
+  g.add(bar);
+  g.position.set(x, 0, z);
+  g.rotation.y = yaw || 0;
+  scene.add(g);
+  addCollider(x, z, 0.85, 1.3, 0, 1.1);
+}
+
+function redHopper(x, z, yaw) {
+  const body = boxMesh(1.55, 0.85, 0.72, mat(0xc62828, { roughness: 0.55, metalness: 0.08 }));
+  body.position.set(x, 0.48, z);
+  body.rotation.y = yaw || 0;
+  scene.add(body);
+  addCollider(x, z, 1.7, 0.9, 0, 0.9);
+}
+
+function makeFilterMat() {
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 256;
+  const g = c.getContext("2d");
+  g.fillStyle = "#a2adc6";
+  g.fillRect(0, 0, 256, 256);
+  const grd = g.createLinearGradient(0, 0, 256, 256);
+  grd.addColorStop(0, "rgba(255,255,255,0.28)");
+  grd.addColorStop(0.45, "rgba(140,175,205,0.1)");
+  grd.addColorStop(1, "rgba(70,85,112,0.14)");
+  g.fillStyle = grd;
+  g.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 55; i++) {
+    g.strokeStyle = `rgba(255,255,255,${0.06 + Math.random() * 0.16})`;
+    g.lineWidth = 1 + Math.random() * 2.2;
+    g.beginPath();
+    g.moveTo(Math.random() * 256, Math.random() * 256);
+    g.quadraticCurveTo(Math.random() * 256, Math.random() * 256, Math.random() * 256, Math.random() * 256);
+    g.stroke();
+  }
+  for (let i = 0; i < 18; i++) {
+    g.strokeStyle = `rgba(50,70,90,${0.08 + Math.random() * 0.12})`;
+    g.lineWidth = 2;
+    g.beginPath();
+    g.moveTo(Math.random() * 256, 0);
+    g.lineTo(Math.random() * 256, 256);
+    g.stroke();
+  }
+  g.fillStyle = "rgba(30,40,50,0.28)";
+  g.fillRect(0, 0, 256, 7);
+  g.fillRect(0, 249, 256, 7);
+  g.fillRect(0, 0, 7, 256);
+  g.fillRect(249, 0, 7, 256);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return new THREE.MeshStandardMaterial({
+    map: t,
+    color: 0xffffff,
+    roughness: 0.86,
+    metalness: 0.02,
+    envMapIntensity: 0.28,
+  });
+}
+
+function ensureFanMats() {
+  if (mats.galv) return;
+  mats.galv = mat(0xb7c0c6, { roughness: 0.3, metalness: 0.82, envMapIntensity: 1.15 });
+  mats.galvBlank = mat(0xc8d0d6, { roughness: 0.26, metalness: 0.86, envMapIntensity: 1.2 });
+  mats.pipeWht = mat(0xe9edf0, { roughness: 0.84, metalness: 0.06 });
+  mats.pipeCoup = mat(0x1c1c1e, { roughness: 0.42, metalness: 0.45 });
+  mats.vfd = mat(0x3a4148, { roughness: 0.42, metalness: 0.28 });
+  mats.doorWht = mat(0xd5dae0, { roughness: 0.46, metalness: 0.22, envMapIntensity: 0.5 });
+  mats.brass = mat(0xd4aa4a, { roughness: 0.32, metalness: 0.78, envMapIntensity: 0.95 });
+  mats.pinkTape = mat(0xc45a7a, { roughness: 0.55, metalness: 0.08 });
+  // Fan-hall finish pass: keep the original aisle and cabinet footprints.
+  mats.fanCoated = mat(0xcbd0d1, { roughness: 0.7, metalness: 0.12, envMapIntensity: 0.5 });
+  mats.filterBlue = makeFilterMat();
+  mats.cove = mat(0x9aa0a6, { roughness: 0.7, metalness: 0.08 });
+}
+
+function crahCabinet(x, z, yaw, kind) {
+  cabinetPlacements.push({x, z, yaw, kind});
+  addCollider(x, z, 1.05 + .12, 2.22 + .06, 0, 6.15);
+}
+
+
+function makeFaBoxMat() {
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 320;
+  const g = c.getContext("2d");
+  g.fillStyle = "#c41e1a";
+  g.fillRect(0, 0, 256, 320);
+  g.fillStyle = "#9a1410";
+  g.fillRect(12, 12, 232, 296);
+  g.fillStyle = "#d62822";
+  g.fillRect(18, 18, 220, 140);
+  g.fillStyle = "#1a1a1c";
+  g.fillRect(28, 170, 200, 118);
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 14; col++) {
+      g.fillStyle = col % 2 === row % 2 ? "#2a2a2e" : "#121214";
+      g.fillRect(34 + col * 13, 176 + row * 13, 11, 11);
+    }
+  }
+  g.fillStyle = "#fff4e8";
+  g.font = "bold 22px Oswald, Arial, sans-serif";
+  g.textAlign = "center";
+  g.fillText("FIRE ALARM", 128, 70);
+  g.font = "16px IBM Plex Mono, monospace";
+  g.fillText("NAC", 128, 102);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return new THREE.MeshStandardMaterial({ map: t, roughness: 0.55, metalness: 0.12, envMapIntensity: 0.35 });
+}
+
+function makeFaStrobeMat() {
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 192;
+  const g = c.getContext("2d");
+  g.fillStyle = "#c41e1a";
+  g.fillRect(0, 0, 256, 192);
+  g.fillStyle = "#8e1210";
+  g.fillRect(10, 10, 236, 172);
+  for (let row = 0; row < 6; row++) {
+    g.fillStyle = "#6a0e0c";
+    g.fillRect(22, 22 + row * 26, 212, 14);
+    g.fillStyle = "#2a0a0a";
+    g.fillRect(22, 28 + row * 26, 212, 6);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return new THREE.MeshStandardMaterial({ map: t, roughness: 0.6, metalness: 0.1 });
+}
+
+function makeVfdFaceMat() {
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 512;
+  const g = c.getContext("2d");
+  g.fillStyle = "#3a4148";
+  g.fillRect(0, 0, 256, 512);
+  g.fillStyle = "#2a3036";
+  g.fillRect(16, 16, 224, 480);
+  g.fillStyle = "#0c1410";
+  g.fillRect(40, 40, 176, 90);
+  g.fillStyle = "#3dff6a";
+  g.font = "bold 36px IBM Plex Mono, monospace";
+  g.textAlign = "center";
+  g.fillText("48.0", 128, 98);
+  g.fillStyle = "#1a1e22";
+  for (let i = 0; i < 4; i++) {
+    g.fillRect(48, 160 + i * 70, 160, 48);
+    g.fillStyle = "#8a9096";
+    g.fillRect(58, 170 + i * 70, 140, 28);
+    g.fillStyle = "#1a1e22";
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return new THREE.MeshStandardMaterial({ map: t, roughness: 0.48, metalness: 0.2, envMapIntensity: 0.4 });
+}
+
+function wallFaceX(wallX, inward) {
+  return wallX + inward * (0.42 / 2 + 0.02);
+}
+
+function dressFanServiceWall(wallX, inward) {
+  ensureFanMats();
+  if (!mats.faNacFace) {
+    mats.faNacFace = makeFaBoxMat();
+    mats.faStrobeFace = makeFaStrobeMat();
+    mats.vfdFace = makeVfdFaceMat();
+  }
+  const face = wallFaceX(wallX, inward);
+  const rotY = inward > 0 ? Math.PI / 2 : -Math.PI / 2;
+  const stick = (depth) => face + inward * (depth / 2);
+  placeBox(stick(0.08), 0, (CB.z0 + CB.z1) / 2, 0.08, 0.14, CB.z1 - CB.z0 - 0.4, mats.cove, false);
+
+  for (let z = CB.z0 + 2.4; z < CB.z1 - 2; z += 3.5) {
+    if (zInCross(z, 1.15)) continue;
+    const nacD = 0.16;
+    const nacX = stick(nacD);
+    placeBox(nacX, 1.38, z, nacD, 0.52, 0.38, mats.redFA, false);
+    const nacFace = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.5), mats.faNacFace);
+    nacFace.position.set(face + inward * (nacD + 0.008), 1.64, z);
+    nacFace.rotation.y = rotY;
+    scene.add(nacFace);
+    const strobeD = 0.15;
+    placeBox(stick(strobeD), 2.12, z + 0.02, strobeD, 0.28, 0.4, mats.redFA, false);
+    const stFace = new THREE.Mesh(new THREE.PlaneGeometry(0.38, 0.26), mats.faStrobeFace);
+    stFace.position.set(face + inward * (strobeD + 0.008), 2.26, z + 0.02);
+    stFace.rotation.y = rotY;
+    scene.add(stFace);
+    const pull = placeBox(stick(0.1), 1.15, z - 0.42, 0.1, 0.22, 0.16, mats.redFA, false);
+    const lever = boxMesh(0.04, 0.1, 0.03, mats.yellow);
+    lever.position.set(face + inward * 0.14, 1.26, z - 0.42);
+    scene.add(lever);
+    const red = new THREE.Mesh(smoothCylinder(0.028, 0.028, 5.1, 6), mats.redFA);
+    red.position.set(face + inward * 0.05, 4.05, z - 0.16);
+    scene.add(red);
+    const yel = new THREE.Mesh(smoothCylinder(0.022, 0.022, 5.1, 6), mats.brass);
+    yel.position.set(face + inward * 0.05, 4.05, z + 0.12);
+    scene.add(yel);
+    const emt = new THREE.Mesh(smoothCylinder(0.02, 0.02, 4.4, 5), mats.emt);
+    emt.position.set(face + inward * 0.05, 4.4, z + 0.28);
+    scene.add(emt);
+  }
+
+  for (let z = CB.z0 + 4.1; z < CB.z1 - 2; z += 7.2) {
+    if (zInCross(z, 1.4)) continue;
+    const d = 0.18;
+    placeBox(stick(d), 0.85, z, d, 1.75, 0.62, mats.vfd, false);
+    const vf = new THREE.Mesh(new THREE.PlaneGeometry(0.58, 1.68), mats.vfdFace);
+    vf.position.set(face + inward * (d + 0.008), 1.72, z);
+    vf.rotation.y = rotY;
+    scene.add(vf);
+    const led = boxMesh(
+      0.02,
+      0.08,
+      0.16,
+      new THREE.MeshStandardMaterial({
+        color: 0x143018,
+        emissive: 0x3dff6a,
+        emissiveIntensity: 1.1,
+        roughness: 0.4,
+        metalness: 0.2,
+      })
+    );
+    led.position.set(face + inward * (d + 0.02), 2.38, z);
+    led.userData.noBake = true;
+    scene.add(led);
+  }
+
+  for (let z = CB.z0 + 3.2; z < CB.z1 - 2; z += 5.6) {
+    if (zInCross(z, 1.1)) continue;
+    placeBox(stick(0.1), 1.05, z + 1.4, 0.1, 0.48, 0.32, mats.cove, false);
+    const cover = boxMesh(0.008, 0.42, 0.26, mats.fanCoated);
+    cover.position.set(face + inward * 0.104, 1.29, z + 1.4);
+    scene.add(cover);
+    const latch = boxMesh(0.008, 0.1, 0.025, mats.dark);
+    latch.position.set(face + inward * 0.113, 1.29, z + 1.49);
+    scene.add(latch);
+  }
+}
+
+// One instanced batch per fan hall; the shared ladder trays stay unchanged.
+function fanBasketTrayRun(x, y, z0, z1, w) {
+  const len = z1 - z0;
+  const mid = (z0 + z1) / 2;
+  const base = y + 0.04; // Same bottom elevation as the existing ladder rungs.
+  const sideH = 0.18;
+  const wire = 0.012;
+  const pieces = [];
+  const bar = (px, py, pz, sx, sy, sz) => pieces.push([px, py, pz, sx, sy, sz]);
+  for (const dx of [-w / 2, -w / 4, 0, w / 4, w / 2]) {
+    bar(x + dx, base, mid, wire, wire, len);
+  }
+  for (const dx of [-w / 2, w / 2]) {
+    for (const dy of [sideH / 2, sideH]) {
+      bar(x + dx, base + dy, mid, wire, wire, len);
+    }
+  }
+  const count = Math.max(8, Math.ceil(len / 0.22));
+  for (let i = 0; i <= count; i++) {
+    const z = z0 + (i / count) * len;
+    bar(x, base, z, w, wire, wire);
+    for (const dx of [-w / 2, w / 2]) {
+      bar(x + dx, base + sideH / 2, z, wire, sideH, wire);
+    }
+  }
+  // Retain the original supports and their 8m top elevation.
+  for (let z = z0 + 2.8; z < z1 - 1; z += 5.8) {
+    bar(x, y + (8.0 - y) / 2, z, 0.04, 8.0 - y, 0.04);
+  }
+  const mesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), mats.tray, pieces.length);
+  mesh.name = "Fan hall wire basket tray";
+  mesh.userData.noBake = true; // The static merger must not flatten instance transforms.
+  const dummy = new THREE.Object3D();
+  pieces.forEach(([px, py, pz, sx, sy, sz], i) => {
+    dummy.position.set(px, py, pz);
+    dummy.scale.set(sx, sy, sz);
+    dummy.updateMatrix();
+    mesh.setMatrixAt(i, dummy.matrix);
+  });
+  mesh.instanceMatrix.needsUpdate = true;
+  mesh.computeBoundingSphere();
+  scene.add(mesh);
+}
+
+function fanHallOverhead(hallX, whiteX) {
+  ensureFanMats();
+  const z0 = CB.z0 + 0.5;
+  const z1 = CB.z1 - 0.5;
+  const mid = (z0 + z1) / 2;
+  const len = z1 - z0;
+  const towardWhite = Math.sign(whiteX - hallX) || -1;
+  fanBasketTrayRun(hallX + towardWhite * 0.85, 6.48, z0, z1, 0.58);
+  emtBundle(hallX + towardWhite * 0.85, 6.58, z0, z1, 7, 0.07);
+  for (let i = 0; i < 3; i++) {
+    const p = new THREE.Mesh(smoothCylinder(0.13, 0.13, len, 8), mats.pipeWht);
+    p.rotation.x = Math.PI / 2;
+    p.position.set(hallX - towardWhite * 0.05 + i * 0.32, 7.12, mid);
+    scene.add(p);
+    for (let z = z0 + 3.5; z < z1; z += 4.6) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.145, 0.028, 6, 10), mats.pipeCoup);
+      // Torus normal is already Z, aligned with these Z-axis pipes.
+      ring.position.set(hallX - towardWhite * 0.05 + i * 0.32, 7.12, z);
+      scene.add(ring);
+    }
+  }
+  roundDuct(hallX - towardWhite * 0.55, 7.28, z0, z1, 0.2);
+}
+
+function buildFanHalls() {
+  ensureFanMats();
+  const specs = [
+    { wallX: CB.data0, yaw: Math.PI, hallX: CB.fanWX, whiteX: CB.fanW0, inward: 1 },
+    { wallX: CB.data1, yaw: 0, hallX: CB.fanEX, whiteX: CB.fanE1, inward: -1 },
+  ];
+  for (const s of specs) {
+    const face = s.yaw === 0 ? 1 : -1;
+    const cx = s.wallX + face * 0.56;
+    let i = 0;
+    for (let z = CB.z0 + 1.8; z < CB.z1 - 1.6; z += 2.38) {
+      if (zInCross(z, 1.15)) continue;
+      crahCabinet(cx, z, s.yaw, i % 4);
+      i += 1;
+    }
+    dressFanServiceWall(s.whiteX, s.inward);
+    fanHallOverhead(s.hallX, s.whiteX);
+    const sign = makeLabel("FAN HALL");
+    sign.position.set(s.whiteX + s.inward * 0.08, 3.35, CB.z0 + 6.2);
+    sign.rotation.y = s.inward > 0 ? Math.PI / 2 : -Math.PI / 2;
+    scene.add(sign);
+  }
+  const door = boxMesh(0.08, 3.35, 2.35, mats.emt);
+  door.position.set(wallFaceX(CB.fanW0, 1) + 0.04, 1.72, podBand(0).z0 + 3.6);
+  scene.add(door);
+  for (let k = -4; k <= 4; k++) {
+    const rib = boxMesh(0.02, 3.3, 0.05, mats.beam);
+    rib.position.set(wallFaceX(CB.fanW0, 1) + 0.09, 1.72, podBand(0).z0 + 3.6 + k * 0.24);
+    scene.add(rib);
+  }
+  const can = new THREE.Mesh(smoothCylinder(0.32, 0.28, 0.72, 12), mats.colBlk);
+  can.position.set(CB.fanWX - 0.85, 0.36, CB.z0 + 4.2);
+  scene.add(can);
+  addCollider(CB.fanWX - 0.85, CB.z0 + 4.2, 0.7, 0.7, 0, 0.8);
+  scissorLift(CB.fanW0 + 0.95, podBand(2).mid - 1.2, 0.02, 1.35, 0xf0c01a, null, false);
+}
+
+function ensureMechMats() {
+  if (mats.tankWht) return;
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 256;
+  const g = c.getContext("2d");
+  g.fillStyle = "#eef1f4";
+  g.fillRect(0, 0, 256, 256);
+  g.strokeStyle = "rgba(180,188,196,0.45)";
+  g.lineWidth = 2;
+  for (let i = 0; i <= 8; i++) {
+    g.beginPath();
+    g.moveTo(0, i * 32);
+    g.lineTo(256, i * 32);
+    g.stroke();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(2, 6);
+  mats.tankWht = new THREE.MeshStandardMaterial({
+    map: t,
+    color: 0xffffff,
+    roughness: 0.38,
+    metalness: 0.08,
+    envMapIntensity: 0.55,
+  });
+  mats.legRust = mat(0x8a3e24, { roughness: 0.72, metalness: 0.22 });
+  mats.actRed = mat(0xc62828, { roughness: 0.42, metalness: 0.18 });
+  mats.flexSil = mat(0xb0b6bc, { roughness: 0.38, metalness: 0.62, envMapIntensity: 0.8 });
+  mats.tarpaulin = mat(0xf2f0e8, { roughness: 0.88, metalness: 0.02 });
+  mats.purpleFlex = mat(0x3d4f9a, { roughness: 0.72, metalness: 0.05 });
+  mats.flange = mat(0x9aa0a6, { roughness: 0.4, metalness: 0.55 });
+  if (!mats.pipeWht) mats.pipeWht = mat(0xe9edf0, { roughness: 0.84, metalness: 0.06 });
+  if (!mats.pipeCoup) mats.pipeCoup = mat(0x1c1c1e, { roughness: 0.42, metalness: 0.45 });
+}
+
+function whiteTank(x, z) {
+  ensureMechMats();
+  const R = 1.18;
+  const H = 4.55;
+  const y0 = 0.92;
+  const body = new THREE.Mesh(smoothCylinder(R, R, H, 18), mats.tankWht);
+  body.position.set(x, y0 + H / 2, z);
+  scene.add(body);
+  const dish = new THREE.Mesh(new THREE.SphereGeometry(R, 16, 10, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), mats.tankWht);
+  dish.position.set(x, y0, z);
+  scene.add(dish);
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(R * 0.92, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), mats.tankWht);
+  cap.position.set(x, y0 + H, z);
+  scene.add(cap);
+  for (const [dx, dz] of [
+    [-0.85, -0.85],
+    [0.85, -0.85],
+    [-0.85, 0.85],
+    [0.85, 0.85],
+  ]) {
+    placeBox(x + dx, 0, z + dz, 0.14, y0 + 0.15, 0.14, mats.legRust, false);
+  }
+  const man = new THREE.Mesh(smoothCylinder(0.28, 0.28, 0.12, 12), mats.legRust);
+  man.rotation.z = Math.PI / 2;
+  man.position.set(x + R - 0.02, y0 + 1.35, z);
+  scene.add(man);
+  const neck = new THREE.Mesh(smoothCylinder(0.22, 0.22, 0.55, 10), mats.pipeWht);
+  neck.position.set(x + 0.35, y0 + H + 0.4, z);
+  scene.add(neck);
+  const flex = new THREE.Mesh(smoothCylinder(0.26, 0.26, 0.28, 10), mats.flexSil);
+  flex.position.set(x + 0.35, y0 + H + 0.72, z);
+  scene.add(flex);
+  const tape = boxMesh(R * 2.05, 0.05, 0.04, mats.yellow);
+  tape.position.set(x, 1.22, z);
+  scene.add(tape);
+  addCollider(x, z, R * 2.15, R * 2.15, 0, y0 + H + 0.4);
+}
+
+function greenPumpPallet(x, z, yaw) {
+  const g = industrial.pumpAssembly({scale:.69, withValve:true});
+  g.position.set(x,0,z);
+  g.rotation.y = (yaw || 0) - Math.PI / 2;
+  scene.add(g);
+  addCollider(x,z,1.7,1.1,0,1.1);
+}
+
+
+function blackProcessRiser(x, z) {
+  ensureMechMats();
+  const h = 5.4;
+  const p = new THREE.Mesh(smoothCylinder(0.16, 0.16, h, 10), mats.pipeBlk);
+  p.position.set(x, h / 2 + 0.35, z);
+  scene.add(p);
+  const act = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), mats.actRed);
+  act.position.set(x, 4.15, z);
+  scene.add(act);
+  const actB = boxMesh(0.28, 0.22, 0.22, mats.actRed);
+  actB.position.set(x + 0.22, 4.15, z);
+  scene.add(actB);
+  const elbow = new THREE.Mesh(smoothCylinder(0.16, 0.16, 1.15, 10), mats.pipeBlk);
+  elbow.rotation.z = Math.PI / 2;
+  elbow.position.set(x + 0.45, 0.42, z);
+  scene.add(elbow);
+  const fl = new THREE.Mesh(smoothCylinder(0.26, 0.26, 0.08, 12), mats.flange);
+  fl.position.set(x, 1.35, z);
+  scene.add(fl);
+  const fl2 = new THREE.Mesh(smoothCylinder(0.26, 0.26, 0.08, 12), mats.flange);
+  fl2.rotation.z = Math.PI / 2;
+  fl2.position.set(x + 0.95, 0.42, z);
+  scene.add(fl2);
+  addCollider(x, z, 0.5, 0.5, 0, 2.2);
+}
+
+function spoolStack(x, z) {
+  const cols = [0xd4c44a, 0xb71c1c, 0x3d8a4a, 0x3d5a9a, 0xc8c8c4, 0x8a5a32, 0x6a2a6a];
+  let n = 0;
+  for (let row = 0; row < 2; row++) {
+    for (let col = 0; col < 4; col++) {
+      const sx = x + (col - 1.5) * 0.42;
+      const sz = z + (row - 0.5) * 0.42;
+      const y = 0.22;
+      const coil = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.07, 6, 10), mat(cols[n % cols.length]));
+      coil.rotation.y = Math.PI / 2;
+      coil.position.set(sx, y, sz);
+      scene.add(coil);
+      n += 1;
+    }
+  }
+  const pal = boxMesh(1.85, 0.1, 0.95, mats.wood);
+  pal.position.set(x, 0.05, z);
+  scene.add(pal);
+  addCollider(x, z, 1.9, 1.05, 0, 0.55);
+}
+
+function dropZoneCone(x, z) {
+  coneAt(x, z);
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 192;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#f4f4f0";
+  ctx.fillRect(0, 0, 256, 192);
+  ctx.fillStyle = "#c41e1a";
+  ctx.fillRect(12, 12, 232, 58);
+  ctx.fillStyle = "#fff";
+  ctx.font = "bold 36px Oswald, Arial, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("DANGER", 128, 54);
+  ctx.fillStyle = "#111";
+  ctx.font = "bold 32px Oswald, Arial, sans-serif";
+  ctx.fillText("DROP ZONE", 128, 130);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.4), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
+  sign.position.set(x, 0.95, z);
+  scene.add(sign);
+}
+
+function tarpChiller(x, z) {
+  ensureMechMats();
+  placeBox(x, 0, z, 2.2, 1.85, 1.35, mats.pump, true);
+  const tarp = boxMesh(2.35, 0.08, 1.5, mats.tarpaulin);
+  tarp.position.set(x, 1.92, z);
+  scene.add(tarp);
+  const drape = boxMesh(0.06, 1.1, 1.45, mats.tarpaulin);
+  drape.position.set(x + 1.12, 1.35, z);
+  scene.add(drape);
+}
+
+function buildMechHall() {
+  ensureMechMats();
+  const z0 = CB.z0 + 0.6;
+  const z1 = CB.z1 - 0.6;
+  const westX = CB.west + 2.45;
+  const eastX = CB.hallW0 - 1.55;
+  placeBox(CB.mechX, 7.98, (z0 + z1) / 2, CB.hallW0 - CB.west - 0.4, 0.06, z1 - z0, mats.colBlk, false);
+
+  let ti = 0;
+  for (let z = z0 + 3.2; z < z1 - 2.5; z += 6.4) {
+    if (zInCross(z, 1.6)) continue;
+    whiteTank(westX, z);
+    if (ti % 2 === 0) blackProcessRiser(CB.mechX + 0.85, z + 1.6);
+    ti += 1;
+  }
+  for (let z = z0 + 4.6; z < z1 - 2; z += 7.2) {
+    if (zInCross(z, 1.4)) continue;
+    greenPumpPallet(eastX, z, 0.15);
+  }
+  for (let z = z0 + 8.2; z < z1 - 3; z += 14) {
+    if (zInCross(z, 1.8)) continue;
+    tarpChiller(eastX - 0.15, z + 3.1);
+  }
+
+  const mid = (z0 + z1) / 2;
+  const len = z1 - z0;
+  for (let i = 0; i < 3; i++) {
+    const p = new THREE.Mesh(smoothCylinder(0.22 + i * 0.04, 0.22 + i * 0.04, len, 10), mats.pipeWht);
+    p.rotation.x = Math.PI / 2;
+    p.position.set(CB.mechX - 1.4 + i * 1.15, 6.55 + (i % 2) * 0.35, mid);
+    scene.add(p);
+    for (let z = z0 + 4; z < z1; z += 5.2) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.26 + i * 0.04, 0.035, 6, 10), i === 1 ? mats.pump : mats.pipeCoup);
+      ring.rotation.y = Math.PI / 2;
+      ring.position.set(CB.mechX - 1.4 + i * 1.15, 6.55 + (i % 2) * 0.35, z);
+      scene.add(ring);
+    }
+  }
+  for (let z = z0 + 5; z < z1; z += 9.5) {
+    if (zInCross(z, 1.2)) continue;
+    const drop = new THREE.Mesh(smoothCylinder(0.2, 0.2, 2.4, 10), mats.pipeWht);
+    drop.position.set(CB.mechX - 0.25, 5.2, z);
+    scene.add(drop);
+  }
+  ladderTrayRun(CB.mechX + 2.2, 6.85, z0, z1, 0.55);
+  emtBundle(CB.mechX + 2.2, 6.95, z0, z1, 6, 0.08);
+
+  const flex = new THREE.Mesh(smoothCylinder(0.12, 0.12, 2.8, 8), mats.purpleFlex);
+  flex.rotation.z = 0.7;
+  flex.position.set(CB.mechX + 0.4, 0.85, podBand(1).mid + 2.4);
+  scene.add(flex);
+
+  spoolStack(CB.mechX - 0.2, podBand(1).mid - 4.2);
+  spoolStack(CB.mechX + 0.6, podBand(2).mid + 3.5);
+  dropZoneCone(CB.mechX + 1.1, podBand(0).mid + 2.2);
+  dropZoneCone(CB.mechX - 0.8, podBand(2).mid - 2.8);
+  faCart(CB.mechX + 1.4, CB.z0 + 5.5, 0.4);
+  const cooler = boxMesh(0.55, 0.42, 0.38, mats.dark);
+  cooler.position.set(CB.mechX + 1.6, 0.22, podBand(0).mid - 1.5);
+  scene.add(cooler);
+  scissorLift(CB.hallW0 - 1.35, podBand(1).mid + 6.2, 0.08, 1.4, 0xc62828, null, false);
+
+  const cab = placeBox(CB.hallW0 - 0.85, 0.55, podBand(0).z0 + 5.8, 0.42, 2.15, 1.15, mats.doorWht || mats.wall, true);
+  for (const sx of [-0.22, 0.22]) {
+    placeBox(CB.hallW0 - 0.85 + sx, 0, podBand(0).z0 + 5.8, 0.08, 0.55, 0.08, mats.emt, false);
+  }
+
+  const sign = makeLabel("MECHANICAL");
+  sign.position.set(CB.west + 0.25, 3.3, CB.z0 + 6.5);
+  sign.rotation.y = Math.PI / 2;
+  scene.add(sign);
+}
+
+function makeSgFaceMat(kind) {
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 512;
+  const g = c.getContext("2d");
+  g.fillStyle = "#9aa3aa";
+  g.fillRect(0, 0, 256, 512);
+  g.fillStyle = "#7e868e";
+  g.fillRect(6, 6, 244, 500);
+  const cols = kind === 1 ? 3 : 2;
+  const rows = kind === 1 ? 4 : 3;
+  const padX = 14;
+  const padY = 16;
+  const gap = 8;
+  const dw = (244 - padX * 2 - gap * (cols - 1)) / cols;
+  const dh = (500 - padY * 2 - gap * (rows - 1)) / rows;
+  for (let r = 0; r < rows; r++) {
+    for (let col = 0; col < cols; col++) {
+      const x = 6 + padX + col * (dw + gap);
+      const y = 6 + padY + r * (dh + gap);
+      g.fillStyle = "#d8c9a6";
+      g.fillRect(x, y, dw, dh);
+      g.fillStyle = "#c4b48e";
+      g.fillRect(x + 3, y + 3, dw - 6, dh - 6);
+      g.fillStyle = "#1c1c1e";
+      g.fillRect(x + dw - 22, y + dh * 0.42, 12, 28);
+      g.fillStyle = "#f4f0e4";
+      g.fillRect(x + 8, y + 10, 48, 14);
+      g.fillStyle = "#333";
+      g.font = "10px IBM Plex Mono, monospace";
+      g.fillText(kind === 1 ? "CB" : "SWGR", x + 10, y + 21);
+    }
+  }
+  if (kind === 0) {
+    g.fillStyle = "#c62828";
+    g.beginPath();
+    g.arc(128, 400, 18, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = "#8e1a16";
+    g.fillRect(122, 382, 12, 36);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return new THREE.MeshStandardMaterial({
+    map: t,
+    roughness: 0.48,
+    metalness: 0.22,
+    envMapIntensity: 0.45,
+  });
+}
+
+function ensurePowerMats() {
+  ensureFanMats();
+  if (mats.sgFace0) return;
+  mats.sgFace0 = makeSgFaceMat(0);
+  mats.sgFace1 = makeSgFaceMat(1);
+  mats.sgBeige = mat(0xd4c49a, { roughness: 0.55, metalness: 0.12 });
+}
+
+function getPowerRouting() {
+  return powerRouting ||= createPowerRouting({ THREE, BufferGeometryUtils, materials: mats });
+}
+
+function switchgearBay(x, z, yaw, kind) {
+  ensurePowerMats();
+  const W = 1.88;
+  const D = 1.02;
+  const H = 6.05;
+  const g = industrial.switchgear({width:W, height:H, depth:D, sections:3});
+  g.add(getPowerRouting().feeders({ height: H, trayOffset: 2.44, kind }));
+  g.position.set(x, 0, z);
+  g.rotation.y = yaw;
+  scene.add(g);
+  addCollider(x, z, D + 0.12, W + 0.08, 0, H);
+}
+
+function buildPowerHalls() {
+  ensurePowerMats();
+  const halls = [
+    { hallX: CB.elecWX, w0: CB.elecW0, w1: CB.fanW0 },
+    { hallX: CB.elecEX, w0: CB.fanE1, w1: CB.elecE1 },
+  ];
+  for (const h of halls) {
+    const specs = [
+      { wallX: h.w0, yaw: 0 },
+      { wallX: h.w1, yaw: Math.PI },
+    ];
+    let i = 0;
+    for (const s of specs) {
+      const face = s.yaw === 0 ? 1 : -1;
+      const cx = s.wallX + face * 0.56;
+      for (let z = CB.z0 + 1.7; z < CB.z1 - 1.5; z += 2.02) {
+        if (zInCross(z, 1.2)) continue;
+        switchgearBay(cx, z, s.yaw, i % 3 === 1 ? 1 : 0);
+        i += 1;
+      }
+    }
+    const z0 = CB.z0 + 0.5;
+    const z1 = CB.z1 - 0.5;
+    const mid = (z0 + z1) / 2;
+    const len = z1 - z0;
+    const bus = boxMesh(0.48, 0.22, len, mats.greenBus);
+    bus.position.set(h.hallX, 6.42, mid);
+    scene.add(bus);
+    const bus2 = boxMesh(0.38, 0.16, len * 0.7, mats.copper);
+    bus2.position.set(h.hallX + 0.42, 6.62, mid);
+    scene.add(bus2);
+    const sign = makeLabel("POWER HALL");
+    sign.position.set(h.w0 + 0.12, 3.35, CB.z0 + 6.4);
+    sign.rotation.y = Math.PI / 2;
+    scene.add(sign);
+  }
+  faCart(CB.elecW0 + 1.62, podBand(0).mid + 3.2, 0);
+  const pal = boxMesh(0.85, 0.14, 1.2, mats.wood);
+  pal.position.set(CB.elecW0 + 1.55, 0.08, podBand(1).mid - 2.4);
+  scene.add(pal);
+  const bkt = new THREE.Mesh(smoothCylinder(0.16, 0.13, 0.38, 10), mats.orange);
+  bkt.position.set(CB.elecW0 + 1.45, 0.22, podBand(1).mid - 2.1);
+  scene.add(bkt);
+}
+
+function buildJobsiteOverhead() {
+  const z0 = CB.z0 + 0.4;
+  const z1 = CB.z1 - 0.4;
+  // west long hall — matches the corridor video: EMT bundle, ladder tray, duct, flags
+  emtBundle(CB.hallWX - 0.55, 6.35, z0, z1, 9, 0.11);
+  ladderTrayRun(CB.hallWX + 0.95, 6.72, z0, z1, 0.62);
+  roundDuct(CB.hallWX + 0.15, 7.05, z0, z1, 0.22);
+  peligroFlags(CB.hallWX - 0.35, 6.45, z0, z1);
+  // yellow inner tray like the right-hand run
+  ladderTrayRun(CB.hallWX + 1.55, 6.95, z0, z1, 0.42);
+  const yelCable = mat(0xd8c22a, { roughness: 0.45, metalness: 0.15 });
+  const ylen = z1 - z0;
+  const ymid = (z0 + z1) / 2;
+  for (let i = 0; i < 3; i++) {
+    const c = new THREE.Mesh(smoothCylinder(0.03, 0.03, ylen, 5), yelCable);
+    c.rotation.x = Math.PI / 2;
+    c.position.set(CB.hallWX + 1.55 - 0.08 + i * 0.08, 7.02, ymid);
+    scene.add(c);
+  }
+  // east long hall, mirrored
+  emtBundle(CB.hallEX + 0.5, 6.35, z0, z1, 8, 0.11);
+  ladderTrayRun(CB.hallEX - 0.95, 6.72, z0, z1, 0.62);
+  roundDuct(CB.hallEX - 0.1, 7.05, z0, z1, 0.22);
+  peligroFlags(CB.hallEX + 0.3, 6.45, z0, z1);
+  // data hall — tray over the aisle, no raised floor
+  emtBundle(CB.dataX + 3.4, 6.55, z0, z1, 6, 0.12);
+  ladderTrayRun(CB.dataX, 6.85, z0, z1, 0.7);
+  // electrical rooms — packed tray of orange / copper / yellow
+  for (const ex of [CB.elecWX, CB.elecEX]) {
+    ladderTrayRun(ex, 7.05, z0, z1, 0.85);
+    for (let i = 0; i < 7; i++) {
+      const col = i % 3 === 0 ? mats.copper : i % 3 === 1 ? mats.orange : mats.greenBus;
+      const c = new THREE.Mesh(smoothCylinder(0.028, 0.028, ylen, 5), col);
+      c.rotation.x = Math.PI / 2;
+      c.position.set(ex - 0.28 + i * 0.09, 7.12, ymid);
+      scene.add(c);
+    }
+  }
+  // black columns along the west hall wall
+  for (let z = z0 + 3; z < z1; z += 6.4) {
+    placeBox(CB.hallW0 + 0.38, 0, z, 0.26, 8, 0.26, mats.colBlk, true);
+    placeBox(CB.elecE1 + 0.38, 0, z, 0.26, 8, 0.26, mats.colBlk, true);
+  }
+  // OSB + 2x4 cleats on the hall walls (from the video)
+  osbCleatWall(CB.elecW0 - 0.24, CB.z0 + 18, -Math.PI / 2);
+  osbCleatWall(CB.elecW0 - 0.24, CB.z0 + 22.5, -Math.PI / 2);
+  osbCleatWall(CB.elecE1 + 0.24, podBand(1).mid, Math.PI / 2);
+  // corridor clutter — keep the walking lane (hall center) open
+  bakerScaffold(CB.hallWX + 1.85, CB.z0 + 16.5, 0.04);
+  bakerScaffold(CB.hallEX - 1.85, podBand(2).mid - 4, 0.02);
+  fergusonBox(CB.hallWX + 1.9, CB.z0 + 12.2, -Math.PI / 2);
+  faCart(CB.hallWX + 1.7, CB.z0 + 9.4, 0.2);
+  redHopper(CB.hallWX + 1.85, podBand(1).mid + 5.5, 0.3);
+  // parked MEC-red scissors against the hall wall
+  scissorLift(CB.hallWX - 1.65, CB.z0 + 14.5, 0.02, 1.15, 0xc62828, null, false);
+  scissorLift(CB.hallWX - 1.65, podBand(1).mid - 3.5, 0.04, 2.4, 0xc62828, "oconnell", false);
+  scissorLift(CB.hallEX + 1.6, podBand(2).mid + 2, 3.1, 1.2, 0xf0a020, null, false);
+}
+
 function buildHotAisle() {
+  const c = hotCross();
+  const w = CB.data1 - CB.data0;
+  const d = Math.max(1.2, c.z1 - c.z0 - 0.2);
   const glow = new THREE.MeshBasicMaterial({
     color: 0xff6a1a,
     transparent: true,
@@ -6897,30 +8981,28 @@ function buildHotAisle() {
     depthWrite: false,
   });
   const tape = new THREE.MeshBasicMaterial({ color: 0x1a140c });
-  {
-    const c = crossBand(HOT_CROSS);
-    const w = CB.data1 - CB.data0;
-    const strip = boxMesh(w, 0.05, 0.42, glow);
-    strip.position.set(CB.dataX, 5.42, c.mid);
-    strip.userData.noBake = true;
-    scene.add(strip);
-    const pad = boxMesh(w - 0.35, 0.02, Math.min(c.z1 - c.z0 - 0.2, 1.85), floor);
-    pad.position.set(CB.dataX, 0.03, c.mid);
-    pad.userData.noBake = true;
-    scene.add(pad);
-    for (const sx of [-w * 0.42, w * 0.42]) {
-      const t = boxMesh(0.12, 0.03, Math.min(c.z1 - c.z0 - 0.15, 1.9), tape);
-      t.position.set(CB.dataX + sx, 0.04, c.mid);
-      t.userData.noBake = true;
-      scene.add(t);
-    }
-    const tag = makeNameTag("HOT AISLE", "110°+ · DON'T CAMP");
+  const strip = boxMesh(w, 0.05, 0.42, glow);
+  strip.position.set(CB.dataX, 5.42, c.mid);
+  strip.userData.noBake = true;
+  scene.add(strip);
+  const pad = boxMesh(w - 0.2, 0.025, d, floor);
+  pad.position.set(CB.dataX, 0.035, c.mid);
+  pad.userData.noBake = true;
+  scene.add(pad);
+  for (const sx of [-w * 0.46, w * 0.46]) {
+    const t = boxMesh(0.12, 0.03, d, tape);
+    t.position.set(CB.dataX + sx, 0.045, c.mid);
+    t.userData.noBake = true;
+    scene.add(t);
+  }
+  for (const x of [CB.data0 + 2.2, CB.data1 - 2.2]) {
+    const tag = makeNameTag("HOT AISLE", "110°+ · DH2 / DH3 ONLY");
     tag.scale.set(2.8, 0.62, 1);
-    tag.position.set(CB.dataX, 3.15, c.mid);
+    tag.position.set(x, 3.15, c.mid);
     scene.add(tag);
   }
-  const pl = new THREE.PointLight(0xff7a28, 0.4, 24);
-  pl.position.set(CB.dataX, 4.1, crossBand(HOT_CROSS).mid);
+  const pl = new THREE.PointLight(0xff7a28, 0.55, 16);
+  pl.position.set(CB.dataX, 4.0, c.mid);
   scene.add(pl);
 }
 
@@ -6955,7 +9037,7 @@ function buildRedBeard() {
       [x - 7, p0.mid - 6],
     ],
     speed: 1.22,
-    skin: 1,
+    skin: 2,
     hair: 1,
     hold: "radio",
   });
@@ -6984,21 +9066,116 @@ function buildAndy() {
   tag.scale.set(2.5, 0.56, 1);
   tag.position.y = 2.4;
   w.add(tag);
-  state.andy = w;
-  // the collector actually collects — the interactable trails him as he walks
-  addItem({
-    id: "andyFund",
-    mesh: null,
-    x: x - 7,
-    z: p1.mid,
-    label: "Give five bucks · sick & needy",
-    andyFund: true,
-    done: false,
+}
+
+function makeMoose() {
+  const detailed=makeDetailedMoose();if(detailed)return detailed;
+  const g = new THREE.Group();
+  const hide = mat(0x5a3a22);
+  const fur = mat(0x6b4428);
+  const dark = mat(0x3a2418);
+  const ant = mat(0xcbb89a);
+  const body = boxMesh(0.72, 0.62, 1.55, fur);
+  body.position.set(0, 0.92, 0.08);
+  g.add(body);
+  const hump = boxMesh(0.58, 0.28, 0.45, hide);
+  hump.position.set(0, 1.28, -0.42);
+  g.add(hump);
+  const neck = boxMesh(0.32, 0.42, 0.38, hide);
+  neck.position.set(0, 1.22, -0.78);
+  neck.rotation.x = -0.45;
+  g.add(neck);
+  const head = boxMesh(0.34, 0.28, 0.42, fur);
+  head.position.set(0, 1.42, -1.08);
+  g.add(head);
+  const snout = boxMesh(0.22, 0.16, 0.32, dark);
+  snout.position.set(0, 1.32, -1.38);
+  g.add(snout);
+  const nose = boxMesh(0.16, 0.1, 0.08, mat(0x1a120c));
+  nose.position.set(0, 1.3, -1.55);
+  g.add(nose);
+  for (const s of [-1, 1]) {
+    const ear = boxMesh(0.08, 0.14, 0.06, hide);
+    ear.position.set(0.16 * s, 1.58, -1.0);
+    ear.rotation.z = 0.4 * s;
+    g.add(ear);
+    const eye = boxMesh(0.05, 0.04, 0.03, mat(0x111));
+    eye.position.set(0.12 * s, 1.48, -1.26);
+    g.add(eye);
+  }
+  function palmate(side) {
+    const palm = boxMesh(0.55, 0.08, 0.42, ant);
+    palm.position.set(0.28 * side, 1.78, -1.05);
+    palm.rotation.z = 0.35 * side;
+    palm.rotation.y = 0.15 * side;
+    g.add(palm);
+    for (let i = 0; i < 4; i++) {
+      const tine = boxMesh(0.06, 0.22, 0.08, ant);
+      tine.position.set(0.28 * side + 0.12 * side * (i - 1.2), 1.96, -1.18 + i * 0.08);
+      tine.rotation.z = 0.2 * side;
+      g.add(tine);
+    }
+    const beam = boxMesh(0.08, 0.28, 0.08, ant);
+    beam.position.set(0.18 * side, 1.62, -1.08);
+    g.add(beam);
+  }
+  palmate(-1);
+  palmate(1);
+  for (const [lx, lz] of [
+    [-0.22, 0.48],
+    [0.22, 0.48],
+    [-0.22, -0.42],
+    [0.22, -0.42],
+  ]) {
+    const leg = boxMesh(0.12, 0.72, 0.14, hide);
+    leg.position.set(lx, 0.38, lz);
+    g.add(leg);
+    const hoof = boxMesh(0.14, 0.08, 0.18, mat(0x1a120c));
+    hoof.position.set(lx, 0.06, lz + 0.02);
+    g.add(hoof);
+  }
+  const tail = boxMesh(0.08, 0.18, 0.1, dark);
+  tail.position.set(0, 1.05, 0.88);
+  tail.rotation.x = 0.4;
+  g.add(tail);
+  g.userData.noBake = true;
+  return g;
+}
+
+function buildDavidMoose() {
+  const w = placeWorker("david", 11.2, 19.6, 0.2, {
+    path: [
+      [11.2, 19.6],
+      [20.4, 16.8],
+      [23.2, 26.4],
+      [8.4, 28.2],
+      [6.8, 21.0],
+    ],
+    speed: 1.05,
+    skin: 0,
+    hair: 1,
+    mount: true,
   });
+  const moose = makeMoose();
+  moose.position.set(0, 0, 0);
+  // The original moose's nose is on -Z; walking crews travel along local +Z.
+  moose.rotation.y = moose.userData.forward==='+Z'?0:Math.PI;
+  w.add(moose);
+  w.userData.moose=moose;
+  w.userData.animate?.(0,{speed:0});
+  const ud = w.userData;
+  if (ud.legL) ud.legL.rotation.x = 0.95;
+  if (ud.legR) ud.legR.rotation.x = 0.95;
+  if (ud.armL) ud.armL.rotation.x = 0.25;
+  if (ud.armR) ud.armR.rotation.x = 0.25;
+  const tag = makeNameTag("DAVID", "ON A MOOSE");
+  tag.scale.set(2.6, 0.58, 1);
+  tag.position.y = 2.55;
+  w.add(tag);
 }
 
 function buildDrew() {
-  const w = makeWorker("gf", { skin: 2, hair: 2, beard: true, hold: "clipboard" });
+  const w = makeWorker("gf", { character:'drew', skin: 2, hair: 2, beard: true, hold: "clipboard" });
   w.position.set(DREW_PATROL[0][0], 0, DREW_PATROL[0][1]);
   const tag = makeNameTag("DREW", "GENERAL FOREMAN");
   tag.position.y = 2.55;
@@ -7283,6 +9460,7 @@ async function fsList(col, pageSize = 12) {
 }
 
 async function fsDel(path) {
+  if (PREVIEW_MODE) return;
   try {
     await fetch(`${FS_DOCS}/${path}?key=${FS_KEY}`, { method: "DELETE" });
   } catch (_) {}
@@ -7304,6 +9482,13 @@ function savePlaysCache(n) {
 }
 
 function paintSitePulse() {
+  if (PREVIEW_MODE) {
+    const pulse = $("site-pulse");
+    if (pulse) pulse.textContent = 'REBUILD PREVIEW · PROGRESS SAVED ON THIS DEVICE';
+    const n = $("site-n");
+    if (n) n.textContent = '1';
+    return;
+  }
   const live = Math.max(0, net.onSite | 0);
   const plays = Math.max(net.plays | 0, loadPlaysCache(), PLAYS_FLOOR, net.handsKnown | 0);
   net.plays = plays;
@@ -7317,6 +9502,10 @@ function paintSitePulse() {
 }
 
 async function refreshPlaysFromCloud() {
+  if (PREVIEW_MODE) {
+    paintSitePulse();
+    return 0;
+  }
   if (fsCooling()) return Math.max(loadPlaysCache(), PLAYS_FLOOR, net.plays | 0);
   try {
     const doc = await fsGet("stats/global");
@@ -7348,22 +9537,15 @@ function visitorNameId(name) {
 }
 
 async function handAlreadyOnBoard(name) {
-  const id = handId(name, "", "utah");
-  const idT = handId(name, "", "tremont");
-  try {
-    const a = await fsGet("hands/" + id);
-    if (a) return true;
-  } catch (_) {}
-  if (idT !== id) {
-    try {
-      const b = await fsGet("hands/" + idT);
-      if (b) return true;
-    } catch (_) {}
+  const oldIds = [handId(name, "", "utah"), handId(name, "", "tremont")];
+  for (const id of [...oldIds.map(workScoreDocumentId), ...oldIds]) {
+    try { if (await fsGet("hands/" + id)) return true; } catch (_) {}
   }
   return false;
 }
 
 async function claimVisitor(name) {
+  if (PREVIEW_MODE) return;
   const n = String(name || "")
     .trim()
     .toUpperCase()
@@ -7408,7 +9590,7 @@ async function claimVisitor(name) {
 }
 
 function presenceFields() {
-  const playing = state.mode === "play" || state.mode === "end" || state.mode === "pause" || state.mode === "store";
+  const playing = PRESENCE_ACTIVE_MODES.has(state.mode);
   return {
     pid: { stringValue: selfPid() },
     name: { stringValue: handleName() },
@@ -7418,7 +9600,7 @@ function presenceFields() {
     yaw: { doubleValue: playing ? facing : 0 },
     day: { integerValue: String(day || 1) },
     mode: { stringValue: String(state.mode || "title").slice(0, 12) },
-    wave: { integerValue: String(net.wave | 0) },
+    wave: { integerValue: String(Math.round(finiteNumber(net.wave, 0, 0, Date.now()))) },
     ts: { timestampValue: new Date().toISOString() },
   };
 }
@@ -7431,6 +9613,7 @@ async function netBeat() {
 }
 
 function parsePresence(doc) {
+  if (!doc || typeof doc !== 'object') return null;
   const f = doc.fields || {};
   const id = fsVal(f.pid) || String(doc.name || "").split("/").pop();
   const ts = fsVal(f.ts) || Date.parse(doc.updateTime || "") || 0;
@@ -7451,6 +9634,7 @@ function parsePresence(doc) {
 function ensureGhost(p) {
   if (settings.mp === false) return null;
   let g = net.remotes.get(p.id);
+  if (g && g.who !== p.who) { dropGhost(p.id); g = null; }
   if (g) return g;
   if (!scene) return null;
   const kit = p.who === "tremont" ? "labor" : "oconnell";
@@ -7460,7 +9644,7 @@ function ensureGhost(p) {
   mesh.traverse((o) => (o.userData.noBake = true));
   const tag = makeNameTag(p.name, p.who === "tremont" ? "TREMONT · CH.7" : "UTAH · CH.7");
   mesh.add(tag);
-  g = { mesh, tag, tx: p.x, tz: p.z, tyaw: p.yaw, name: p.name, who: p.who };
+  g = { id:p.id, mesh, tag, tx: p.x, tz: p.z, tyaw: p.yaw, name: p.name, who: p.who, ts:p.ts };
   net.remotes.set(p.id, g);
   return g;
 }
@@ -7469,42 +9653,30 @@ function clearGhosts() {
   for (const id of [...net.remotes.keys()]) dropGhost(id);
 }
 
-function disposeGhostTree(root) {
-  // ghosts are churned (mode flips, 45s timeouts), so their merged
-  // geometries, face textures, and tag canvases must actually be freed
-  root.traverse((o) => {
-    if (o.isMesh || o.isSprite) {
-      o.geometry?.dispose?.();
-      const mats = Array.isArray(o.material) ? o.material : [o.material];
-      for (const m of mats) {
-        if (!m || m === VERT_MAT) continue;
-        m.map?.dispose?.();
-        m.dispose?.();
-      }
-    }
-  });
-}
-
 function dropGhost(id) {
   const g = net.remotes.get(id);
   if (!g) return;
+  disposeNameTag(g.tag);
   scene.remove(g.mesh);
-  disposeGhostTree(g.mesh);
+  disposeCharacter(g.mesh);
   net.remotes.delete(id);
   net.hail.delete(id);
-  net.seenWave.delete(id);
 }
 
 function syncGhosts(rows) {
+  rows = newestPresenceRows(rows, Date.now(), LAST_DAY);
+  const nearby = new Set(rows.filter(p => p.id !== selfPid() && p.day === day && PRESENCE_ACTIVE_MODES.has(p.mode))
+    .sort((a,b)=>Math.hypot(a.x-player.position.x,a.z-player.position.z)-Math.hypot(b.x-player.position.x,b.z-player.position.z))
+    .slice(0,isCoarse()?8:12).map(p=>p.id));
   const live = new Set();
   const now = Date.now();
   net.roster = [];
   for (const p of rows) {
     if (!p.id || p.id === selfPid()) continue;
-    if (now - p.ts > 45000) continue;
+    // Rows were normalized using the same 180-second presence window.
     live.add(p.id);
     net.roster.push(p);
-    const playing = p.mode === "play" || p.mode === "pause" || p.mode === "end" || p.mode === "store";
+    const playing = PRESENCE_ACTIVE_MODES.has(p.mode) && p.day === day && nearby.has(p.id);
     if (settings.mp === false) {
       dropGhost(p.id);
     } else if (state.built && playing) {
@@ -7513,11 +9685,11 @@ function syncGhosts(rows) {
         g.tx = p.x;
         g.tz = p.z;
         g.tyaw = p.yaw;
+        g.ts = p.ts;
         if (g.name !== p.name) {
           g.name = p.name;
           const nt = makeNameTag(p.name, p.who === "tremont" ? "TREMONT · CH.7" : "UTAH · CH.7");
-          g.mesh.remove(g.tag);
-          disposeGhostTree(g.tag);
+          disposeNameTag(g.tag);
           g.mesh.add(nt);
           g.tag = nt;
         }
@@ -7527,11 +9699,12 @@ function syncGhosts(rows) {
     }
     if (p.wave && net.seenWave.get(p.id) !== p.wave) {
       net.seenWave.set(p.id, p.wave);
-      if (p.wave > 1000) toast(p.name + " WAVED");
+      if (p.wave > now - 180000 && p.wave <= now + 30000) toast(p.name + " WAVED");
     }
     if (!net.lastIds.has(p.id) && p.mode !== "title") toast(p.name + " WALKED ON");
   }
   for (const id of [...net.remotes.keys()]) if (!live.has(id)) dropGhost(id);
+  for (const id of net.seenWave.keys()) if (!live.has(id)) net.seenWave.delete(id);
   net.lastIds = live;
   paintRoster();
 }
@@ -7539,21 +9712,7 @@ function syncGhosts(rows) {
 function paintRoster() {
   const el = $("chat-roster");
   if (!el) return;
-  const me = handleName() || "YOU";
-  const meWho = getTraveler() === "tremont" ? "TREMONT" : "UTAH";
-  el.textContent = "";
-  const mine = document.createElement("span");
-  mine.className = "roster-me";
-  mine.textContent = `${me} · ${meWho}`;
-  el.appendChild(mine);
-  for (const p of net.roster || []) {
-    const tag = p.who === "tremont" ? "TREMONT" : "UTAH";
-    const mode = p.mode === "play" ? "ON HALL" : p.mode === "title" ? "GATE" : String(p.mode).toUpperCase();
-    // p.name comes from the shared presence doc — never mark it up as HTML
-    const row = document.createElement("span");
-    row.textContent = `${p.name} · ${tag} · ${mode}`;
-    el.appendChild(row);
-  }
+  populateRoster(el, document, {name:handleName() || 'YOU',who:getTraveler(),rows:net.roster || []});
   const sub = $("chat-sub");
   if (sub) {
     const n = Math.max(1, net.onSite);
@@ -7565,37 +9724,24 @@ function paintRoster() {
 }
 
 function animateGhosts(dt) {
-  const t = performance.now();
-  for (const g of net.remotes.values()) {
-    const mx = g.mesh.position.x;
-    const mz = g.mesh.position.z;
-    const dx = g.tx - mx;
-    const dz = g.tz - mz;
-    const dist = Math.hypot(dx, dz);
-    if (dist > 18) {
-      g.mesh.position.x = g.tx;
-      g.mesh.position.z = g.tz;
-    } else {
-      const k = 1 - Math.pow(0.001, dt);
-      g.mesh.position.x += dx * k;
-      g.mesh.position.z += dz * k;
-    }
-    g.mesh.rotation.y = g.tyaw;
-    const moving = dist > 0.12;
+  const now = Date.now();
+  for (const [id,g] of net.remotes) {
+    if (now - g.ts > 180000) { dropGhost(id); continue; }
+    const pose = stepRemotePose({x:g.mesh.position.x,z:g.mesh.position.z,yaw:g.mesh.rotation.y},
+      {x:g.tx,z:g.tz,yaw:g.tyaw}, dt);
+    g.mesh.position.set(pose.x, groundH(pose.x,pose.z), pose.z);
+    g.mesh.rotation.y = pose.yaw;
+    const dMe = Math.hypot(player.position.x-pose.x,player.position.z-pose.z);
+    g.mesh.visible = dMe < (isCoarse()?45:80);
     const ud = g.mesh.userData;
-    if (ud && ud.legL) {
-      const w = moving ? t * 0.012 : 0;
-      ud.legL.rotation.x = Math.sin(w) * 0.55;
-      ud.legR.rotation.x = Math.cos(w) * 0.55;
-      ud.armL.rotation.x = Math.cos(w) * 0.4;
-      ud.armR.rotation.x = -1.25;
+    if (g.mesh.visible && ud.animate) ud.animate(dt,{moving:pose.moving,speed:pose.speed});
+    else if (g.mesh.visible && ud.legL) {
+      const phase=pose.moving?performance.now()*.012:0;
+      ud.legL.rotation.x=Math.sin(phase)*.55;ud.legR.rotation.x=-Math.sin(phase)*.55;
+      ud.armL.rotation.x=-Math.sin(phase)*.4;ud.armR.rotation.x=-1.25;
     }
-    if (state.mode === "play") {
-      const dMe = Math.hypot(player.position.x - g.mesh.position.x, player.position.z - g.mesh.position.z);
-      if (dMe < 6.5 && !net.hail.has(g.name)) {
-        net.hail.add(g.name);
-        toast(g.name + " ON YOUR HALL");
-      }
+    if (state.mode === 'play' && dMe < 6.5 && !net.hail.has(id)) {
+      net.hail.add(id);toast(g.name+' ON YOUR HALL');
     }
   }
 }
@@ -7604,10 +9750,9 @@ async function pullPresence() {
   if (settings.mp === false || fsCooling()) return;
   try {
     const docs = await fsList("presence", 40);
-    const rows = docs.map(parsePresence);
-    const now = Date.now();
-    // 3 min live window matches sparse 90s heartbeats — stale docs are not "on site"
-    const live = rows.filter((p) => p.ts && now - p.ts < 180000);
+    // netTick sends every 5s and polls every 8s. Keep one tolerant expiry for
+    // roster and ghosts, including temporarily suspended phone tabs.
+    const live = newestPresenceRows(docs.map(parsePresence), Date.now(), LAST_DAY);
     const uniq = new Set(live.map((p) => p.id).filter(Boolean));
     net.onSite = uniq.size;
     paintSitePulse();
@@ -7688,6 +9833,7 @@ async function pullChat(announce) {
 }
 
 async function sendChat() {
+  if(PREVIEW_MODE){toast("LIVE CHAT IS OFF IN THIS REVIEW");return;}
   const inp = $("chat-text");
   const raw = (inp.value || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 80);
   if (!raw) return;
@@ -7725,8 +9871,6 @@ function sendWave() {
 }
 
 function openChat() {
-  const pg = $("panel-game");
-  if (pg && !pg.classList.contains("hidden")) return; // no chat underneath a minigame panel
   const handle = handleName();
   const h = $("chat-handle");
   if (h) h.value = handle;
@@ -7753,7 +9897,7 @@ function netTick(dt) {
   net.beatT -= dt;
   net.pullT -= dt;
   net.chatT -= dt;
-  const playing = state.mode === "play" || state.mode === "end" || state.mode === "pause";
+  const playing = PRESENCE_ACTIVE_MODES.has(state.mode);
   const chatOpen = !$("chat-dock")?.classList.contains("hidden");
   if (net.beatT <= 0) {
     net.beatT = 5;
@@ -7846,6 +9990,7 @@ function netBoot() {
 /* ------------------------------------------------------------------ */
 const JOE_POS = [CB.hallEX, 61.5]; // east long hallway, south end of pod 0
 const JOE_YELL = [
+  "Get to fucking workkk.",
   "Derek — get that fucking tray up. Not whatever that shit is.",
   "I SAID THE TRAY, NOT THE GODDAMN FLOOR. You packing a lunch or hanging pipe?",
   "That coupling's backwards, you stupid shit. Don't make me come up there.",
@@ -7858,8 +10003,6 @@ const JOE_YELL = [
   "Rivera. That's the name on the slip if this corner ain't done by lunch. So quit dicking around.",
   "You two talking or working? 'Cause I only hear one of those, and it ain't the work.",
   "Measure twice. I already measured once and you're short, genius.",
-  "GET TO FUCKING WORKKK.",
-  "Me and Gibbs? Batman and Robin. I'm Batman. Obviously.",
   "Don't look at the traveler. Look at the fucking work.",
   "Derek — stop staring at the traveler and put your hands on the pipe.",
   "Both of you — close that gap or you're both on the next truck home.",
@@ -7879,7 +10022,7 @@ function buildJoe() {
   const w = makeWorker("joe", { skin: 1, hair: 1, beard: true });
   w.position.set(JOE_POS[0], 0, JOE_POS[1]);
   w.rotation.y = 0.05; // facing his boys up the east hall
-  const tag = makeNameTag("JOE RIVERA");
+  const tag = makeNameTag("JOE RIVERA", "BATMAN · EAST HALL");
   w.add(tag);
   scene.add(w);
   w.traverse((o) => (o.userData.noBake = true));
@@ -7895,39 +10038,33 @@ function buildJoe() {
   derekTag.position.y = 2.25;
   derek.add(derekTag);
   state.joe = { mesh: w, guys, tag, derek, inRange: false, i: 0, nextYell: 0, introduced: false };
+}
 
-  // Mike Gibbs — Joe's Robin, orbiting the corner asking after his neck
-  const gibbs = placeWorker("gibbs", CB.hallEX + 1.6, 59.5, 0.4, {
+function buildGibbs() {
+  const x = CB.hallEX;
+  const w = placeWorker("gibbs", x - 1.6, 61.2, 0.2, {
     path: [
-      [CB.hallEX + 1.6, 59.5],
-      [CB.hallEX - 1.6, 60.5],
-      [CB.hallEX - 1.2, 64.0],
-      [CB.hallEX + 1.6, 63.0],
+      [x - 1.6, 61.2],
+      [x + 1.4, 64.8],
+      [x - 1.2, 72.0],
+      [x + 1.3, 80.4],
+      [x - 1.4, 70.2],
+      [x + 1.2, 62.4],
+      [x - 1.7, 58.8],
     ],
-    speed: 1.05,
-    skin: 2,
+    speed: 1.28,
+    skin: 0,
     hair: 1,
   });
-  const gTag = makeNameTag("MIKE GIBBS", "BATMAN & ROBIN");
-  gTag.scale.set(2.6, 0.58, 1);
-  gTag.position.y = 2.42;
-  gibbs.add(gTag);
+  const tag = makeNameTag("MIKE GIBBS", "ROBIN · WHERE'S MY NECK");
+  tag.scale.set(2.8, 0.58, 1);
+  tag.position.y = 2.22;
+  w.add(tag);
 }
 
 function barkJoe() {
-  const j = state.joe;
-  if (!j) return;
-  // floor talk, not the walkie — drop the radio HUD if it was up
-  $("radio").classList.remove("show");
-  if (!j.introduced) {
-    j.introduced = true;
-    speakAs("joe", "Rivera. This corner's mine — eyes on the fucking work, not the traveler. Don't test me.");
-    toast("JOE RIVERA");
-    return;
-  }
-  const line = JOE_YELL[j.i % JOE_YELL.length];
-  j.i++;
-  speakAs("joe", line);
+  const j=state.joe;if(!j)return;
+  nearbyDialogue('joe',JOE_YELL,j.mesh,8.2);
 }
 
 function updateJoe(dt, t) {
@@ -7981,7 +10118,7 @@ const CHRIS_YELL = [
   "I have a great brain for fire alarm. The best brain. It's true.",
   "We're going to drain the swamp. By which I mean this wet floor. Somebody get a pig.",
   "Bends so clean, so beautiful, you'll say Chris you can't do that. I did it.",
-  "Many people said Book 2 can't pull. We pulled. Bigly.",
+  "Many people said we wouldn't finish the pull. We finished. Tremendous pull.",
   "The trailer says we're behind. We're not behind. We're ahead. Way ahead.",
   "Believe me. This is the greatest data hall. Maybe ever.",
   "Hard hats. Very important. I have the best hard hat. Look at this hat.",
@@ -8004,18 +10141,8 @@ function buildChris() {
 }
 
 function barkChris() {
-  const m = state.chris;
-  if (!m) return;
-  $("radio").classList.remove("show");
-  if (!m.introduced) {
-    m.introduced = true;
-    speakAs("chris", "Chris. Lighting. O'Connell. Used to run fire alarm. Tremendous hall. Believe me.");
-    toast("CHRIS · LIGHTING");
-    return;
-  }
-  const line = CHRIS_YELL[m.i % CHRIS_YELL.length];
-  m.i++;
-  speakAs("chris", line);
+  const c=state.chris;if(!c)return;
+  nearbyDialogue('chris',CHRIS_YELL,c.mesh,9);
 }
 
 function updateChris(dt, t) {
@@ -8071,7 +10198,7 @@ const DON_YELL = [
 ];
 
 function buildDon() {
-  const w = makeWorker("foreman", { skin: 2, hair: 1, beard: true, hold: "radio" });
+  const w = makeWorker("foreman", { character:'don', skin: 2, hair: 1, beard: true, hold: "radio" });
   w.position.set(DON_HOME[0], 0, DON_HOME[1]);
   w.rotation.y = -0.4;
   const tag = makeNameTag("DON", "THE FOREMAN");
@@ -8093,7 +10220,7 @@ function barkDon(intro) {
     line = DON_YELL[d.i % DON_YELL.length];
     d.i++;
   }
-  speakAs("don", line);
+  nearbyDialogue('don',intro?[line]:DON_YELL,d.mesh,18,{valid:()=>state.mode==='play'&&!!dayState.utv});
   toast("DON THE FOREMAN");
 }
 
@@ -8221,9 +10348,6 @@ function updateDayMechanics(dt, t) {
       // the bag rides the cart's nose — walk it up to the crew
       it.x = state.cart.position.x + Math.sin(state.cart.rotation.y) * 0.9;
       it.z = state.cart.position.z + Math.cos(state.cart.rotation.y) * 0.9;
-    } else if (it.andyFund && state.andy) {
-      it.x = state.andy.position.x;
-      it.z = state.andy.position.z;
     } else if (it.cartGrab && state.cart) {
       if (dayState.pushCart) {
         // handle's in Utah's hand: face the bag to share candy, look away to let go
@@ -8615,17 +10739,7 @@ function updateDrew(dt, t) {
     let ddz = nz - cz;
     const d2 = ddx * ddx + ddz * ddz;
     if (d2 < 0.16) {
-      const dd = Math.sqrt(d2);
-      if (dd < 1e-6) {
-        // center inside the box — push out through the nearest face
-        const fw = nx - b.minx, fe = b.maxx - nx, fs = nz - b.minz, fn = b.maxz - nz;
-        const fm = Math.min(fw, fe, fs, fn);
-        if (fm === fw) nx = b.minx - 0.401;
-        else if (fm === fe) nx = b.maxx + 0.401;
-        else if (fm === fs) nz = b.minz - 0.401;
-        else nz = b.maxz + 0.401;
-        continue;
-      }
+      const dd = Math.sqrt(d2) || 0.0001;
       nx += (ddx / dd) * (0.4 - dd + 0.001);
       nz += (ddz / dd) * (0.4 - dd + 0.001);
     }
@@ -8647,22 +10761,9 @@ function updateDrew(dt, t) {
 }
 
 function buildForklift() {
-  const g = new THREE.Group();
-  const body = boxMesh(1.3, 1.1, 2.2, mats.yellow);
-  body.position.y = 0.7;
-  const cage = boxMesh(1.1, 1.0, 0.1, mats.dark);
-  cage.position.set(0, 1.5, -0.9);
-  const mast = boxMesh(0.12, 2.0, 0.12, mats.dark);
-  mast.position.set(-0.4, 1.4, 1.0);
-  const mast2 = mast.clone();
-  mast2.position.x = 0.4;
-  const fork = boxMesh(0.9, 0.08, 1.3, mat(0x888));
-  fork.position.set(0, 0.25, 1.6);
-  g.add(body, cage, mast, mast2, fork);
-  g.position.set(-6, 0, 20);
-  scene.add(g);
-  g.traverse((o) => (o.userData.noBake = true));
-  state.forklift = { mesh: g, t: 0, dir: 1 };
+  const g=createTelehandlerLod({THREE,color:0xb5a052});
+  g.position.set(-6,0,20);scene.add(g);
+  state.forklift={mesh:g,t:0,dir:1};
 }
 
 function buildRacks() {
@@ -8675,25 +10776,10 @@ function buildRacks() {
   const nPer = 9;
   const pitch = 0.68;
 
-  const rackTex = loader.load("/assets/tex_rack.jpg?v=126");
+  const rackTex = loader.load("/assets/tex_rack.jpg?v=117");
   rackTex.colorSpace = THREE.SRGBColorSpace;
-  const crahTex = loader.load("/assets/tex_crah.jpg?v=126");
+  const crahTex = loader.load("/assets/tex_crah.jpg?v=117");
   crahTex.colorSpace = THREE.SRGBColorSpace;
-  // sealed concrete slab — this site has NO raised floor; power and data
-  // run in the overhead tray (see assets/ref_mech.jpg / ref_elec.jpg)
-  const floorTex = loader.load("/assets/tex_concrete.jpg?v=126");
-  floorTex.colorSpace = THREE.SRGBColorSpace;
-  floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
-  floorTex.repeat.set(8, 12);
-
-  const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(CB.data1 - CB.data0 - 0.3, CB.z1 - CB.z0 - 0.3),
-    new THREE.MeshLambertMaterial({ map: floorTex, color: 0xc9c7c1 })
-  );
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.set(CB.dataX, 0.02, (CB.z0 + CB.z1) / 2);
-  floor.userData.noBake = true;
-  scene.add(floor);
 
   const spots = [];
   for (let i = 0; i < CB.pods; i++) {
@@ -8746,15 +10832,19 @@ function buildRacks() {
       scene.add(g);
       addCollider(cx, mid, 1.0, 1.8, 0, 2.2);
     }
-
   }
 
   const n = spots.length;
-  const bodyMat = new THREE.MeshLambertMaterial({ color: 0x16181c });
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color: 0x14161c,
+    roughness: 0.36,
+    metalness: 0.78,
+    envMapIntensity: 0.95,
+  });
   const bodies = new THREE.InstancedMesh(new THREE.BoxGeometry(rackD, rackH, rackW), bodyMat, n);
-  const doorMat = new THREE.MeshBasicMaterial({ map: rackTex });
+  const doorMat = new THREE.MeshStandardMaterial({ map: rackTex, roughness: 0.42, metalness: 0.55, envMapIntensity: 0.8 });
   const doors = new THREE.InstancedMesh(new THREE.PlaneGeometry(rackW * 0.96, rackH * 0.92), doorMat, n);
-  const rearMat = new THREE.MeshLambertMaterial({ color: 0x2a2e34 });
+  const rearMat = new THREE.MeshStandardMaterial({ color: 0x2a3038, roughness: 0.4, metalness: 0.7, envMapIntensity: 0.7 });
   const rears = new THREE.InstancedMesh(new THREE.BoxGeometry(0.04, rackH * 0.9, rackW * 0.92), rearMat, n);
 
   spots.forEach((s, i) => {
@@ -8779,7 +10869,7 @@ function buildRacks() {
         0.05,
         0.14,
         0.05,
-        new THREE.MeshLambertMaterial({ color: 0x143018, emissive: 0x000000 })
+        new THREE.MeshStandardMaterial({ color: 0x0e2a12, emissive: 0x2aff4a, emissiveIntensity: 0.85, roughness: 0.4, metalness: 0.2 })
       );
       led.position.set(faceX, 1.95, s.z);
       led.userData.noBake = true;
@@ -8790,11 +10880,20 @@ function buildRacks() {
   bodies.userData.noBake = true;
   doors.userData.noBake = true;
   rears.userData.noBake = true;
+  bodies.castShadow = bodies.receiveShadow = !isCoarse();
+  doors.castShadow = doors.receiveShadow = !isCoarse();
+  rears.receiveShadow = !isCoarse();
   scene.add(bodies, doors, rears);
 
-  // high-bays — white over cold aisles, no extra PointLights
+  // high-bays — white over cold aisles, bloom-catching emissive pans
   const bayGeo = new THREE.BoxGeometry(1.35, 0.08, 0.42);
-  const bayMat = new THREE.MeshBasicMaterial({ color: 0xf3eee0 });
+  const bayMat = new THREE.MeshStandardMaterial({
+    color: 0xf3eee0,
+    emissive: 0xfff3d8,
+    emissiveIntensity: 1.55,
+    roughness: 0.35,
+    metalness: 0.05,
+  });
   const baySpots = [];
   for (let i = 0; i < CB.pods; i++) {
     const { mid } = podBand(i);
@@ -8803,6 +10902,7 @@ function buildRacks() {
     }
   }
   const bays = new THREE.InstancedMesh(bayGeo, bayMat, baySpots.length);
+  if (nightRig) nightRig.bayMat = bayMat;
   baySpots.forEach((p, i) => {
     dummy.position.set(p[0], p[1], p[2]);
     dummy.rotation.set(0, 0, 0);
@@ -8821,6 +10921,11 @@ function faLoopReady() {
 }
 
 function jobReady(id) {
+  if (id === "textlugo") return true;
+  if (id === "countcash") return !!state.done.textlugo;
+  if (id === "redass") return !!state.done.countcash;
+  if (id === "ytd") return !!state.done.redass;
+  if (id === "ignorehall") return !!state.done.ytd;
   if (id === "tools") return true;
   if (id === "coffee") return true;
   if (String(id).startsWith("utv")) return true;
@@ -8852,7 +10957,7 @@ function refreshJobs() {
     box.appendChild(el);
   });
   if (cur) $("job-line").textContent = jobDisplayName(cur);
-  else $("job-line").textContent = isTremont() ? "Circuits are live" : "Loop is live";
+  else $("job-line").textContent = isUtahHome() ? "YEAR GOAL HIT · STAY IN BED" : isTremont() ? "Circuits are live" : "Loop is live";
   if (cycleDay(day) === 4 && !dayState.genTransferred && dayState.genT < 22 && state.hasTools) {
     $("job-line").textContent = "FEED THE GENNY · SOUTH DOORS";
   }
@@ -8883,13 +10988,14 @@ function tremontOnWork() {
     "Squenchers are poison. Water and iron.",
   ];
   const toasts = ["SET. THEN WORK.", "FORM OVER FORCE", "WATER AND IRON", "FORD IN THE LOT", "SQUENCHERS ARE POISON"];
-  speakAs("tremont", lines[Math.floor(Math.random() * lines.length)]);
+  speakAs('tremont',lines[0],{lines,kind:'ambient',ttl:10});
   toast(toasts[Math.floor(Math.random() * toasts.length)]);
 }
 
 function completeTick(id, label, watts) {
-  state.progress[id] = Math.min(needFor(id), state.progress[id] + 1);
-  state.combo += 1;
+  if (!canCompleteTask(state, id, needFor(id), JOBS)) return false;
+  state.progress[id] = Math.min(needFor(id), finiteNumber(state.progress[id], 0, 0, needFor(id)) + 1);
+  state.combo = finiteNumber(state.combo, 0, 0, 100) + 1;
   addWatts(watts, label);
   sfx("pickup");
   vib(12);
@@ -8921,7 +11027,43 @@ function completeTick(id, label, watts) {
 
 function tryInteract() {
   if (state.mode !== "play") return;
+  if (isUtahHome()) {
+    const bank = $("bank");
+    if (bank && !bank.classList.contains("hidden")) {
+      confirmUtahBank();
+      return;
+    }
+    const im = $("imsg");
+    if (im && !im.classList.contains("hidden")) {
+      sendUtahText();
+      return;
+    }
+    const it = state.nearest;
+    if (!it || it.done) {
+      const cur = currentJob();
+      toast(cur ? "LOOK AT IT · " + jobDisplayName(cur).toUpperCase() : "STAY IN BED", true);
+      return;
+    }
+    if (!jobReady(it.id)) {
+      toast("NOT YET · " + (currentJob() ? jobDisplayName(currentJob()).toUpperCase() : "WAIT"), true);
+      return;
+    }
+    if (it.id === "countcash") countUtahCash(it);
+    else if (it.id === "redass") iceUtahAss();
+    else if (it.id === "ytd") openUtahBank();
+    else if (it.id === "ignorehall") ignoreUtahHall();
+    else if (it.id === "textlugo") openUtahText();
+    return;
+  }
+  if (state.mode !== "play") return;
   let it = state.nearest;
+  if (it?.physicalProp) {
+    const target=it.physicalProp;
+    const centre=target.body.translation();
+    physicalProps.push(target.id,{x:centre.x-player.position.x,z:centre.z-player.position.z});
+    sfx('thud');
+    return;
+  }
   // Standing on Drew is the sign-off — don't lose the finish to "GO BILLS"
   if (state.drew) {
     const dm = state.drew.mesh;
@@ -8998,46 +11140,19 @@ function tryInteract() {
     sfx("bad");
     return;
   }
+  if (nightNoPower(it)) {
+    toast("NO POWER — FUEL THE DIESEL", true);
+    radioFore(
+      "Halls are dark, y'all. Tests don't count. Fuel the diesel east of the south doors.",
+      "Halls are dark. Tests don't count. Fuel the diesel east of the south doors."
+    );
+    sfx("bad");
+    return;
+  }
   if (it.store) {
     openStore();
     sfx("pickup");
     vib(10);
-    return;
-  }
-  if (it.andyFund) {
-    // sick & needy fund: hall tradition — you give, the local has your back
-    if (dayState.andyGave) {
-      speakAs("andy", "Local takes care of its own. Sick and needy fund.");
-      toast("YOU'RE PAID UP TODAY");
-      sfx("ok");
-      return;
-    }
-    if (state.watts < 100) {
-      speakAs("andy", "Folding money. Not IOUs.");
-      toast("NEED 100 PTS", true);
-      sfx("bad");
-      return;
-    }
-    state.watts -= 100;
-    $("watts").textContent = state.watts.toLocaleString();
-    $("watts-mini").textContent = "PTS " + state.watts.toLocaleString();
-    dayState.andyGave = true;
-    if (state.hp < 3) {
-      state.hp += 1; // the fund takes care of you right back
-      setHearts();
-      toast("GAVE $5 · THE LOCAL'S GOT YOU");
-    } else {
-      state.combo += 1; // morale money
-      toast("GAVE $5 · MORALE'S UP");
-    }
-    speakAs("andy", "Local takes care of its own. Sick and needy fund.");
-    sfx("ok");
-    vib(15);
-    track("andy_fund", { day });
-    if (REAL_FUND.url && !dayState.realFundHint) {
-      dayState.realFundHint = true;
-      setTimeout(() => toast("REAL FUND LINK'S ON THE BREAK SCREEN"), 2600);
-    }
     return;
   }
   if (it.candy) {
@@ -9066,7 +11181,7 @@ function tryInteract() {
     const pz = player.position.z;
     let near = state.crew.filter((c) => !c.lift && Math.hypot(px - c.mesh.position.x, pz - c.mesh.position.z) < 7).length;
     if (state.drew && Math.hypot(px - state.drew.mesh.position.x, pz - state.drew.mesh.position.z) < 7) near++;
-    addWatts(40 + near * 60, near > 0 ? "CANDY RUN ×" + near : "MORALE");
+    addSidePoints(40 + near * 60, near > 0 ? "CANDY RUN ×" + near : "MORALE", "crew-morale");
     state.speedBoost = Math.max(state.speedBoost, 4);
     toast(near > 0 ? "CREW MOOD ENHANCED ×" + near : "MOOD ENHANCED");
     vib(15);
@@ -9123,7 +11238,7 @@ function tryInteract() {
     dayState.driving = !dayState.driving;
     syncLiftBtns();
     if (dayState.driving) {
-      toast(isCoarse() ? "BLUE SCISSOR — ROLLING" : "SCISSOR — SPACE UP · C DOWN");
+      toast(isCoarse() ? "BLUE SCISSOR — HOLD RAISE / LOWER" : "SCISSOR — SPACE UP · C DOWN · OR HOLD THE BUTTONS");
       speakAs(getTraveler() === "tremont" ? "tremont" : "utah",
           getTraveler() === "tremont" ? "Borrowing the blue scissor. Legs still warm from the set." : "Borrowing the blue scissor. Tell Ferguson it drives itself.");
       track("lift_drive", {});
@@ -9138,12 +11253,7 @@ function tryInteract() {
           break;
         }
       }
-      if (!placed) {
-        // settle the last-resort spot against the colliders instead of
-        // dropping the player inside a wall next to a parked lift
-        const safe = collideXZ(L.position.x, L.position.z - 2.6, 0.4, 0);
-        player.position.set(safe.x, 0, safe.z);
-      }
+      if (!placed) player.position.set(L.position.x, 0, L.position.z - 2.6);
     }
     sfx("pickup");
     vib(15);
@@ -9155,7 +11265,7 @@ function tryInteract() {
     state.hp = Math.min(3, state.hp + 1);
     state.speedBoost = 8;
     setHearts();
-    addWatts(80, "COFFEE");
+    addSidePoints(80, "COFFEE");
     if (getTraveler() === "tremont") {
       speakAs("tremont", "Black coffee. No sugar sludge.");
       toast("BLACK COFFEE");
@@ -9172,7 +11282,7 @@ function tryInteract() {
       // he leaves it — recovery food is after the whistle
       toast("PASSED ON THE TENDY");
       speakAs("tremont", "Tendies are a recovery meal. Not a mid-shift meal.");
-      addWatts(40, "DISCIPLINE");
+      addSidePoints(40, "DISCIPLINE");
       track("egg_tendy_skip", {});
       sfx("pickup");
       return;
@@ -9180,7 +11290,7 @@ function tryInteract() {
     state.hp = Math.min(3, state.hp + 1);
     state.speedBoost = 6;
     setHearts();
-    addWatts(150, "TENDY");
+    addSidePoints(150, "TENDY");
     toast("GAS STATION TENDY");
     radio("Wendel's finest tenders. Don't tell safety, Utah.");
     vib([15, 30, 15]);
@@ -9257,20 +11367,14 @@ function tryInteract() {
       sfx("ok");
       return;
     }
-    // pay only when she actually drank — topping a full tank is not work
-    const wasLow = (dayState.genT || 0) < GEN_FEED * 0.75;
     dayState.genT = GEN_FEED;
     dayState.genLow = false;
     dayState.genWarned = false;
     applyNightPower();
-    if (wasLow) {
-      addWatts(40, "GENNY FED");
-      toast("DIESEL'S IN — HALLS UP");
-    } else {
-      toast("TANK'S STILL FULL");
-    }
+    addSidePoints(40, "GENNY FED", "generator-fuel");
     sfx("ok");
     vib(15);
+    toast("DIESEL'S IN — HALLS UP");
     return; // never done — she's thirsty until transfer
   }
   if (it.reelSrc) {
@@ -9282,9 +11386,7 @@ function tryInteract() {
     if (dayState.carrying) {
       toast("ONE REEL AT A TIME", true);
       sfx("bad");
-    } else if (state.progress.reels >= ((state.needs && state.needs.reels) || 4)) {
-      // day 5 needs 3, day 12 needs 4 — a hard-coded 4 handed out an
-      // un-stageable extra reel that stuck to the player all shift
+    } else if (state.progress.reels >= 4) {
       toast("RACK'S EMPTY");
     } else {
       dayState.carrying = true;
@@ -9424,8 +11526,6 @@ function hurt(amount, why) {
     dayState.utv = null;
     dayState.workoutT = 0; // KO'd riders come off the lift — it stays where they left it
     dayState.pushCart = false;
-    dayState.carrying = false; // the reel comes off the shoulder at the trailer too
-    if (state.carrySpool) state.carrySpool.visible = false;
     syncLiftBtns();
     player.position.set(14, 0, 16);
     pvel.x = pvel.z = 0;
@@ -9735,7 +11835,7 @@ function renderVesStep() {
   order.forEach((c) => {
     const b = document.createElement("button");
     b.type = "button";
-    b.className = "ves-pick"; // never paint the answer key on at render time
+    b.className = "ves-pick" + (c.ok ? " yes" : " no");
     b.innerHTML = `<b>${c.lab}</b><span>${c.sub}</span>`;
     b.addEventListener("click", () => vesPick(c, b));
     picks.appendChild(b);
@@ -10022,10 +12122,9 @@ const GEAR_ADDR = [
   { id: "05", lab: "05  FEEDER" },
 ];
 const facpKeys = () => {
-  const d = cycleDay(day); // week 2 (days 8-14) mirrors week 1's panel content
   if (isTremont()) {
     return (
-      { 2: ["WALK TEST", "RACK IN", "CLOSE"], 4: ["TRANSFER", "RACK IN", "CLOSE"], 7: ["ENERGIZE", "RACK IN", "CLOSE"] }[d] || [
+      { 2: ["WALK TEST", "RACK IN", "CLOSE"], 4: ["TRANSFER", "RACK IN", "CLOSE"], 7: ["ENERGIZE", "RACK IN", "CLOSE"] }[day] || [
         "CHECK",
         "CLOSE",
         "RACK IN",
@@ -10033,7 +12132,7 @@ const facpKeys = () => {
     );
   }
   return (
-    { 2: ["WALK TEST", "SILENCE", "RESET"], 4: ["TRANSFER", "SILENCE", "RESET"], 7: ["ENERGIZE", "SILENCE", "RESET"] }[d] || [
+    { 2: ["WALK TEST", "SILENCE", "RESET"], 4: ["TRANSFER", "SILENCE", "RESET"], 7: ["ENERGIZE", "SILENCE", "RESET"] }[day] || [
       "ACK",
       "SILENCE",
       "RESET",
@@ -10054,11 +12153,10 @@ function openFacp(it) {
   facpKeyAt = 0;
   facpDone = false;
   const keyNames = facpKeys();
-  const cd = cycleDay(day); // week-2 days show their week-1 counterpart's panel
   const addrBook = isTremont() ? GEAR_ADDR : FACP_ADDR;
   $("facp-title").textContent = isTremont()
-    ? ({ 2: "WALK-TEST GEAR", 3: "FINAL ACCEPTANCE", 4: "POWER TRANSFER", 7: "ENERGIZE CB-4" }[cd] || "COMMISSION GEAR")
-    : ({ 2: "WALK-TEST FACP", 3: "FINAL ACCEPTANCE", 4: "POWER TRANSFER", 7: "ENERGIZE CB-4" }[cd] || "COMMISSION FACP");
+    ? ({ 2: "WALK-TEST GEAR", 3: "FINAL ACCEPTANCE", 4: "POWER TRANSFER", 7: "ENERGIZE CB-4" }[day] || "COMMISSION GEAR")
+    : ({ 2: "WALK-TEST FACP", 3: "FINAL ACCEPTANCE", 4: "POWER TRANSFER", 7: "ENERGIZE CB-4" }[day] || "COMMISSION FACP");
   const facpSubs = isTremont()
     ? {
         1: `Address the circuits in order. Then ${keyNames.join(", ")}. Inspector is in the lot.`,
@@ -10074,7 +12172,7 @@ function openFacp(it) {
         4: `Utility's locked out. Address, then ${keyNames.join(", ")} to hand the building back.`,
         7: `Address the loop in order. Then ${keyNames.join(", ")}. AHJ is at the panel.`,
       };
-  $("facp-sub").textContent = facpSubs[cd] || facpSubs[1];
+  $("facp-sub").textContent = facpSubs[day] || facpSubs[1];
   $("facp-close").disabled = false;
   $("facp-game").classList.remove("hidden");
   setFacpStatus(isTremont() ? "TROUBLE  ·  CIRCUIT OPEN" : "TROUBLE  ·  LOOP OPEN");
@@ -10579,13 +12677,12 @@ $("pull-close").addEventListener("click", () => {
 /*  WIN / LOSE                                                         */
 /* ------------------------------------------------------------------ */
 function rankName() {
-  if (state.overtime > 0) return "APPRENTICE";
-  if (state.time > shiftLen * 0.5) return "TOP HAND";
-  if (state.time > shiftLen * 0.25) return "LEADMAN";
-  return "JOURNEYMAN";
+  return outcomeLabel({home:isUtahHome(),overtime:state.overtime,
+    shocks:state.shocks,corrections:dayState.corrections});
 }
 
 function win() {
+  if (!settleRun(state, true, JOBS)) return false;
   state.mode = "end";
   $("punch-hint").classList.add("hidden");
   sfx("win");
@@ -10594,13 +12691,15 @@ function win() {
   // goes to the gang box — leftover seconds don't buy the leaderboard.
   const clockBonus =
     state.time > 0 ? 1600 + Math.round(state.time * 4 * (600 / shiftLen)) : 0;
-  const workPts = state.watts;
+  const workPts = points(state.watts);
+  const sidePts = points(state.sidePoints, SIDE_POINT_CAP);
   const seconds = Math.round(Math.max(0, shiftLen - state.time + state.overtime));
   // Snapshot NOW — tapping NEXT DAY used to zero watts / bump `day` before the post.
   lastWinRec = {
     name: commitHand(false) || "",
     local: readGateLocal(),
     pts: ptsNum(workPts),
+    scoreVersion: state.scoreVersion || 1,
     seconds,
     rank: rankName(),
     day,
@@ -10611,6 +12710,7 @@ function win() {
     clockBonus > 0
       ? `WORK ${workPts.toLocaleString()} PTS · ON TIME +${clockBonus.toLocaleString()} TO THE GANG BOX`
       : `WORK ${workPts.toLocaleString()} PTS · OT · NO TIME PAY`;
+  if (sidePts) $("end-bonus").textContent += ` · SIDE ACTIVITIES +${sidePts.toLocaleString()} TO THE GANG BOX`;
   state.racks.forEach((led, i) => {
     setTimeout(() => {
       if (state.mode !== "end") return; // a quick RUN IT BACK cancels the show
@@ -10632,15 +12732,17 @@ function win() {
   });
   clearCheckpoint();
   $("end-eye").textContent = `DAY ${day} — ${dayDisplayName(day)} · ${travelerTag(getTraveler())} · O'CONNELL · BARKER, NY`;
-  $("end-title").textContent = "SYSTEM NORMAL";
+  $("end-title").textContent = isUtahHome() ? "YEAR GOAL HIT" : "SYSTEM NORMAL";
   $("end-rank").textContent = rankName();
   $("end-watts").textContent = workPts.toLocaleString();
   $("end-time").textContent = formatTime(seconds);
   $("end-shocks").textContent = state.shocks;
-  addWallet(workPts + clockBonus);
+  addWallet(workPts + clockBonus + sidePts);
   const best = loadBest();
   const el = $("end-best");
-  if (!best || workPts > best.watts || (workPts === best.watts && seconds < (best.seconds || 1e9))) {
+  if (state.scoreVersion !== SCORE_VERSION) {
+    el.textContent = 'LEGACY SHIFT FINISHED · START A NEW SHIFT FOR THE WORK BOARD';
+  } else if (!best || workPts > best.watts || (workPts === best.watts && seconds < (best.seconds || 1e9))) {
     saveBest({ watts: workPts, rank: rankName(), time: formatTime(seconds), seconds, who: getTraveler() });
     el.innerHTML = `<strong>NEW ${travelerTag(getTraveler())} · DAY ${day} RECORD</strong>`;
   } else {
@@ -10681,22 +12783,27 @@ function win() {
   }
   autoPostWin(lastWinRec);
   hidePlayChrome();
+  hideUtahSting();
   $("end-screen").classList.remove("hidden");
+  if (isUtahHome()) {
+    radio("Stay in bed, Utah. Year's already made. I'll tell Drew you caught something.");
+    return;
+  }
   if (state.drew && state.drew.mode === "chase") {
     state.drew.mode = "idle";
     radioFore(
-      "Loop's green with Drew ten feet out. Tell him to eat that slip. That's a Book 2 finish, Utah.",
-      "Gear's green with Drew ten feet out. Tell him to eat that slip. That's a Book 2 finish, Tremont."
+      "Loop's green, Utah. Drew can put that slip away. Let's get our tools.",
+      "Gear's green, Tremont. Drew's getting a finished job. Tools away."
     );
   } else if (cycleDay(day) === 2) {
     radioFore(
-      "Walk test's clean. Hand the AHJ the paper and don't say nothing extra. Book 2 does it again.",
-      "Walk test's clean. Hand the inspector the paper and don't say anything extra. Book 2 does it again."
+      "Walk test's clean. Give the AHJ the completed sheet. Good work, Utah.",
+      "Walk test's clean. Get the completed sheet to the inspector. That's the job, Tremont."
     );
   } else {
     radioFore(
-      "That's a loop, y'all. All four halls. Lugo's signing off. Book 2. Tell 237 it's green.",
-      "That's a clean run. All four halls. Lemon's signing off. Book 2. Tell 237 it's green."
+      "That's the loop, y'all. All four pods. Lugo's signing off. Get your tools and we'll walk out together.",
+      "That's a clean run. All four pods. Lemon's signing off. Put the gear away and check your time."
     );
   }
 }
@@ -10724,7 +12831,7 @@ const HEAT_BARK = [
   },
   {
     at: 0.78,
-    lugo: "Heat illness is a write-up. Walk through, don't live there.",
+    lugo: "Too hot in there, Utah. Get out of the aisle and tell me if you're feeling rough.",
   },
   {
     at: 0.88,
@@ -10733,6 +12840,7 @@ const HEAT_BARK = [
 ];
 
 function updateHeat(dt) {
+  if (isUtahHome()) return;
   if (state.mode !== "play") return;
   const x = player.position.x;
   const z = player.position.z;
@@ -10760,30 +12868,15 @@ function updateHeat(dt) {
     dayState.heat = Math.max(0, (dayState.heat || 0) - dt * 0.15);
     if ((dayState.heat || 0) < 0.04) dayState.heatAnnounced = false;
   }
-  // diff before writing — this runs every frame (same convention as the clock/zone HUD)
   const wrap = $("heat-meter");
   const veil = $("heat-veil");
   const shown = hot || (dayState.heat || 0) > 0.05;
-  if (wrap && ui.heatShown !== shown) {
-    ui.heatShown = shown;
-    wrap.classList.toggle("hidden", !shown);
-  }
+  if (wrap) wrap.classList.toggle("hidden", !shown);
   const f = 86 + Math.floor((dayState.heat || 0) * 32);
-  if (ui.heatF !== f && $("heat-f")) {
-    ui.heatF = f;
-    $("heat-f").textContent = f + "°";
-  }
-  const pct = Math.round((dayState.heat || 0) * 100);
-  if (ui.heatPct !== pct) {
-    ui.heatPct = pct;
-    const fill = $("heat-fill");
-    if (fill) fill.style.width = pct + "%";
-  }
-  const veilOp = Math.round((hot ? 0.16 + dayState.heat * 0.5 : (dayState.heat || 0) * 0.1) * 100) / 100;
-  if (veil && ui.heatVeil !== veilOp) {
-    ui.heatVeil = veilOp;
-    veil.style.opacity = String(veilOp);
-  }
+  if ($("heat-f")) $("heat-f").textContent = f + "°";
+  const fill = $("heat-fill");
+  if (fill) fill.style.width = Math.round((dayState.heat || 0) * 100) + "%";
+  if (veil) veil.style.opacity = String(hot ? 0.16 + dayState.heat * 0.5 : (dayState.heat || 0) * 0.1);
   renderer.toneMappingExposure = 1.05 + (hot ? 0.12 : 0) + (dayState.heat || 0) * 0.28;
   const stage = dayState.heatSaid || 0;
   const next = HEAT_BARK[stage];
@@ -10807,7 +12900,38 @@ function updateHeat(dt) {
   }
 }
 
+function showUtahSting(kind) {
+  const el = $("utah-sting");
+  if (!el) return;
+  el.classList.remove("hidden");
+  el.classList.toggle("quit-sting", kind === "quit");
+  el.dataset.kind = kind;
+  const cap = $("utah-sting-cap");
+  if (cap) cap.textContent = kind === "quit" ? "WALKED OFF" : kind === "fail" ? "ROUGH ONE" : "";
+  const v = $("utah-sting-vid");
+  if (v) {
+    try { v.currentTime = 0; } catch (_) {}
+    v.play().catch(() => {});
+  }
+  $("end-screen")?.classList.toggle("has-utah", kind === "fail");
+  if (kind === "fail") {
+    $("end-screen")?.classList.add("utah-wait");
+    setTimeout(() => $("end-screen")?.classList.remove("utah-wait"), 1600);
+  }
+}
+
+function hideUtahSting() {
+  const el = $("utah-sting");
+  if (!el) return;
+  el.classList.add("hidden");
+  el.classList.remove("quit-sting");
+  $("end-screen")?.classList.remove("has-utah", "utah-wait");
+  const v = $("utah-sting-vid");
+  if (v) { try { v.pause(); } catch (_) {} }
+}
+
 function fail(reason = "ot") {
+  if (!settleRun(state, false, JOBS)) return false;
   state.mode = "end";
   sfx("bad");
   vib([200, 80, 200]);
@@ -10820,6 +12944,7 @@ function fail(reason = "ot") {
   $("btn-next-day").classList.add("hidden");
   $("post-score").classList.add("hidden");
   postProgress(failRank(reason));
+  showUtahSting("fail");
   if (reason === "inspection") {
     $("end-eye").textContent = isTremont() ? "INSPECTOR · RED TAG" : "AHJ · RED TAG";
     $("end-title").textContent = "FAILED INSPECTION";
@@ -10866,6 +12991,30 @@ function fail(reason = "ot") {
 /*  CAMERA / LOOP                                                      */
 /* ------------------------------------------------------------------ */
 function updatePlayer(dt) {
+  if (isUtahHome()) {
+    pvel.x = pvel.z = 0;
+    pvel.y = 0;
+    kick.x = kick.z = 0;
+    player.position.x = HOME.x + 0.15;
+    player.position.y = 0.72;
+    player.position.z = HOME.z - 0.55;
+    grounded = true;
+    cam.pitch = THREE.MathUtils.clamp(cam.pitch, -0.95, 0.55);
+    cam.yaw = THREE.MathUtils.clamp(cam.yaw, -0.7, 1.95);
+    physics?.update(dt, { enabled: false, externalPosition: player.position });
+    if (state.homeFan) state.homeFan.rotation.y += dt * 2.4;
+    if (state.homeRadio && state.done.ytd && !state.done.ignorehall) {
+      state.homeRadio.rotation.z = Math.sin(performance.now() / 55) * 0.18;
+      if (state.homeLed?.material) state.homeLed.material.emissiveIntensity = 0.5 + Math.sin(performance.now() / 90) * 0.5;
+      dayState.utahNag = (dayState.utahNag || 0) + dt;
+      if (dayState.utahNag > 8) {
+        dayState.utahNag = 0;
+        radio("Utah. I know you're in that bed. Get on this hall.");
+        sfx("strobe");
+      }
+    }
+    return;
+  }
   let ix = 0,
     iz = 0;
   if (keys.KeyW || keys.ArrowUp) iz += 1;
@@ -10904,13 +13053,7 @@ function updatePlayer(dt) {
     speed *= 1 - Math.min(0.5, (dayState.heat - 0.22) * 0.7);
   }
   // airborne clears the puddle — hopping them is a real move
-  if (player.position.y < 0.2 && inWet(player.position.x, player.position.z)) {
-    speed *= 0.55;
-    if (!dayState.wetSaid) {
-      dayState.wetSaid = true; // once a shift is plenty
-      radio(pickLine(radioPack().wet));
-    }
-  }
+  if (player.position.y < 0.2 && inWet(player.position.x, player.position.z)) speed *= 0.55;
   if (player.position.z > CB.z1 + 26) {
     speed *= 0.28;
     if (!state.swam) {
@@ -10932,6 +13075,7 @@ function updatePlayer(dt) {
 
   if (dayState.utv) {
     updateUtv(dt, ix, iz, mag, fx, fz);
+    physics?.update(dt, { enabled: false, externalPosition: player.position });
     return;
   }
 
@@ -10970,7 +13114,7 @@ function updatePlayer(dt) {
     const elevated = dayState.liftH > 0.9;
     if (elevated && maxH > 4.5 && dayState.liftH >= maxH - 0.05 && !dayState.toppedOut) {
       dayState.toppedOut = true;
-      addWatts(250, "HIGH WORK");
+      addSidePoints(250, "HIGH WORK", "lift-top");
       toast("TOPPED OUT — TIE OFF");
       radioFore(
         "If y'all are working up there, y'all are tied off. I ain't calling your mother.",
@@ -10986,7 +13130,8 @@ function updatePlayer(dt) {
       facing = Math.atan2(fx, fz);
       L.rotation.y = facing;
     }
-    player.position.set(L.position.x, 1.12 + dayState.liftH, L.position.z);
+    // Stand on the tread plate, including the lift base's elevation.
+    player.position.set(L.position.x, L.position.y + L.userData.liftBits.height + 0.075, L.position.z);
     player.rotation.y = facing;
     pvel.x = pvel.z = pvel.y = 0;
     kick.x = kick.z = 0; // stale knockback must not fire on dismount
@@ -10996,29 +13141,34 @@ function updatePlayer(dt) {
     udl.armR.rotation.x = -0.35;
     udl.legL.rotation.x = 0;
     udl.legR.rotation.x = 0;
+    physics?.update(dt, { enabled: false, externalPosition: player.position });
     return;
   }
 
   pvel.x = fx * speed;
   pvel.z = fz * speed;
-  pvel.y += -24 * dt;
-
-  const kdecay = Math.max(0, 1 - 6 * dt);
+  const kdecay = Math.exp(-6 * dt);
   kick.x *= kdecay;
   kick.z *= kdecay;
-
-  let x = player.position.x + (pvel.x + kick.x) * dt;
-  let z = player.position.z + (pvel.z + kick.z) * dt;
-  const hit = collideXZ(x, z, PLAYER_R);
-  player.position.x = hit.x;
-  player.position.z = hit.z;
-  player.position.y += pvel.y * dt;
-  const gh = groundH(player.position.x, player.position.z);
-  if (player.position.y <= gh) {
-    player.position.y = gh;
-    pvel.y = 0;
-    grounded = true;
-  } else grounded = false;
+  if (physics) {
+    const motion = physics.update(dt, {
+      velocity: { x: pvel.x + kick.x, z: pvel.z + kick.z },
+      externalPosition: player.position,
+    });
+    player.position.set(motion.position.x, motion.position.y, motion.position.z);
+    pvel.y = motion.verticalVelocity;
+    grounded = motion.grounded;
+  } else {
+    pvel.y -= 24 * dt;
+    const hit = collideXZ(player.position.x + (pvel.x + kick.x) * dt,
+      player.position.z + (pvel.z + kick.z) * dt, PLAYER_R);
+    player.position.x = hit.x;
+    player.position.z = hit.z;
+    player.position.y += pvel.y * dt;
+    const gh = groundH(player.position.x, player.position.z);
+    grounded = player.position.y <= gh;
+    if (grounded) { player.position.y = gh; pvel.y = 0; }
+  }
 
   if (mag > 0.12) {
     facing = Math.atan2(fx, fz);
@@ -11073,6 +13223,18 @@ function pointInCollider(x, z, y = 1.4) {
 }
 
 function updateCamera(dt) {
+  if (isUtahHome() && state.mode === "play") {
+    const px = player.position.x;
+    const py = player.position.y + 0.38;
+    const pz = player.position.z + 0.12;
+    camera.up.set(0, 1, 0);
+    camera.position.set(px, py, pz);
+    const lx = px + Math.sin(cam.yaw) * Math.cos(cam.pitch);
+    const ly = py + Math.sin(cam.pitch);
+    const lz = pz + Math.cos(cam.yaw) * Math.cos(cam.pitch);
+    camera.lookAt(lx, ly, lz);
+    return;
+  }
   if (window.__lwLook) {
     const L = window.__lwLook;
     camera.up.set(0, 1, 0);
@@ -11123,6 +13285,59 @@ function updateCamera(dt) {
 }
 
 function updateInteract() {
+  if (isUtahHome()) {
+    if ($("bank") && !$("bank").classList.contains("hidden")) return;
+    if ($("imsg") && !$("imsg").classList.contains("hidden")) return;
+    const cur = currentJob();
+    let best = null;
+    let bestDot = 0.32;
+    for (const it of state.interactables) {
+      if (it.done) continue;
+      if (cur && it.id !== cur.id) continue;
+      const dot = utahLookDot(it);
+      if (dot > bestDot) {
+        bestDot = dot;
+        best = it;
+      }
+    }
+    if (state._lookIt !== best) {
+      state._lookIt = best;
+      if (state.homeRing) {
+        if (best) {
+          state.homeRing.visible = true;
+          state.homeRing.position.set(best.x - HOME.x, 0.76, best.z - HOME.z);
+        } else {
+          state.homeRing.visible = false;
+        }
+      }
+    }
+    if (state.homeRing && state.homeRing.visible) {
+      state.homeRing.rotation.z += 0.03;
+      const s = 1 + Math.sin(performance.now() / 180) * 0.08;
+      state.homeRing.scale.set(s, s, 1);
+    }
+    state.nearest = best;
+    let promptLabel = null;
+    if (best && jobReady(best.id)) promptLabel = best.label;
+    else if (cur) promptLabel = "LOOK AROUND · " + jobDisplayName(cur).toUpperCase();
+    if (promptLabel !== ui.promptLabel) {
+      ui.promptLabel = promptLabel;
+      if (promptLabel) {
+        $("prompt").classList.remove("hidden");
+        $("prompt-text").textContent = promptLabel;
+        $("prompt").querySelector("kbd").textContent = isCoarse() ? "⚡" : "E";
+      } else {
+        $("prompt").classList.add("hidden");
+      }
+    }
+    const zone = zoneName(player.position.x, player.position.z);
+    if (zone !== ui.zone) {
+      ui.zone = zone;
+      const zl = $("zone-line");
+      if (zl) zl.textContent = zone;
+    }
+    return;
+  }
   let best = null;
   let bestScore = Infinity;
   const px = player.position.x;
@@ -11145,8 +13360,10 @@ function updateInteract() {
       best = it;
     }
   }
-  state.nearest = best;
-  const promptLabel = best && jobReady(best.id) ? shownLabel(best.label) : null;
+  let prop = null;
+  if (!best && !dayState.driving && !dayState.utv) prop = physicalProps?.nearest(player.position,2.0);
+  state.nearest = best || (prop ? {physicalProp:prop,label:prop.label} : null);
+  const promptLabel = prop ? (prop.kind==='mounted-reel'?'SPIN · ':'PUSH · ')+prop.label.toUpperCase() : best && jobReady(best.id) ? shownLabel(best.label) : null;
   if (promptLabel !== ui.promptLabel) {
     ui.promptLabel = promptLabel;
     if (promptLabel) {
@@ -11174,27 +13391,46 @@ function updateInteract() {
     if (target) {
       const ang = Math.atan2(target.x - px, target.z - pz) - cam.yaw;
       // positive relative bearing is screen-LEFT; CSS rotation is clockwise
-      const deg = Math.round((-ang * 180) / Math.PI);
-      if (ui.needleDeg !== deg) {
-        ui.needleDeg = deg;
-        $("needle").style.transform = `rotate(${deg}deg)`;
-      }
+      $("needle").style.transform = `rotate(${(-ang * 180) / Math.PI}deg)`;
     }
+  }
+}
+
+const namedCrewPose=new WeakMap();
+function updateNamedCrewAnimation(dt){
+  for(const record of [state.drew,state.joe,state.chris,state.don,state.ahjNpc]){
+    const mesh=record?.mesh;if(!mesh?.userData.animate)continue;
+    const previous=namedCrewPose.get(mesh);
+    const speed=previous?Math.hypot(mesh.position.x-previous.x,mesh.position.z-previous.z)/Math.max(dt,.001):0;
+    namedCrewPose.set(mesh,{x:mesh.position.x,z:mesh.position.z});
+    if(!mesh.visible||Math.hypot(mesh.position.x-player.position.x,mesh.position.z-player.position.z)>(isCoarse()?35:65))continue;
+    mesh.userData.animate(dt,{moving:speed>.12,speed});
   }
 }
 
 function updateCrew(dt, t) {
   const px = player.position.x;
   const pz = player.position.z;
+  const mobile=isCoarse();
+  crewVisibility.begin(camera,player.position,mobile);
   for (const c of state.crew) {
     const ud = c.mesh.userData;
     if (!ud) continue;
-    // crew past the fog line reads as noise on a phone — skip the draws
-    if (!c.lift) {
-      const vis = Math.hypot(px - c.mesh.position.x, pz - c.mesh.position.z) < 64;
-      if (c.mesh.visible !== vis) c.mesh.visible = vis;
-      if (!vis) continue;
+    offerCrewDialogue(c,t);
+    const visibility=crewVisibility.inspect(c.mesh);
+    c.mesh.visible=visibility.visible;
+    if (ud.animate && visibility.visible) {
+      const old=c.previousAnimatedPosition;
+      const elapsed=(c.animationTime||0)+dt;
+      const velocity=old?Math.hypot(c.mesh.position.x-old.x,c.mesh.position.z-old.z)/Math.max(dt,.001):0;
+      c.previousAnimatedPosition={x:c.mesh.position.x,z:c.mesh.position.z};
+      c.animationTime=elapsed;
+      if(visibility.distance<(mobile?14:24)||elapsed>=.1){
+        ud.animate(elapsed,{moving:velocity>.12&&!c.pause,speed:velocity,working:!!c.lift,lookBack:!c.path&&Math.sin(t*.17+c.phase)>.98});
+        c.animationTime=0;
+      }
     }
+    if (!visibility.visible && !(c.path && c.path.length>1) && !c.followLift) continue;
     if (c.followLift && dayState.driving && !dayState.utv && state.driveLift && state.driveLift.mesh) {
       const L = state.driveLift.mesh;
       const yaw = L.rotation.y;
@@ -11223,16 +13459,6 @@ function updateCrew(dt, t) {
         ud.legL.rotation.x = 0;
         ud.legR.rotation.x = 0;
       }
-      if (!c.nextBark || c.nextBark < t - 40) c.nextBark = t + 1.2;
-      if (t >= c.nextBark) {
-        const lines = BARK.safety;
-        if (lines && lines.length) {
-          c.barkI = (c.barkI || 0) % lines.length;
-          speakAs("safety", lines[c.barkI]);
-          c.barkI += 1;
-        }
-        c.nextBark = t + 3.2 + Math.random() * 2.4;
-      }
       continue;
     }
     if (c.path && c.path.length > 1) {
@@ -11257,44 +13483,17 @@ function updateCrew(dt, t) {
       c.mesh.position.z = a[1] + dz * c.u;
       c.mesh.rotation.y = Math.atan2(dx, dz);
       const w = t * 9 * c.speed;
-      ud.armL.rotation.x = Math.sin(w) * 0.65;
-      ud.armR.rotation.x = c.hold === "radio" ? -1.25 : c.hold === "clipboard" ? -0.75 : Math.sin(w + Math.PI) * 0.65;
-      ud.legL.rotation.x = Math.sin(w + Math.PI) * 0.65;
-      ud.legR.rotation.x = Math.sin(w) * 0.65;
-      const dxp = player.position.x - c.mesh.position.x;
-      const dzp = player.position.z - c.mesh.position.z;
-      if (c.kit === "safety" || c.kit === "andy" || c.kit === "gibbs") {
-        // repeat-bark NPCs: keep talking while the player hangs around,
-        // cycling their lines instead of the one-shot the generic crew gets
-        if (Math.hypot(dxp, dzp) < 4.6 && t > 2) {
-          if (!c.nextBark || t >= c.nextBark) {
-            const lines = BARK[c.kit];
-            if (lines && lines.length) {
-              c.barkI = (c.barkI || 0) % lines.length;
-              speakAs(NPC_VOICE[c.kit] || "crew", lines[c.barkI]);
-              c.barkI += 1;
-            }
-            // Andy paces his ask; the safety lady stays on your heels
-            c.nextBark = t + (c.kit === "andy" ? 5.5 + Math.random() * 3.5 : 3.5 + Math.random() * 2.5);
-          }
-        }
-      } else if (!c.said && Math.hypot(dxp, dzp) < 3.1 && t > 5) {
-        c.said = true;
-        const lines =
-          c.kit === "foreman"
-            ? (() => {
-                const dayLines = isTremont() ? (DAY_IDLE_LEMON[day] || DAY_IDLE_LEMON[cycleDay(day)]) : (DAY_IDLE[day] || DAY_IDLE[cycleDay(day)]);
-                const generic = isTremont() ? BARK.foremanLemon : BARK.foreman;
-                return dayLines && dayLines.length ? dayLines.concat(generic) : generic;
-              })()
-            : c.kit === "oconnell" && isTremont()
-              ? BARK.oconnellTremont
-              : BARK[c.kit];
-        if (lines) {
-          const barkRole =
-            c.kit === "foreman" ? foremanWho() : NPC_VOICE[c.kit] || "crew";
-          speakAs(barkRole, lines[Math.floor(Math.random() * lines.length)]);
-        }
+      if (c.mount) {
+        c.mesh.position.y = Math.sin(t * 5.2 * c.speed) * 0.045;
+        if (ud.armL) ud.armL.rotation.x = 0.22 + Math.sin(w) * 0.12;
+        if (ud.armR) ud.armR.rotation.x = 0.22 + Math.sin(w + Math.PI) * 0.12;
+        if (ud.legL) ud.legL.rotation.x = 0.95;
+        if (ud.legR) ud.legR.rotation.x = 0.95;
+      } else {
+        ud.armL.rotation.x = Math.sin(w) * 0.65;
+        ud.armR.rotation.x = c.hold === "radio" ? -1.25 : c.hold === "clipboard" ? -0.75 : Math.sin(w + Math.PI) * 0.65;
+        ud.legL.rotation.x = Math.sin(w + Math.PI) * 0.65;
+        ud.legR.rotation.x = Math.sin(w) * 0.65;
       }
     } else if (c.joeGuy) {
       const jm = state.joe && state.joe.mesh;
@@ -11319,8 +13518,8 @@ function updateCrew(dt, t) {
     if (L.swing && L.turret) L.turret.rotation.y = Math.sin(t * 0.22 + L.t) * 0.4;
     if (L.rise && L.plat) {
       const y = L.h + Math.sin(t * 0.35 + L.t) * 0.55;
-      L.plat.position.y = y;
-      if (L.sc) L.sc.scale.y = y / L.h;
+      if (L.mesh.userData.liftBits?.setHeight) L.mesh.userData.liftBits.setHeight(y);
+      else { L.plat.position.y = y; if (L.sc) L.sc.scale.y = y / L.h; }
     }
   }
   if (state.weld) {
@@ -11362,9 +13561,12 @@ function updateHazards(dt, t) {
     if (f.t > 1 || f.t < 0) f.dir *= -1;
     const x = -16 + f.t * 28;
     const z = 30;
+    const travelled=Math.abs(x-f.mesh.position.x);
     f.mesh.position.set(x, 0, z);
     f.mesh.rotation.y = f.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
-    if (!dayState.driving && !dayState.utv && Math.hypot(player.position.x - x, player.position.z - z) < 1.5) {
+    if(travelled<2)f.mesh.userData.roll?.(travelled);
+    patrolVehiclePhysics?.sync();
+    if (!dayState.driving && !dayState.utv && telehandlerBodyContact(f.mesh,player.position)) {
       if (!f.cd || t > f.cd) {
         f.cd = t + 1.4;
         hurt(1, "fork");
@@ -11390,6 +13592,7 @@ function updateHazards(dt, t) {
     updateDon(dt, t);
     updateDayMechanics(dt, t);
   }
+  updateNamedCrewAnimation(dt);
   updateFx(dt);
 
   // the mascot spooks when Utah gets close
@@ -11449,13 +13652,13 @@ function updateHazards(dt, t) {
 
 const UTAH_RANDOM = [
   "It's throat punch Thursday.",
-  "Do you even know what you're doing?",
-  "Mood enhancing drugs, anybody?",
-  "This hall's crooked. Not my work — the HALL.",
-  "Tell Drew my numbers are beautiful.",
+  "Need a hand, or are we both staring at the same print?",
+  "That's hotel coffee doing its best.",
+  "That corridor keeps getting longer every time I walk it.",
+  "Tell Drew I'm working on it. His pencil can wait.",
   "I've seen better bends in a garden hose.",
   "Somebody's playing country in pod three and it's ruining my splice.",
-  "Book 2 does it better. That's not bragging, that's data.",
+  "Came all this way to run conduit. Still hunting couplings.",
   "I'm a Mormon.",
   "I'm a virgin!",
 ];
@@ -11464,40 +13667,40 @@ const TREMONT_RANDOM = [
   "Who's skipping leg day on my site?",
   "Form over force. That's a clean bend.",
   "Hydrate. Water. That's the whole sermon.",
-  "Strong people. Strong community. Strong circuit.",
+  "Anybody heading toward the hotel after shift? I've got a seat.",
   "I've seen better form on a gas-station pull-up bar.",
-  "Book 2, Tremont. Built different.",
-  "Tell Lemon the set's done and the device is landed.",
+  "Good crew on this call. Makes the long days easier.",
+  "Tell Lemon I'm checking the last connection before I move on.",
   "No candy cart. Never a candy cart.",
   "Recover after the shift. Work during it.",
-  "Chest tight. Mind clear. Next device.",
+  "Long day. One device at a time.",
   "F-150's in the south lot. PowerBoost. Don't block it.",
   "Ford in the lot, iron in the hall. That's the day.",
   "After this pull I'm hitting the gym. Not the vending machine.",
-  "Tow package, Pro Power, and a circuit that actually lands.",
-  "If you need a ride to the hall, I drive American.",
-  "Squenchers are poison.",
-  "Hydrate. Not that colored sugar water.",
-  "You can keep the Squenchers. I'll take the water and the truck.",
-  "Gym, Ford, water. Squenchers didn't make the list.",
-  "Squenchers are still poison. That's the last time I'm saying it.",
+  "Need anything from the supply run? Put it on the list now.",
+  "If you need a ride to the union hall, let me know before we leave.",
+  "I've got laundry to do tonight. Living the dream.",
+  "I owe somebody a phone call when we get out of here.",
+  "Anybody find a decent breakfast place that's open before shift?",
+  "Overtime's good. A proper night's sleep would be good too.",
+  "Heading home when this stretch is over. Been looking forward to it.",
 ];
 const LUGO_CHAT = [
   "Y'all need something, or y'all just admiring the foreman?",
-  "Water's in the conex. Hydrate or die-drate, y'all.",
+  "Water's in the conex. Take a minute before you head back in.",
   "If Drew asks, I said something inspirational.",
-  "Quit talking to me and go make us look good, y'all.",
+  "Bring me the part that's holding you up. We'll sort it out.",
 ];
 const LEMON_CHAT = [
-  "You need something, or are you stretching?",
+  "What do you need, Tremont? Material or a second pair of hands?",
   "Water's in the conex. Then get back on the stick.",
   "If Drew asks, I said stay productive.",
-  "Quit talking. Finish the device and the set.",
-  "Strong people show up. You're already on the clock — use it.",
+  "Finish that connection, label it, then tell me what's left.",
+  "If the print and the field don't agree, bring it to me before you change anything.",
   "Tremont's Ford is in the south lot. Don't make him move it twice.",
   "Gym after the whistle. Circuit before it.",
-  "Water's in the conex. Squenchers are still poison.",
-  "Tell Tremont I heard him on Squenchers. He can drop it now.",
+  "Water's in the conex. Take care of yourself; it's a long shift.",
+  "Tremont's already planned the gym session. I've still got a material order to finish.",
 ];
 const DAY_IDLE = {
   1: [
@@ -11589,6 +13792,16 @@ function paceFraction() {
 }
 
 function updateClock(dt) {
+  if (isUtahHome()) {
+    const el = $("clock");
+    const txt = state.done && state.done.ytd ? "HIT" : "OFF";
+    if (el && ui.clock !== txt) {
+      ui.clock = txt;
+      el.textContent = txt;
+      el.style.color = "#d6f04a";
+    }
+    return;
+  }
   if (state.time > 0) {
     state.time -= dt;
     if (state.time < 0) state.time = 0;
@@ -11629,29 +13842,301 @@ function updateClock(dt) {
   if (idleRadio < 0 && state.mode === "play") {
     idleRadio = 22 + Math.random() * 16;
     const pool = idlePool();
-    radio(pool[Math.floor(Math.random() * pool.length)]);
+    radio(pool[0],undefined,{lines:pool,kind:'ambient',key:'ambient:radio',ttl:18,valid:()=>state.mode==='play'});
   }
   utahChatT -= dt;
   if (utahChatT < 0 && state.mode === "play") {
     utahChatT = 60 + Math.random() * 40;
     if (getTraveler() === "tremont") {
       const line = TREMONT_RANDOM[Math.floor(Math.random() * TREMONT_RANDOM.length)];
-      speakAs("tremont", line);
-      toastMutter(line);
+      speakAs('tremont',line,{lines:TREMONT_RANDOM,kind:'ambient'});
     } else {
       const line = UTAH_RANDOM[Math.floor(Math.random() * UTAH_RANDOM.length)];
-      speakAs("utah", line);
-      toastMutter(line);
+      speakAs('utah',line,{lines:UTAH_RANDOM,kind:'ambient'});
     }
   }
 }
 
+function updateSunShadow() {
+  const sun = dayLights && dayLights.sun;
+  if (!sun || !sun.castShadow || !player) return;
+  const p = player.position;
+  sun.position.set(p.x - 26, 44, p.z + 14);
+  sun.target.position.set(p.x, 0.2, p.z);
+  sun.target.updateMatrixWorld();
+}
+
+const FOG_OUT = new THREE.Color(0x8b9aaa);
+const FOG_HALL = new THREE.Color(0xc4c0b6);
+const FOG_DATA = new THREE.Color(0xb8bcc2);
+const BG_OUT = new THREE.Color(0x8b9aaa);
+const BG_HALL = new THREE.Color(0xbbb7ae);
+const BG_DATA = new THREE.Color(0xadb2b8);
+const HEAT_FOG = new THREE.Color(0x8a4a28);
+
+function updateSiteLook() {
+  if (!dayLights || !player) return;
+  if (isUtahHome()) return;
+  if (cycleDay(day) === 4 && (state.mode === "play" || state.mode === "end")) {
+    applyNightPower(clock.elapsedTime);
+    if (dayLights.heatKey) dayLights.heatKey.intensity = 0;
+    return;
+  }
+  const x = player.position.x;
+  const z = player.position.z;
+  const inside = z > CB.z0 - 0.2 && z < CB.z1 + 0.2 && x > CB.west - 0.2 && x < CB.east + 0.2;
+  const inData = inside && x > CB.data0 - 0.4 && x < CB.data1 + 0.4;
+  const hot = inHotAisle(x, z);
+  const { hemi, sun, amb, fill, hallKey, heatKey } = dayLights;
+  if (inside) {
+    if (sun) sun.intensity = 0.42;
+    if (fill) fill.intensity = 0.22;
+    if (hemi) {
+      hemi.color.set(inData ? 0xe4eaf0 : 0xf2eee4);
+      hemi.groundColor.set(inData ? 0x6a7076 : 0x6e6a62);
+      hemi.intensity = 0.92;
+    }
+    if (amb) amb.intensity = 0.48;
+    if (hallKey) {
+      hallKey.position.set(x, 5.85, z);
+      hallKey.color.set(inData ? 0xe8eef4 : 0xfff6e8);
+      hallKey.intensity = inData ? 2.15 : 2.35;
+      hallKey.distance = 26;
+    }
+    scene.fog.color.copy(inData ? FOG_DATA : FOG_HALL);
+    scene.fog.near = 16;
+    scene.fog.far = inData ? 105 : 118;
+    scene.background.copy(inData ? BG_DATA : BG_HALL);
+    renderer.toneMappingExposure = inData ? 1.2 : 1.22;
+  } else {
+    if (sun) sun.intensity = 1.55;
+    if (fill) fill.intensity = 0.28;
+    if (hemi) {
+      hemi.color.set(0xd7e4f0);
+      hemi.groundColor.set(0x5a5648);
+      hemi.intensity = 0.72;
+    }
+    if (amb) amb.intensity = 0.22;
+    if (hallKey) hallKey.intensity = 0;
+    scene.fog.color.copy(FOG_OUT);
+    scene.fog.near = 48;
+    scene.fog.far = 380;
+    scene.background.copy(BG_OUT);
+    renderer.toneMappingExposure = 1.12;
+  }
+  if (heatKey) {
+    if (hot) {
+      heatKey.position.set(x, 2.8, z);
+      heatKey.intensity = 1.15 + (dayState.heat || 0) * 1.4;
+    } else {
+      heatKey.intensity = 0;
+    }
+  }
+  if (hot && scene.fog) {
+    scene.fog.color.lerp(HEAT_FOG, 0.35 + (dayState.heat || 0) * 0.4);
+    renderer.toneMappingExposure += 0.1 + (dayState.heat || 0) * 0.22;
+  }
+  if (lookPass && lookPass.compMat) {
+    lookPass.compMat.uniforms.heat.value = dayState.heat || 0;
+  }
+}
+
+function makeFSTri() {
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(new Float32Array([-1, -1, 0, 3, -1, 0, -1, 3, 0]), 3));
+  g.setAttribute("uv", new THREE.BufferAttribute(new Float32Array([0, 0, 2, 0, 0, 2]), 2));
+  return g;
+}
+
+function disposeLookPass() {
+  if (!lookPass) return;
+  const L = lookPass; lookPass = null;
+  L.sceneRT.dispose(); L.bloomA.dispose(); L.bloomB.dispose();
+  L.brightMat.dispose(); L.blurMat.dispose(); L.compMat.dispose(); L.mesh.geometry.dispose();
+}
+function installLookPass() {
+  if (lookPass) return;
+  try {
+    const post = choosePostProcessing({ touch:isCoarse(),
+      floatColor:renderer.extensions.has('EXT_color_buffer_float'),
+      halfFloatColor:renderer.extensions.has('EXT_color_buffer_half_float'),
+      maxSamples:renderer.capabilities.maxSamples });
+    const geo = makeFSTri();
+    const opt = {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      format: THREE.RGBAFormat,
+      type: post.hdr ? THREE.HalfFloatType : THREE.UnsignedByteType,
+      colorSpace: THREE.LinearSRGBColorSpace,
+      depthBuffer: true,
+      stencilBuffer: false,
+    };
+    const sceneRT = new THREE.WebGLRenderTarget(2, 2, opt);
+    sceneRT.samples = post.samples;
+    const bloomA = new THREE.WebGLRenderTarget(2, 2, { ...opt, depthBuffer: false });
+    const bloomB = new THREE.WebGLRenderTarget(2, 2, { ...opt, depthBuffer: false });
+    const vs = "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }";
+    const brightMat = new THREE.ShaderMaterial({
+      uniforms: { tDiffuse: { value: null }, thresh: { value: 1.1 } },
+      vertexShader: vs,
+      fragmentShader:
+        "uniform sampler2D tDiffuse; uniform float thresh; varying vec2 vUv;" +
+        "void main(){ vec3 c = texture2D(tDiffuse, vUv).rgb; float l = dot(c, vec3(0.2126,0.7152,0.0722));" +
+        "gl_FragColor = vec4(c * max(0.0, l - thresh) * 2.1, 1.0); }",
+      depthTest: false,
+      depthWrite: false,
+    });
+    const blurMat = new THREE.ShaderMaterial({
+      uniforms: { tDiffuse: { value: null }, dir: { value: new THREE.Vector2(1, 0) } },
+      vertexShader: vs,
+      fragmentShader:
+        "uniform sampler2D tDiffuse; uniform vec2 dir; varying vec2 vUv;" +
+        "void main(){ vec3 a = texture2D(tDiffuse, vUv - dir*2.4).rgb * 0.09;" +
+        "a += texture2D(tDiffuse, vUv - dir*1.2).rgb * 0.22;" +
+        "a += texture2D(tDiffuse, vUv).rgb * 0.38;" +
+        "a += texture2D(tDiffuse, vUv + dir*1.2).rgb * 0.22;" +
+        "a += texture2D(tDiffuse, vUv + dir*2.4).rgb * 0.09;" +
+        "gl_FragColor = vec4(a, 1.0); }",
+      depthTest: false,
+      depthWrite: false,
+    });
+    const compMat = new THREE.ShaderMaterial({
+      uniforms: {
+        tDiffuse: { value: null },
+        tBloom: { value: null },
+        res: { value: new THREE.Vector2(1, 1) },
+        bloomAmt: { value: isCoarse() ? 0 : 0.13 },
+        heat: { value: 0 },
+        time: { value: 0 },
+      },
+      vertexShader: vs,
+      fragmentShader: `
+        uniform sampler2D tDiffuse;
+        uniform sampler2D tBloom;
+        uniform vec2 res;
+        uniform float bloomAmt;
+        uniform float heat;
+        uniform float time;
+        varying vec2 vUv;
+        float luma(vec3 c){ return dot(c, vec3(0.299, 0.587, 0.114)); }
+        void main(){
+          vec2 uv = vUv;
+          if (heat > 0.02) {
+            uv.x += sin(uv.y * 48.0 + time * 7.0) * heat * 0.0045;
+            uv.y += cos(uv.x * 36.0 + time * 5.0) * heat * 0.0022;
+          }
+          vec3 col = texture2D(tDiffuse, uv).rgb;
+          vec2 px = 1.0 / res;
+          float l = luma(col);
+          float lL = luma(texture2D(tDiffuse, uv + vec2(-px.x, 0.0)).rgb);
+          float lR = luma(texture2D(tDiffuse, uv + vec2( px.x, 0.0)).rgb);
+          float lD = luma(texture2D(tDiffuse, uv + vec2(0.0, -px.y)).rgb);
+          float lU = luma(texture2D(tDiffuse, uv + vec2(0.0,  px.y)).rgb);
+          float e = abs(lL + lR + lD + lU - 4.0 * l);
+          if (e > 0.08) {
+            col = (col + texture2D(tDiffuse, uv + vec2(-px.x,0.0)).rgb
+                      + texture2D(tDiffuse, uv + vec2( px.x,0.0)).rgb
+                      + texture2D(tDiffuse, uv + vec2(0.0,-px.y)).rgb
+                      + texture2D(tDiffuse, uv + vec2(0.0, px.y)).rgb) * 0.2;
+          }
+          vec3 bloom = texture2D(tBloom, uv).rgb;
+          col += bloom * bloomAmt;
+          float sat = 1.0;
+          float g = luma(col);
+          col = mix(vec3(g), col, sat);
+          col.r += 0.006; col.b -= 0.004;
+          float vig = smoothstep(0.98, 0.32, length((uv - 0.5) * vec2(1.08, 1.0)));
+          col *= mix(0.9, 1.0, vig);
+          float grain = fract(sin(dot(uv * res + time, vec2(12.9898, 78.233))) * 43758.5453);
+          col += (grain - 0.5) * 0.001;
+          if (heat > 0.05) col = mix(col, col * vec3(1.18, 0.82, 0.62), heat * 0.35);
+          gl_FragColor = vec4(max(col, vec3(0.0)), 1.0);
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+        }`,
+      depthTest: false,
+      depthWrite: false,
+    });
+    const fsScene = new THREE.Scene();
+    const fsCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const mesh = new THREE.Mesh(geo, brightMat);
+    fsScene.add(mesh);
+    lookPass = { sceneRT, bloomA, bloomB, brightMat, blurMat, compMat, fsScene, mesh, fsCam };
+    resizeLookPass();
+  } catch (err) {
+    console.warn("[LW] look pass skip", err);
+    lookPass = null;
+  }
+}
+
+function resizeLookPass() {
+  if (!lookPass) return;
+  const w = Math.max(2, renderer.domElement.width);
+  const h = Math.max(2, renderer.domElement.height);
+  lookPass.sceneRT.setSize(w, h);
+  const bw = isCoarse() ? 2 : Math.max(2, w >> 2);
+  const bh = isCoarse() ? 2 : Math.max(2, h >> 2);
+  lookPass.bloomA.setSize(bw, bh);
+  lookPass.bloomB.setSize(bw, bh);
+  lookPass.compMat.uniforms.res.value.set(w, h);
+}
+
+function renderLook(t) {
+  renderer.info.autoReset=false;
+  renderer.info.reset();
+  if (!lookPass) {
+    renderer.setRenderTarget(null);
+    renderer.render(scene, camera);
+    return;
+  }
+  const L = lookPass;
+  renderer.setRenderTarget(L.sceneRT);
+  renderer.render(scene, camera);
+  if (!isCoarse()) {
+    L.mesh.material = L.brightMat;
+    L.brightMat.uniforms.tDiffuse.value = L.sceneRT.texture;
+    renderer.setRenderTarget(L.bloomA);
+    renderer.render(L.fsScene, L.fsCam);
+    L.mesh.material = L.blurMat;
+    L.blurMat.uniforms.tDiffuse.value = L.bloomA.texture;
+    L.blurMat.uniforms.dir.value.set(1 / L.bloomA.width, 0);
+    renderer.setRenderTarget(L.bloomB);
+    renderer.render(L.fsScene, L.fsCam);
+    L.blurMat.uniforms.tDiffuse.value = L.bloomB.texture;
+    L.blurMat.uniforms.dir.value.set(0, 1 / L.bloomA.height);
+    renderer.setRenderTarget(L.bloomA);
+    renderer.render(L.fsScene, L.fsCam);
+  }
+  L.mesh.material = L.compMat;
+  L.compMat.uniforms.tDiffuse.value = L.sceneRT.texture;
+  L.compMat.uniforms.tBloom.value = L.bloomA.texture;
+  L.compMat.uniforms.time.value = t;
+  renderer.setRenderTarget(null);
+  renderer.render(L.fsScene, L.fsCam);
+}
+
 function loop() {
+  cabinetInstances?.update(player.position);
+  parkedVehicles?.update(player.position);
+  landscape?.update(player.position);
   requestAnimationFrame(loop);
-  const dt = Math.min(0.033, clock.getDelta());
+  if (window.LW?.manualStep) { clock.getDelta(); return; }
+  if (document.hidden || mobileLifecycle.suspended || mobileLifecycle.contextLost) { clock.getDelta(); return; }
+  dialogue.tick();
+  const rawDt = clock.getDelta();
+  const dt = Math.min(0.1, rawDt);
+  if (renderBudget.sample(rawDt * 1000, {active:state.mode === 'play' && state.built})) applySize();
+  frameSample.frames++;
+  const frameNow=performance.now();
+  if(frameNow-frameSample.start>1500){
+    rebuildStatus.performance={fps:Math.round(frameSample.frames*1000/(frameNow-frameSample.start)),draws:renderer.info.render.calls,triangles:renderer.info.render.triangles};
+    frameSample={start:frameNow,frames:0};
+  }
   const t = clock.elapsedTime;
   if (state.mode === "play") {
     updatePlayer(dt);
+    physicalProps?.update();
+    body.userData.animate?.(dt,{moving:grounded && Math.hypot(pvel.x,pvel.z)>.2 && !dayState.driving && !dayState.utv,speed:Math.hypot(pvel.x,pvel.z),working:!!dayState.driving&&!dayState.utv,seated:!!dayState.utv});
     updateHeat(dt);
     updateInteract();
     updateWorkMarkers(dt, t);
@@ -11660,13 +14145,16 @@ function loop() {
   netTick(dt);
   if (state.mode === "mag") updateMag(dt);
   if (state.mode === "pull") updatePull(dt);
+  if (state.mode === "mag" || state.mode === "pull" || state.mode === "panel") body.userData.animate?.(dt,{working:true});
   if (state.mode === "play" || state.mode === "mag" || state.mode === "pull") updateSiteRadio();
-  // Title, pause and the mini-games fully cover or freeze the scene —
-  // skip rendering there so idle screens don't burn battery.
   if (state.mode === "play" || state.mode === "end") {
     updateHazards(dt, t);
     updateCamera(dt);
-    renderer.render(scene, camera);
+    updateSunShadow();
+    updateSiteLook();
+    environment?.update({ position: player.position, night: cycleDay(day) === 4,
+      inside: player.position.z > CB.z0 && player.position.z < CB.z1 && player.position.x > CB.west && player.position.x < CB.east });
+    renderLook(t);
   }
 }
 
@@ -11676,6 +14164,11 @@ function loop() {
 // icons and button skins are pre-keyed transparent PNGs shipped in assets/
 const iconURL = {};
 for (const d of Object.values(DAYS)) for (const j of d.jobs) iconURL[j.id] = "/assets/" + j.icon.replace(".jpg", ".png");
+iconURL.countcash = "/assets/icon_box.png";
+iconURL.redass = "/assets/icon_tools.png";
+iconURL.ytd = "/assets/icon_facp.png";
+iconURL.ignorehall = "/assets/icon_strobe.png";
+iconURL.textlugo = "/assets/icon_tools.png";
 
 /* ------------------------------------------------------------------ */
 /*  STATIC WORLD MERGE                                                 */
@@ -11684,62 +14177,29 @@ for (const d of Object.values(DAYS)) for (const j of d.jobs) iconURL[j.id] = "/a
    merged meshes (one per material look). Anything that moves, hides, or
    swaps materials at runtime is tagged userData.noBake and left alone. */
 function mergeStaticWorld() {
-  const groups = new Map();
-  const doomed = [];
-  const walk = (obj, blocked) => {
-    const b = blocked || obj.userData.noBake === true;
-    if (obj.isMesh && !b) {
-      const m = obj.material;
-      const g = obj.geometry;
-      if (
-        m &&
-        m.isMeshLambertMaterial &&
-        !m.transparent &&
-        (!m.emissive || m.emissive.getHex() === 0) &&
-        g &&
-        g.index &&
-        g.attributes.position &&
-        g.attributes.normal &&
-        g.attributes.uv
-      ) {
-        // textured props merge per texture; every flat color merges into
-        // one vertex-colored mesh — a single draw for the whole set
-        const flat = !m.map && !m.vertexColors;
-        const key = flat ? "FLAT" : (m.map ? m.map.uuid : "vc") + "|" + m.color.getHex();
-        let grp = groups.get(key);
-        if (!grp) {
-          grp = { mat: flat ? VERT_MAT : m, flat, geos: [] };
-          groups.set(key, grp);
-        }
-        obj.updateWorldMatrix(true, false);
-        const geo = g.clone().applyMatrix4(obj.matrixWorld);
-        if (flat) colorizeGeo(geo, m.color);
-        grp.geos.push(geo);
-        doomed.push(obj);
-      }
-    }
-    for (const c of obj.children) walk(c, b);
-  };
-  walk(scene, false);
-  for (const d of doomed) d.parent?.remove(d);
-  let merged = 0;
-  for (const grp of groups.values()) {
-    if (!grp.geos.length) continue;
-    const g = BufferGeometryUtils.mergeGeometries(grp.geos, false);
-    if (!g) continue;
-    const mesh = new THREE.Mesh(g, grp.mat);
-    mesh.matrixAutoUpdate = false;
-    scene.add(mesh);
-    merged++;
-    for (const src of grp.geos) src.dispose();
-  }
-  return { removed: doomed.length, drawGroups: merged };
+  // Some legacy Basic spark tips predate noBake. Explicitly retain all known
+  // gameplay roots as well as the inherited noBake checks in the merger.
+  const protectedObjects = [];
+  for (const item of state.interactables || [])
+    for (const key of ['mesh', 'marker', 'conduit', 'box'])
+      if (item[key]) protectedObjects.push(item[key]);
+  for (const spark of state.sparks || []) protectedObjects.push(spark.mesh, spark.tip);
+  for (const led of state.racks || []) protectedObjects.push(led);
+  const params = new URLSearchParams(location.search);
+  staticBatchController = createStaticSceneBatches({
+    THREE, BufferGeometryUtils, scene, CB, podBand, protectedObjects,
+    roomBatches: params.get('staticRooms') !== '0',
+    occlusion: params.get('staticOcclusion') !== '0',
+    cellSize: params.get('staticCell') === '64' ? 64 : 32,
+    castShadows: !isCoarse(),
+  });
+  return staticBatchController.stats();
 }
 
 /* ------------------------------------------------------------------ */
 /*  CHECKPOINT / RESET                                                 */
 /* ------------------------------------------------------------------ */
-const SAVE_VERSION = 6; // bump when interactable layout or save shape changes
+const SAVE_VERSION = 7; // bump when interactable layout or save shape changes
 
 function saveCheckpoint() {
   if (state.mode === "end") return;
@@ -11766,6 +14226,9 @@ function saveCheckpoint() {
         time: state.time,
         overtime: state.overtime,
         watts: state.watts,
+        sidePoints: state.sidePoints || 0,
+        sideAwarded: state.sideAwarded || {},
+        scoreVersion: state.scoreVersion || 1,
         hp: state.hp,
         shocks: state.shocks,
         combo: state.combo,
@@ -11808,7 +14271,11 @@ function applyCheckpoint(save) {
   // huddles already seen before the save don't replay on resume
   state.huddleN = state.time < shiftLen * 0.38 ? 2 : state.time < shiftLen * 0.72 ? 1 : 0;
   state.overtime = save.overtime || 0;
-  state.watts = save.watts;
+  state.watts = points(save.watts);
+  state.sidePoints = points(save.sidePoints, SIDE_POINT_CAP);
+  state.sideAwarded = Object.assign(Object.create(null), save.sideAwarded || {});
+  state.runSettled = false;
+  state.scoreVersion = save.scoreVersion === SCORE_VERSION ? SCORE_VERSION : 1;
   state.hp = save.hp;
   state.shocks = save.shocks;
   state.combo = save.combo || 0;
@@ -11846,11 +14313,16 @@ function resetItem(it) {
 }
 
 function softReset() {
+  stopVoice();
   // note: the checkpoint slot is NOT cleared here — a fresh start leaves the
   // old save resumable until the new run's first tick overwrites it
   state.time = shiftLen;
   state.overtime = 0;
   state.watts = 0;
+  state.sidePoints = 0;
+  state.sideAwarded = Object.create(null);
+  state.runSettled = false;
+  state.scoreVersion = SCORE_VERSION;
   state.hp = 3;
   state.shocks = 0;
   state.combo = 0;
@@ -11916,7 +14388,6 @@ function softReset() {
   dayState.genTransferred = false;
   dayState.carrying = false;
   dayState.candyCd = 0;
-  dayState.andyGave = false; // Andy passes the hat fresh every shift
   dayState.pushCart = false;
   dayState.driving = false;
   dayState.utv = null;
@@ -11953,7 +14424,7 @@ function softReset() {
   }
   setNight(cycleDay(day) === 4);
   ui.hint = undefined;
-  $("compass").classList.toggle("hidden", false); // day 6 hides it only while punch items remain
+  $("compass").classList.toggle("hidden", isUtahHome());
   if (cycleDay(day) !== 6 && cycleDay(day) !== 7) $("punch-hint").classList.add("hidden");
   state.progress = Object.fromEntries(JOBS.map((j) => [j.id, 0]));
   state.done = Object.fromEntries(JOBS.map((j) => [j.id, false]));
@@ -11968,10 +14439,7 @@ function softReset() {
     if (avail < j.need) {
       console.warn("[LW] day", day, "job", j.id, "short:", avail, "<", j.need);
       track("job_short", { day, job: j.id, avail, need: j.need });
-      // avail can legitimately be 0 (e.g. traveler-specific devices);
-      // flooring at 1 would make the day unwinnable
-      state.needs[j.id] = avail;
-      if (avail === 0) state.done[j.id] = true;
+      state.needs[j.id] = Math.max(1, avail);
     }
   }
   for (const led of state.racks) {
@@ -11981,50 +14449,21 @@ function softReset() {
   player.position.set(SPAWN.x, 0, SPAWN.z);
   pvel.x = pvel.y = pvel.z = 0;
   kick.x = kick.z = 0;
+  physics?.reset({spawn:player.position});
   cam.yaw = 0;
   cam.pitch = -0.28;
   sprintOn = false;
+  dayState.textSent = false;
+  if (isUtahHome()) enterUtahBedroom();
   $("watts").textContent = "0";
   $("watts-mini").textContent = "PTS 0";
-  ui.clock = "";
+  ui.clock = isUtahHome() ? "OFF" : "";
   ui.zone = "";
   ui.promptLabel = undefined;
   $("prompt").classList.add("hidden");
   setHearts();
   refreshJobs();
 }
-
-/* ------------------------------------------------------------------ */
-/*  REAL SICK & NEEDY FUND                                             */
-/*  This is REAL MONEY. Set url to an actual payment link (Venmo /     */
-/*  PayPal.me / GoFundMe / Stripe Payment Link) that goes to the real  */
-/*  fund, and say honestly in `note` where the money lands. Leave url  */
-/*  empty and the whole feature stays hidden.                          */
-/* ------------------------------------------------------------------ */
-const REAL_FUND = {
-  url: "",
-  note: "Real money, opens in your browser. Goes to the local's sick & needy fund.",
-};
-
-function openRealFund() {
-  if (!REAL_FUND.url) return;
-  try {
-    window.open(REAL_FUND.url, "_blank", "noopener");
-  } catch (_) {}
-  track("real_fund_tap", {});
-}
-
-function wireRealFund() {
-  if (!REAL_FUND.url) return;
-  $("btn-real-fund")?.classList.remove("hidden");
-  $("btn-real-fund-pause")?.classList.remove("hidden");
-  const note = $("real-fund-note-pause");
-  if (note) {
-    note.textContent = REAL_FUND.note;
-    note.classList.remove("hidden");
-  }
-}
-wireRealFund();
 
 /* ------------------------------------------------------------------ */
 /*  PAUSE / SETTINGS                                                   */
@@ -12048,13 +14487,15 @@ function pauseGame() {
 }
 
 function resumeGame() {
-  if (state.mode !== "pause") return;
+  if (state.mode !== "pause" || mobileLifecycle.contextLost) return;
   $("pause-screen").classList.add("hidden");
   state.mode = "play";
+  resetTransientInput(); clock.getDelta(); renderBudget.resetSamples();
   setDrone(settings.sfx);
-  recoverAudio();
+  recoverAudio(); acquireWakeLock();
 }
 
+let quitStingArmed = false;
 function quitToTitle() {
   clearTimeout(introTimer);
   setNight(false); // the title screen is always daytime
@@ -12063,6 +14504,30 @@ function quitToTitle() {
   $("end-screen").classList.add("hidden");
   $("hud").classList.add("hidden");
   $("touch").classList.add("hidden");
+  if (!quitStingArmed && state.mode !== "title") {
+    quitStingArmed = true;
+    showUtahSting("quit");
+    const finish = () => {
+      if (!quitStingArmed) return;
+      quitStingArmed = false;
+      hideUtahSting();
+      document.body.classList.add("gate");
+      $("title-screen").classList.remove("hidden");
+      $("btn-start").disabled = false;
+      $("btn-start").textContent = startBtnLabel();
+      state.mode = "title";
+      setDrone(false);
+      stopVoice();
+      stopSiteRadio();
+      refreshTitle();
+      refreshTitlePreview();
+    };
+    $("utah-sting")?.addEventListener("click", finish, { once: true });
+    setTimeout(finish, 3400);
+    return;
+  }
+  quitStingArmed = false;
+  hideUtahSting();
   document.body.classList.add("gate");
   $("title-screen").classList.remove("hidden");
   $("btn-start").disabled = false;
@@ -12078,8 +14543,6 @@ function quitToTitle() {
 for (const [id, fn] of [
   ["btn-pause", pauseGame],
   ["btn-resume", resumeGame],
-  ["btn-real-fund", openRealFund],
-  ["btn-real-fund-pause", openRealFund],
   ["btn-quit", quitToTitle],
   ["btn-gate", quitToTitle],
 ]) {
@@ -12142,28 +14605,59 @@ $("touch")?.classList.toggle("swap", settings.swap);
 /* ------------------------------------------------------------------ */
 let wakeLock = null;
 async function acquireWakeLock() {
-  try {
-    wakeLock = await navigator.wakeLock?.request("screen");
-  } catch (_) {}
+  if (document.hidden || !['play','panel','facp','mag','trouble','pull'].includes(state.mode) || (wakeLock && !wakeLock.released)) return;
+  try { wakeLock = await navigator.wakeLock?.request("screen"); } catch (_) {}
 }
 
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) {
-    if (state.mode === "play") pauseGame();
-    else if (["panel", "facp", "mag", "trouble", "pull"].includes(state.mode)) {
-      pull.holding = false; // a backgrounded thumb is not pulling cable
-      saveCheckpoint();
-    }
-    audio.ctx?.suspend?.().catch?.(() => {});
-    stopVoice();
-  } else {
-    recoverAudio();
-    acquireWakeLock();
-  }
+function suspendMobileSession() {
+  mobileLifecycle.suspended = true;
+  resetTransientInput(); renderBudget.resetSamples();
+  if (state.mode === 'play') pauseGame();
+  else if (['panel','facp','mag','trouble','pull'].includes(state.mode)) saveCheckpoint();
+  audio.ctx?.suspend?.().catch?.(() => {}); stopVoice();
+  wakeLock?.release?.().catch?.(() => {}); wakeLock = null;
+}
+function resumeMobileSession() {
+  if (document.hidden) return;
+  mobileLifecycle.suspended = false;
+  clock.getDelta(); resetTransientInput(); renderBudget.resetSamples();
+  applySize(); recoverAudio(); acquireWakeLock();
+}
+document.addEventListener('visibilitychange', () => document.hidden ? suspendMobileSession() : resumeMobileSession());
+addEventListener('pagehide', suspendMobileSession);
+addEventListener('pageshow', resumeMobileSession);
+document.addEventListener('freeze', suspendMobileSession);
+document.addEventListener('resume', resumeMobileSession);
+// A fresh completed gesture is the reliable opportunity to resume iOS Web Audio.
+document.addEventListener('pointerup', recoverAudio, {capture:true,passive:true});
+document.addEventListener('keydown', recoverAudio, {capture:true});
+canvas.addEventListener('webglcontextlost', event => {
+  event.preventDefault(); mobileLifecycle.contextLost = true;
+  suspendMobileSession(); renderBudget.lowerAfterContextLoss();
+  rebuildStatus.graphics = 'restoring';
+  toast('DISPLAY PAUSED — RESTORING THE GAME', true);
+});
+canvas.addEventListener('webglcontextrestored', async () => {
+  if (mobileLifecycle.restoring) return;
+  mobileLifecycle.restoring = true;
+  try {
+    disposeLookPass(); installLookPass();
+    await environment?.restoreContext?.();
+    mobileLifecycle.contextLost = false;
+    rebuildStatus.graphics = 'ready';
+    resumeMobileSession();
+    if (state.built) renderLook(clock.elapsedTime);
+    toast('DISPLAY RESTORED — RESUME WHEN READY');
+  } catch (error) {
+    rebuildStatus.graphics = 'failed';
+    console.error('[LW] Display restoration failed', error);
+    toast('DISPLAY COULD NOT RESUME. RELOAD TO RESTORE YOUR SAVED SHIFT.', true);
+  } finally { mobileLifecycle.restoring = false; }
 });
 
 const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
 function goImmersive() {
+  if (new URLSearchParams(location.search).get('qa') === '1') return;
   acquireWakeLock();
   unzoomIfNeeded();
   applySize();
@@ -12177,12 +14671,13 @@ function goImmersive() {
 let pickedDay = 1;
 
 function startBtnLabel() {
+  if (isUtahHome()) return "START · TEXT LUGO";
   if (pickedDay === 1) return "START · GET YOUR POUCH";
   const w = weekOfDay(pickedDay);
   return "START D" + pickedDay + " · " + dayDisplayName(pickedDay) + (w > 1 ? " · WEEK " + w : "");
 }
 
-let gateWeek = currentContractWeek();
+let gateWeek = weekOfDay(unlockedDays());
 
 function fillDayPicker() {
   const picker = $("day-picker");
@@ -12209,6 +14704,7 @@ function fillDayPicker() {
       if (pickedDay < lo || pickedDay > lo + 6) pickedDay = lo;
       fillDayPicker();
       refreshBestLine();
+      refreshTitleBoard();
       $("btn-start").textContent = startBtnLabel();
     });
     weekBar.appendChild(b);
@@ -12237,6 +14733,7 @@ function fillDayPicker() {
         } catch (_) {}
         fillDayPicker();
         refreshBestLine();
+      refreshTitleBoard();
         $("btn-start").textContent = startBtnLabel();
       });
     } else {
@@ -12248,15 +14745,12 @@ function fillDayPicker() {
 }
 
 function refreshBestLine() {
-  const who = getTraveler();
-  const best = loadBest(pickedDay, who);
-  const bl = $("title-best");
-  if (best) {
-    bl.innerHTML = `${travelerTag(who)} · DAY ${pickedDay} RECORD: <strong>${best.watts.toLocaleString()} PTS${best.time ? " · " + best.time : ""} · ${best.rank}</strong>`;
-    bl.classList.remove("hidden");
-  } else {
-    bl.classList.add("hidden");
-  }
+  const who = getTraveler(), best = loadBest(pickedDay, who), previous = loadLegacyBest(pickedDay, who);
+  const bl = $("title-best"), lines = [];
+  if (best) lines.push(`${travelerTag(who)} · DAY ${pickedDay} WORK RECORD: ${ptsNum(best.watts).toLocaleString()} PTS${best.time ? " · " + best.time : ""}`);
+  if (previous) lines.push(`PREVIOUS RECORD: ${ptsNum(previous.watts).toLocaleString()} PTS${previous.time ? " · " + previous.time : ""} · KEPT SEPARATELY`);
+  bl.textContent = lines.join("  |  ");
+  bl.classList.toggle("hidden", !lines.length);
 }
 
 function refreshTitle() {
@@ -12328,7 +14822,7 @@ function renderTitleTop5(el, rows) {
   if (!people.length) {
     const d = document.createElement("div");
     d.className = "board-note";
-    d.textContent = "Board's empty. First loop landed takes the top slot.";
+    d.textContent = `No work scores for WEEK ${gateWeek} yet. Previous weeks remain on the work board.`;
     el.appendChild(d);
     return;
   }
@@ -12377,9 +14871,11 @@ async function refreshTitleBoard() {
   if (!el) return;
   try {
     const rows = await fetchBoard(true);
-    const cw = currentContractWeek();
+    const cw = gateWeek;
+    const label = document.querySelector('.title-board-label');
+    if (label) label.textContent = `TOP 5 · WEEK ${cw} · WORK BOARD${PREVIEW_MODE ? " · ON THIS DEVICE" : ""}`;
     const weeked = rows.map((r) => weekBestOf(r, cw)).filter((r) => r && ((r.pts || 0) > 0 || (r.rank && r.rank !== "ON SITE")));
-    renderTitleTop5(el, weeked.length ? crewSlots(weeked) : rows);
+    renderTitleTop5(el, crewSlots(weeked));
   } catch (_) {
     el.textContent = "";
     const d = document.createElement("div");
@@ -12390,7 +14886,7 @@ async function refreshTitleBoard() {
 }
 
 function hideOverlays() {
-  for (const id of ["panel-game", "facp-game", "mag-game", "trouble-game", "pull-game", "board-screen", "store-screen", "shop-screen", "pause-screen", "print-view", "chat-dock"]) {
+  for (const id of ["panel-game", "facp-game", "mag-game", "trouble-game", "pull-game", "board-screen", "store-screen", "shop-screen", "pause-screen", "print-view", "chat-dock", "imsg", "bank"]) {
     $(id)?.classList.add("hidden");
   }
 }
@@ -12405,9 +14901,11 @@ function hidePlayChrome() {
 
 function showPlayUI() {
   document.body.classList.remove("gate");
+  document.body.classList.toggle("bed-day", isUtahHome());
   $("title-screen").classList.add("hidden");
   disposeTitlePreview();
   $("end-screen").classList.add("hidden");
+  hideUtahSting();
   hideOverlays();
   $("hud").classList.remove("hidden");
   if (isCoarse()) $("touch").classList.remove("hidden");
@@ -12431,7 +14929,6 @@ function teachTouch() {
 }
 
 let starting = false;
-let lastStartAt = 0;
 let introTimer = 0;
 
 function gateError(msg, el) {
@@ -12452,10 +14949,6 @@ function clearGateError() {
 
 async function startShift(resume, wantDay = 1) {
   if (starting) return; // double-tap during the async build must not re-enter
-  // the gate button has two click listeners (game.js + index.html shim); the
-  // second fires after the sync path has already finished, so guard by time too
-  if (Date.now() - lastStartAt < 600) return;
-  lastStartAt = Date.now();
   if (!commitHand(true)) {
     gateError("NAME GOES ON THE SLIP", $("gate-name"));
     return;
@@ -12488,9 +14981,27 @@ async function startShift(resume, wantDay = 1) {
   $("btn-start").disabled = true;
   $("btn-resume-save").disabled = true;
   $("btn-start").textContent = "STARTING SHIFT…";
+  try {
+    await Promise.all([loadUtahCharacter(),loadCrewCharacters({lugo:true,drew:true}),loadMooseAssets()]);
+    rebuildStatus.character = 'ready';
+    rebuildPlayerBody();
+  } catch(error) {
+    rebuildStatus.character = 'failed';
+    console.error('[LW] Utah model unavailable',error);
+  }
   if (!state.built) {
     try {
       await buildWorld();
+      parkedVehicles = createParkedVehicleFleet({THREE,scene,placements:parkedVehiclePlacements,
+        nearDistance:isCoarse()?22:28,farDistance:isCoarse()?115:155,maxNearVehicles:isCoarse()?6:10});
+      parkedVehicles.update(player.position,true);
+      cabinetInstances = createCabinetInstances({THREE, scene, industrial, placements:cabinetPlacements});
+      cabinetInstances.update(player.position, true);
+      landscape = await createLandscape({THREE,scene,trees:treePlacements,shoreZ:CB.z1});
+      landscape.update(player.position,true);
+      environment = await upgradeEnvironment({ THREE, scene, renderer, mats, dayLights });
+      rebuildStatus.materials = environment.status;
+      projectWorldUVs(THREE, scene, environment.physicalMaterials);
       const stat = mergeStaticWorld();
       console.info("[LW] static merge:", stat);
     } catch (err) {
@@ -12512,14 +15023,41 @@ async function startShift(resume, wantDay = 1) {
     state.seed = (Math.random() * 1e9) | 0;
   }
   softReset(); // builds the day's item list (seeded) and resets the world
+  if (isUtahHome()) save = null;
   if (save && (save.n !== state.interactables.length || (save.doneIdx || []).some((i) => i >= state.interactables.length))) {
     save = null; // layout drift — a stale save must not corrupt a fresh world
   }
   showPlayUI();
   if (save) applyCheckpoint(save);
+  try {
+    if (physics) physics.reset({ spawn: player.position });
+    else physics = await createJobsitePhysics({ colliders: state.colliders, ramps: state.ramps,
+      spawn: player.position, jumpSpeed: 4.3,
+      groundBounds: { continuousPlane: true, minx: -232, maxx: 168, minz: -30, maxz: CB.z1 + 70 } });
+    if (!patrolVehiclePhysics && state.forklift) patrolVehiclePhysics=createTelehandlerPhysics({physics,mesh:state.forklift.mesh});
+    patrolVehiclePhysics?.sync({teleport:true});
+    if (!physicalProps) {
+      const spots = [];
+      // Find clear gravel positions near the gate, away from existing tasks and wall proxies.
+      for (const [x,z] of [[-31.6,43],[-39.4,44.1],[-30.1,46.2],[-38,39],[-42,40],[-32,38],[-40,48],[-46,38],[-46,44]]) {
+        const blocked = state.colliders.some(b => b.y < 2 && x > b.minx-1.1 && x < b.maxx+1.1 && z > b.minz-1.1 && z < b.maxz+1.1);
+        const task = state.interactables.some(i => Math.hypot(i.x-x,i.z-z)<2.1);
+        if(!blocked&&!task)spots.push({x,y:.02,z});
+      }
+      physicalProps = createPhysicalProps({ THREE, scene, physics, positions: {
+        reel: spots[0] || false, stand: spots[1] || false,
+        cases: spots[2] ? [spots[2],{...spots[2],y:.55}] : false,
+      }});
+    }
+    rebuildStatus.physics = 'Rapier 0.17.3 · 60 Hz';
+  } catch (error) {
+    rebuildStatus.physics = 'failed';
+    console.error('[LW] Physics unavailable', error);
+    toast('PHYSICS FAILED TO LOAD — BASIC MOVEMENT ACTIVE', true);
+  }
   state.mode = "play";
-  startSiteRadio();
-  setDrone(settings.sfx);
+  if (!isUtahHome()) startSiteRadio();
+  setDrone(isUtahHome() ? false : settings.sfx);
   netBeat();
   pullPresence();
   track("shift_start", { resume: save ? "yes" : "no", touch: isCoarse() ? "yes" : "no" });
@@ -12531,6 +15069,12 @@ async function startShift(resume, wantDay = 1) {
       "Back on it, Utah. Loop's where you left it.",
       "Back on it, Tremont. Work's where you left it."
     );
+  } else if (isUtahHome()) {
+    const lines = dayStartLines(day);
+    radio(lines[0]);
+    setTimeout(() => {
+      if (state.mode === "play" && !state.done.textlugo) openUtahText();
+    }, 700);
   } else {
     const lines = dayStartLines(day);
     radio(lines[0]);
@@ -12538,7 +15082,7 @@ async function startShift(resume, wantDay = 1) {
     introTimer = setTimeout(() => {
       if (state.mode === "play" && lines[1]) radio(lines[1]);
     }, openerBaked ? 12000 : 5400); // the neural openers run 9-14s — don't chop them
-    if (cycleDay(day) === 1) teachTouch();
+    if (cycleDay(day) === 1 && !isUtahHome()) teachTouch();
   }
   starting = false;
   $("btn-start").disabled = false;
@@ -12575,8 +15119,8 @@ function applyTravelerUI() {
   if (blurb) {
     blurb.innerHTML =
       t === "tremont"
-        ? "Tremont, Book 2 traveler — 237's call at Lake Mariner. His foreman is <strong>Lemon</strong>. Seven days on the power: lighting, feeders, EMT, gear, then energize. Drag it and Drew comes off the trailer with a slip."
-        : "Utah, Book 2 traveler, O'Connell Electric — 237's call at Lake Mariner. Seven days on the fire alarm: rough-in, trim, the AHJ walk, a night shift on the genny, the big pull, Drew's punch list, and energize day. Drag any of it and Drew comes off the trailer with a slip.";
+        ? "Tremont is a traveling wireman on an O'Connell call through Local 237. Check in with <strong>Lemon</strong> for the power work at Lake Mariner: lighting, feeders, EMT, gear, and energization. Seven shifts. Keep the work moving and stay ahead of Drew."
+        : "Utah is a traveling wireman on an O'Connell call through Local 237. Check in with <strong>Lugo</strong>, grab your pouch, and get the fire alarm ready: conduit, boxes, devices, testing, and turnover. Seven shifts. Make your time count.";
   }
   try {
     rebuildPlayerBody();
@@ -12592,18 +15136,7 @@ function applyTravelerUI() {
 }
 document.querySelectorAll(".trav-btn").forEach((b) => {
   b.addEventListener("click", () => {
-    const before = getTraveler();
     setTraveler(b.dataset.traveler);
-    if (state.built && getTraveler() !== before) {
-      // the merged world is traveler-specific (VESDAs, FA devices, conduit);
-      // it can't be un-baked, so a swap after building needs a fresh page —
-      // otherwise Utah's Day 1/8 VESDA jobs are unwinnable in a Tremont world
-      toast("SWAPPING TRAVELERS — RESETTING THE HALL");
-      setTimeout(() => {
-        try { location.reload(); } catch (_) {}
-      }, 400);
-      return;
-    }
     try {
       applyTravelerUI();
     } catch (err) {
@@ -12614,6 +15147,14 @@ document.querySelectorAll(".trav-btn").forEach((b) => {
   });
 });
 
+$("imsg-send")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  sendUtahText();
+});
+$("bank-ok")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  confirmUtahBank();
+});
 $("btn-start").onclick = () => startShift(false, pickedDay);
 $("btn-resume-save").onclick = () => startShift(true, Number($("btn-resume-save").dataset.day) || pickedDay);
 $("btn-next-day").onclick = () => startShift(false, Math.min(LAST_DAY, day + 1));
@@ -12644,6 +15185,7 @@ function winRec(name, local, rank) {
     name,
     local,
     pts: ptsNum(state.watts),
+    scoreVersion: state.scoreVersion || 1,
     seconds: Math.round(Math.max(0, shiftLen - state.time + state.overtime)),
     rank: rank || rankName(),
     day,
@@ -12668,6 +15210,7 @@ function registerWalkOn(wantDay) {
     pts: 0,
     seconds: 0,
     rank: "ON SITE",
+    scoreVersion: SCORE_VERSION,
     day: wantDay || day || 1,
     level: wantDay || day || 1,
     who: getTraveler(),
@@ -12719,13 +15262,7 @@ async function autoPostWin(posted) {
     down: result.down ? "yes" : "no",
   });
   if (!result.down) $("post-score").classList.add("hidden");
-  toast(
-    result.down
-      ? "GATE MISSED THE POST — TAP POST IT"
-      : result.kept
-        ? "BOARD ALREADY HAS YOUR BEST"
-        : "POSTED TO THE CLOUD BOARD"
-  );
+  toast(scoreSaveMessage(result), !!result.down);
   await paintMiniBoard();
 }
 
@@ -12745,20 +15282,14 @@ $("btn-post").addEventListener("click", async () => {
     ? { ...lastWinRec, name, local }
     : winRec(name, local);
   const result = await postScore(rec);
-  scorePosted = true;
+  scorePosted = !result.down;
   try {
     durableSet("lw_name", name);
     durableSet("lw_local", local);
   } catch (_) {}
   track("board_post", { pts: state.watts, local, who: getTraveler(), kept: result.kept ? "yes" : "no", down: result.down ? "yes" : "no" });
   $("post-score").classList.add("hidden");
-  toast(
-    result.down
-      ? "ON THIS BOX — GATE'S JAMMED, WILL POST WHEN IT CLEARS"
-      : result.kept
-        ? "BOARD ALREADY HAS YOUR BEST"
-        : "POSTED TO THE BOARD"
-  );
+  toast(scoreSaveMessage(result), !!result.down);
   await paintMiniBoard();
   if (result.down) {
     btn.disabled = false;
@@ -12769,8 +15300,8 @@ $("btn-post").addEventListener("click", async () => {
 });
 
 let boardRows = [];
-let boardFilter = 0; // 0 = all days
-let boardWho = 0; // 0 = all travelers
+let boardFilter = 1; // compare one shift; 0 is the optional overview
+let boardWho = getTraveler(); // matching work pack by default
 let boardWeek = currentContractWeek(); // 0 = career (all weeks)
 
 function weekBestOf(r, w) {
@@ -12803,7 +15334,10 @@ function weekBestOf(r, w) {
 function renderBoardFiltered() {
   let rows = boardRows;
   if (boardWho) rows = rows.filter((r) => (r.who || "utah") === boardWho);
-  if (boardWeek) {
+  if (boardFilter) {
+    rows = rows.map((r) => sameShiftRow(r, boardFilter)).filter(Boolean);
+    rows.sort((a, b) => b.pts - a.pts || (a.seconds || 9e9) - (b.seconds || 9e9));
+  } else if (boardWeek) {
     rows = rows.map((r) => weekBestOf(r, boardWeek)).filter(Boolean);
     rows.sort((a, b) => (b.pts || 0) - (a.pts || 0) || (a.seconds || 9e9) - (b.seconds || 9e9));
   }
@@ -12813,7 +15347,7 @@ function renderBoardFiltered() {
     const names = new Set(rows.map((r) => String(r.name || "").toUpperCase()).filter(Boolean));
     const foot = document.createElement("div");
     foot.className = "board-note";
-    const wk = boardWeek ? "WEEK " + boardWeek + " · " + weekRangeLabel(boardWeek) : "CAREER · ALL WEEKS";
+    const wk = boardFilter ? `DAY ${boardFilter} · SAME SHIFT` : boardWeek ? "WEEK " + boardWeek + " · OVERVIEW" : "CAREER · OVERVIEW";
     foot.textContent = rows.length + " ROWS · " + names.size + " HANDS · " + wk;
     el.appendChild(foot);
   }
@@ -12822,6 +15356,20 @@ function renderBoardFiltered() {
 (() => {
   const whoTabs = $("board-who-tabs") || document.querySelector(".board-tabs");
   const dayTabs = $("board-day-tabs");
+  if (dayTabs) {
+    const label = document.createElement('label');
+    label.textContent = 'Compare shift: ';
+    const select = document.createElement('select'); select.id = 'board-shift-filter';
+    select.className = 'set-btn';
+    for (let d=0;d<=LAST_DAY;d++) {
+      const option=document.createElement('option'); option.value=String(d);
+      option.textContent=d ? `DAY ${d} · ${dayDisplayName(d)}` : 'ALL SHIFTS · OVERVIEW';
+      select.appendChild(option);
+    }
+    select.value=String(boardFilter);
+    select.onchange=()=>{boardFilter=Number(select.value)||0;renderBoardFiltered();};
+    label.appendChild(select);dayTabs.parentNode.insertBefore(label,dayTabs);
+  }
   if (whoTabs) {
     whoTabs.textContent = "";
     const whoDefs = [
@@ -12832,7 +15380,7 @@ function renderBoardFiltered() {
     for (const [label, v] of whoDefs) {
       const b = document.createElement("button");
       b.type = "button";
-      b.className = "set-btn" + (v === 0 ? " on" : "");
+      b.className = "set-btn" + (v === boardWho ? " on" : "");
       b.textContent = label;
       b.addEventListener("click", () => {
         boardWho = v;
@@ -12855,6 +15403,9 @@ function renderBoardFiltered() {
       b.textContent = label;
       b.addEventListener("click", () => {
         boardWeek = v;
+        boardFilter = 0; // a week/career tab explicitly chooses the overview
+        const shiftSelect = $("board-shift-filter");
+        if (shiftSelect) shiftSelect.value = "0";
         [...dayTabs.children].forEach((el, i) => el.classList.toggle("on", defs[i][1] === v));
         renderBoardFiltered();
       });
@@ -12919,6 +15470,7 @@ function shopFileExt(f) {
 }
 
 async function uploadShopBlob(path, blob, mime, meta) {
+  if (PREVIEW_MODE) throw new Error('Uploads are unavailable in this review build.');
   const url =
     "https://storage.googleapis.com/upload/storage/v1/b/" +
     SHOP_BUCKET +
@@ -13077,11 +15629,8 @@ function parseShopDoc(doc) {
   const text = ticketBody(String(fsVal(f.text) || "")).trim();
   if (!text) return null;
   const created = fsVal(f.ts) || (doc.createTime && Date.parse(doc.createTime)) || 0;
-  // new = untouched · wip = on the bench · done = shipped · passed = declined w/ note
-  const rawStatus = String(fsVal(f.status) || "new").toLowerCase();
-  const status = ["done", "wip", "passed"].includes(rawStatus) ? rawStatus : "new";
+  const status = String(fsVal(f.status) || "new").toLowerCase() === "done" ? "done" : "new";
   return {
-    note: String(fsVal(f.note) || "").slice(0, 300),
     id: String(doc.name || "").split("/").pop() || "",
     text: text.slice(0, 500),
     name: String(fsVal(f.name) || "ANON").slice(0, 20),
@@ -13097,6 +15646,10 @@ function parseShopDoc(doc) {
 }
 
 async function fetchShopTickets() {
+  if (PREVIEW_MODE) {
+    try { shopCache = await previewFeedback.list(); return shopCache; }
+    catch (_) { return shopCache.slice(); }
+  }
   try {
     let docs = [];
     try { docs = await fsList("tickets", 80); } catch (_) { docs = []; }
@@ -13135,20 +15688,18 @@ function renderShopList(rows) {
     el.appendChild(d);
     return;
   }
-  const open = rows.filter((r) => r.status === "new" || r.status === "wip");
-  const done = rows.filter((r) => r.status === "done" || r.status === "passed");
+  const open = rows.filter((r) => r.status !== "done");
+  const done = rows.filter((r) => r.status === "done");
   const seen = shopSeenAt();
 
   function addCard(r) {
     const card = document.createElement("div");
-    const isNew = (r.status === "new" || r.status === "wip") && (r.createdAt || 0) > seen;
-    card.className = "shop-ticket" + (r.status === "done" || r.status === "passed" ? " done" : "") + (isNew ? " new" : "");
+    const isNew = r.status !== "done" && (r.createdAt || 0) > seen;
+    card.className = "shop-ticket" + (r.status === "done" ? " done" : "") + (isNew ? " new" : "");
     const meta = document.createElement("div");
     meta.className = "st-meta";
-    const tag =
-      r.status === "done" ? "ADDED · " : r.status === "wip" ? "ON THE BENCH · " : r.status === "passed" ? "PASSED · " : "";
     meta.textContent =
-      tag +
+      (r.status === "done" ? "ADDED · " : "") +
       (r.name || "ANON") +
       " · " +
       (r.who === "tremont" ? "TREMONT" : "UTAH") +
@@ -13157,12 +15708,6 @@ function renderShopList(rows) {
     body.className = "st-text";
     body.textContent = (r.status === "done" ? "✓ " : "") + r.text;
     card.append(meta, body);
-    if (r.note) {
-      const note = document.createElement("div");
-      note.className = "st-note";
-      note.textContent = "BENCH: " + r.note;
-      card.appendChild(note);
-    }
     if (r.photoN || r.clipN || (r.photoUrls && r.photoUrls.length)) {
       const att = document.createElement("div");
       att.className = "st-att";
@@ -13223,7 +15768,7 @@ function paintShopBadge(rows) {
   const btn = $("btn-shop");
   if (!btn) return;
   const seen = shopSeenAt();
-  const n = (rows || []).filter((r) => (r.status === "new" || r.status === "wip") && (r.createdAt || 0) > seen).length;
+  const n = (rows || []).filter((r) => r.status !== "done" && (r.createdAt || 0) > seen).length;
   btn.classList.toggle("has-new", n > 0);
   let main = btn.querySelector(".shop-main");
   let sub = btn.querySelector(".shop-sub");
@@ -13270,6 +15815,13 @@ async function postShopTicket(text, name) {
       return { ok: false, err: "Be more specific — name them, say where they stand, and what they say. “Add a guy” isn’t enough." };
     }
   }
+  if (PREVIEW_MODE) {
+    try {
+      const row = await previewFeedback.add({text:body,name:hand || 'ANON',who:getTraveler(),build:BUILD_VERSION,photos,clips});
+      shopPending = {photos:[],clips:[]};paintShopPending();shopMarkSent();
+      return {ok:true,local:true,id:row.id,body,name:row.name,photoN:photos.length,clipN:clips.length};
+    } catch (error) { return {ok:false,err:error.message || 'Could not save the request on this device.'}; }
+  }
   const slug = shopOwnerSlug(hand || "ANON");
   const pack = slug + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const photoUrls = [];
@@ -13287,7 +15839,7 @@ async function postShopTicket(text, name) {
       clipUrls.push(await uploadShopBlob(path, f.blob, f.mime || "audio/mpeg", meta));
     }
   } catch (_) {
-    /* Storage miss — ticket still lands; files go on the ticket as Firestore docs */
+    return {ok:false,err:'A file did not upload. Your request and selected files are still here; try again.'};
   }
   try {
     if (photoUrls.length || clipUrls.length) {
@@ -13324,7 +15876,7 @@ async function postShopTicket(text, name) {
     try {
       doc = await fsPost("tickets", fields);
     } catch (e) {
-      if (e && (e.status === 403 || /403/.test(String(e.message || "")))) {
+      if (!photos.length && !clips.length && e && (e.status === 403 || /403/.test(String(e.message || "")))) {
         doc = await fsPost("tickets", core);
       } else {
         throw e;
@@ -13417,12 +15969,13 @@ $("shop-send")?.addEventListener("click", async (e) => {
   if (res.ok) {
     if (st) {
       st.classList.remove("err");
-      st.textContent =
-        "On the bench under " +
+      st.textContent = res.local
+        ? 'Saved on this device under ' + (res.name || 'ANON') + '. The request and files stay in this browser; they have not been sent to the live game.'
+        : "On the bench under " +
         (res.name || "ANON") +
         ". Files stay on this request only — they will not get reused on someone else’s add.";
     }
-    toast("REQUEST SENT");
+    toast(res.local ? "REQUEST SAVED ON THIS DEVICE" : "REQUEST SENT");
     if ($("shop-text")) $("shop-text").value = "";
     shopCache.unshift({
       id: "local",
@@ -13595,7 +16148,26 @@ window.__controlsTest = {
 };
 window.LW = {
   state, player, cam, renderer, scene, camera, keys, mag, pull, dayState, siteRadio: SITE_RADIO,
+  get parkedVehicles() { return parkedVehicles; },
+  mobile: {
+    quality: () => renderBudget.inspect(), isTouch: isCoarse,
+    input: () => ({stick:{...stick},look:{...look},holdSprint,jumpPending:!!jumpHoldTimer,liftUp:dayState.liftUp,liftDn:dayState.liftDn}),
+    lifecycle: () => ({...mobileLifecycle}), post: () => ({samples:lookPass?.sceneRT.samples,type:lookPass?.sceneRT.texture.type,bloomWidth:lookPass?.bloomA.width}),
+    setTouch(value) { if(new URLSearchParams(location.search).get('qa')!=='1')throw new Error('Touch override requires qa=1'); window.__LW_QA_TOUCH__=Boolean(value);applySize();mobileLayout.refresh(); },
+    resetInput:resetTransientInput, suspend:suspendMobileSession, resume:resumeMobileSession,
+    resize:applySize, render:() => renderLook(clock.elapsedTime), pause:pauseGame, resumePlay:resumeGame,
+  },
+  rebuildStatus, getPhysics: () => physics, get physics() { return physics; }, get physicalProps() { return physicalProps; },
+  get patrolVehiclePhysics() { return patrolVehiclePhysics; }, get body() { return body; }, jump, manualStep: false,
+  makeUtahCharacter, disposeCharacter, mountUtv, applyNightPower,
+  gameplay: {version:SCORE_VERSION,completeTick,win,fail,addWatts,addSidePoints,rankName,
+    syncGhosts,animateGhosts,clearGhosts,presenceFields,parsePresence,
+    previewRequests:()=>previewFeedback.exportMetadata()},
+  get dayLights() { return dayLights; }, get nightRig() { return nightRig; },
+  get staticWorld() { return staticBatchController; },
+  deviceMounts:()=>deviceMounts.map(({mesh,mount})=>({name:mesh.name,position:mesh.position.toArray(),axis:mount.axis,plane:mount.wall.plane,along:mount.at,solid:[mount.wall.lo,mount.wall.hi],supported:auditWallMount(mount)})),
   net, CB, zoneName, SPAWN,
+  dialogueStatus:()=>dialogue.inspect(),
   startShift,
   applyTravelerUI,
   setTraveler,
@@ -13608,20 +16180,32 @@ window.LW = {
   getDay: () => day,
   joePos: () => (state.joe ? [state.joe.mesh.position.x, state.joe.mesh.position.z] : null),
   softReset, saveCheckpoint, applyCheckpoint, tryInteract, openFacp, openPanel, openTrouble, showPrint,
-  debugStep: (dt) => {
+  debugStep: (dt, { hazards = true } = {}) => {
+    dialogue.tick();
     if (state.mode === "play") {
       updatePlayer(dt);
+      physicalProps?.update();
+      body.userData.animate?.(dt,{moving:grounded && Math.hypot(pvel.x,pvel.z)>.2 && !dayState.driving && !dayState.utv,speed:Math.hypot(pvel.x,pvel.z),working:!!dayState.driving&&!dayState.utv,seated:!!dayState.utv});
       updateInteract();
       updateClock(dt);
     }
     if (state.mode === "mag") updateMag(dt);
     if (state.mode === "pull") updatePull(dt);
     if (state.mode === "play" || state.mode === "end") {
-      updateHazards(dt, clock.elapsedTime + (LW._t = (LW._t || 0) + dt));
+      if (hazards) updateHazards(dt, clock.elapsedTime + (LW._t = (LW._t || 0) + dt));
       updateCamera(dt);
+      updateSunShadow();
+      updateSiteLook();
+      environment?.update({ position: player.position, night: cycleDay(day) === 4,
+        inside: player.position.z > CB.z0 && player.position.z < CB.z1 && player.position.x > CB.west && player.position.x < CB.east });
     }
   },
 };
+loadUtahCharacter().then(()=>{
+  rebuildStatus.character='ready';
+  rebuildPlayerBody();
+  if(state.mode==='title')refreshTitlePreview();
+}).catch(error=>{rebuildStatus.character='failed';console.error('[LW] Utah asset',error);});
 loop();
 
 try {
@@ -13633,4 +16217,3 @@ try {
 } catch (_) {}
 
 export const LIVE_WIRE = true;
-

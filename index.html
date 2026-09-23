@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="connect-src 'self' blob: data: https:; object-src 'none'; base-uri 'self'" />
+  <script src="qa/network-audit.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, shrink-to-fit=no" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -13,7 +15,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=126" />
+  <link rel="stylesheet" href="style.css?v=rebuild-04" />
+  <link rel="stylesheet" href="rebuild.css?v=rebuild-04" />
+  <link rel="stylesheet" href="mobile.css?v=rebuild-04" />
   <link rel="icon" href="assets/icon_192.png" />
   <link rel="apple-touch-icon" href="assets/icon_192.png" />
   <script type="importmap">
@@ -27,17 +31,7 @@
   <link rel="modulepreload" href="vendor/three.module.min.js" />
   <link rel="modulepreload" href="vendor/BufferGeometryUtils.js" />
   <link rel="modulepreload" href="props.js" />
-  <link rel="modulepreload" href="game.js?v=126" />
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    // count real players only — local dev stays out of the numbers
-    if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
-      gtag("js", new Date());
-      gtag("config", "G-SBYKE4M35L");
-    }
-  </script>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SBYKE4M35L"></script>
+  <link rel="modulepreload" href="game.js?v=rebuild-04" />
 </head>
 <body class="gate">
   <canvas id="c"></canvas>
@@ -51,15 +45,14 @@
     <img id="title-utah" src="assets/utah_title.jpg" alt="Utah" />
     <div class="title-shade"></div>
     <div class="title-card">
-      <p class="eyebrow">IBEW Book 2 · O'Connell Electric · Barker, NY</p>
+      <p class="eyebrow">IBEW travelers · O'Connell Electric · Barker, NY</p>
+      <p class="release-note">THE JOBSITE UPDATE</p>
       <h1>LIVE WIRE</h1>
       <p class="sub">Lake Mariner · Fire Alarm</p>
       <p class="blurb">
-        This is the gate — not the hall yet. Pick Utah or Tremont, pick a day, put your name on the slip,
-        then hit <strong>START</strong> to walk on.
-        Seven shifts on the fire alarm at Lake Mariner, then a new week every Monday.
-        Week 2 is loop extend through turnover — not last week's list with a new hat.
-        Drag it and Drew writes a slip.
+        Pick your traveler and shift, sign the slip, and walk on.
+        New crew details, upgraded equipment, and a fresh work-point season.
+        Seven shifts. A new work week every Monday.
       </p>
       <p class="best-line hidden" id="title-best"></p>
       <p class="site-pulse" id="site-pulse">Loading the hall…</p>
@@ -81,25 +74,26 @@
         <button type="button" class="day-chip" data-day="7">D7</button>
       </div>
       <div class="gate-row">
-        <input id="gate-name" name="lw-hand" maxlength="20" placeholder="YOUR NAME" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" enterkeyhint="next" data-lpignore="true" data-1p-ignore="true" readonly />
-        <input id="gate-local" name="lw-local" maxlength="8" placeholder="LOCAL #" autocomplete="off" inputmode="numeric" enterkeyhint="done" data-lpignore="true" data-1p-ignore="true" readonly />
+        <input id="gate-name" name="lw-hand" maxlength="20" placeholder="YOUR NAME" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" enterkeyhint="next" data-lpignore="true" data-1p-ignore="true" />
+        <input id="gate-local" name="lw-local" maxlength="8" placeholder="LOCAL #" autocomplete="off" inputmode="numeric" enterkeyhint="done" data-lpignore="true" data-1p-ignore="true" />
       </div>
-      <p class="gate-hint">Name on the slip (required). Then START — or tap <strong>ADD TO THE GAME</strong> to request a person, voice, jump, or fix. Be specific. Attachments stay on your request only.</p>
+      <p class="gate-hint">Put your name on the slip and start your shift. Work scores and game requests connect to the site.</p>
+      <p id="build-version" style="font:11px system-ui;color:#c6d6ae">REBUILD · SEPTEMBER 5</p>
       <p id="gate-err" class="gate-err hidden"></p>
       <div class="title-btns">
         <button id="btn-start" type="button" class="btn-start-main">START · GET YOUR POUCH</button>
+        <button id="btn-resume-save" type="button" class="hidden">BACK ON THE HALL</button>
+        <button id="btn-board" type="button" class="btn-quiet">WORK BOARD</button>
+        <button id="btn-chat" type="button" class="btn-quiet">CH. 7</button>
+        <button id="btn-store" type="button" class="btn-quiet">GANG BOX</button>
         <button id="btn-shop" type="button" class="btn-shop">
           <span class="shop-main">ADD TO THE GAME</span>
           <span class="shop-sub">Request a feature · jump · NPC · voice · bug</span>
         </button>
-        <button id="btn-resume-save" type="button" class="hidden">BACK ON THE HALL</button>
-        <button id="btn-board" type="button" class="btn-quiet">SITE BOARD</button>
-        <button id="btn-chat" type="button" class="btn-quiet">CH. 7</button>
-        <button id="btn-store" type="button" class="btn-quiet">GANG BOX</button>
-        <button id="btn-real-fund" type="button" class="btn-quiet hidden">SICK &amp; NEEDY · GIVE FOR REAL</button>
       </div>
       <div class="title-board-wrap">
-        <p class="title-board-label">TOP 5 · THIS WEEK · CLOUD</p>
+        <p class="title-board-label">TOP 5 · WORK BOARD</p>
+        <p class="board-note">New work-point season · previous records and unlocked shifts are kept.</p>
         <div id="title-board" class="title-board">Pulling the board…</div>
       </div>
       <p class="controls-hint">
@@ -116,7 +110,7 @@
       <div class="who">
         <img id="portrait" src="assets/utah_portrait.jpg" alt="Utah" />
         <div>
-          <div class="who-name">UTAH · BOOK 2</div>
+          <div class="who-name">UTAH · FIRE ALARM</div>
           <div class="who-job" id="job-line">Pouch is in the crib</div>
           <div class="who-zone" id="zone-line">YARD</div>
         </div>
@@ -167,14 +161,44 @@
     </div>
   </div>
 
+  <div id="imsg" class="hidden">
+    <div class="imsg-card">
+      <div class="imsg-head">
+        <img src="assets/lugo_portrait.jpg" alt="Lugo" />
+        <div>
+          <strong>LUGO</strong>
+          <span>Foreman · CH. 3</span>
+        </div>
+      </div>
+      <div class="imsg-thread">
+        <p class="imsg-them">You coming in?</p>
+        <p class="imsg-me" id="imsg-draft">Staying home. Don't wait on me.</p>
+      </div>
+      <button id="imsg-send" type="button">SEND TO LUGO</button>
+    </div>
+  </div>
+
+  <div id="bank" class="hidden">
+    <div class="bank-card">
+      <div class="bank-head">UTAH · 2026</div>
+      <div class="bank-row"><span>YTD WAGES</span><strong>$184,200</strong></div>
+      <div class="bank-row"><span>YEAR GOAL</span><strong>$175,000</strong></div>
+      <div class="bank-hit">GOAL HIT · 105% · RED ASS</div>
+      <p class="bank-copy">You already made the year. The hall can wait. Stay in bed.</p>
+      <button id="bank-ok" type="button">I'M GOOD</button>
+    </div>
+  </div>
+
   <div id="touch" class="hidden">
     <div id="stick" class="idle">
       <div id="stick-base"><div id="stick-knob"></div></div>
     </div>
     <div id="btns">
-      <div id="lift-btns" class="hidden">
-        <button id="btn-lift-up" type="button" aria-label="Raise the scissor">▲</button>
-        <button id="btn-lift-dn" type="button" aria-label="Lower the scissor">▼</button>
+      <div id="lift-btns" class="hidden" role="group" aria-label="Scissor lift controls" aria-describedby="lift-help">
+        <output id="lift-height" aria-label="Platform height">PLATFORM · 3.3 FT</output>
+        <button id="btn-lift-up" type="button" aria-label="Hold to raise the scissor lift"><span aria-hidden="true">▲</span><small>RAISE</small></button>
+        <button id="btn-lift-dn" type="button" aria-label="Hold to lower the scissor lift"><span aria-hidden="true">▼</span><small>LOWER</small></button>
+        <span id="lift-help">Hold to move · release to stop</span>
       </div>
       <button id="btn-jump" type="button" aria-label="Jump — hold to hustle"></button>
       <button id="btn-act" type="button" aria-label="Work"></button>
@@ -245,9 +269,13 @@
         <button id="btn-resume" type="button">BACK ON THE HALL</button>
         <button id="btn-quit" type="button">QUIT TO GATE</button>
       </div>
-      <button id="btn-real-fund-pause" type="button" class="btn-quiet hidden" style="margin-top:10px">SICK &amp; NEEDY · GIVE FOR REAL</button>
-      <p id="real-fund-note-pause" class="chat-sub hidden" style="margin:6px 0 0"></p>
     </div>
+  </div>
+
+  <div id="utah-sting" class="hidden" aria-hidden="true">
+    <img id="utah-sting-img" src="assets/utah_tongue.jpg" alt="" />
+    <video id="utah-sting-vid" src="assets/utah_tongue.mp4" loop muted playsinline preload="auto"></video>
+    <p id="utah-sting-cap"></p>
   </div>
 
   <div id="end-screen" class="hidden">
@@ -264,8 +292,8 @@
       <p class="best-line" id="end-best"></p>
       <div id="post-score" class="hidden">
         <div class="post-row">
-          <input id="post-name" maxlength="20" placeholder="NAME" autocomplete="off" readonly />
-          <input id="post-local" maxlength="8" placeholder="LOCAL #" autocomplete="off" inputmode="numeric" readonly />
+          <input id="post-name" maxlength="20" placeholder="NAME" autocomplete="off" />
+          <input id="post-local" maxlength="8" placeholder="LOCAL #" autocomplete="off" inputmode="numeric" />
           <button id="btn-post" type="button">POST IT</button>
         </div>
         <p class="post-hint">One slot per name per traveler. Work PTS rank the board — walking the site counts. Faster time wins a tie. On-time pay goes to the gang box.</p>
@@ -336,8 +364,9 @@
 
   <div id="board-screen" class="hidden">
     <div class="sheet">
-      <h2>SITE BOARD</h2>
-      <p>Cloud only. CAREER is all-time best. WEEK tabs are that week's days only — Week 1 scores stay, Week 2 is a fresh race. Utah and Tremont each get a row.</p>
+      <h2>WORK BOARD</h2>
+      <p class="board-note">New work-point season. Previous records and unlocked shifts are kept.</p>
+      <p>Completed shifts across the site. CAREER is all-time best. WEEK tabs are that week's days only — Week 1 scores stay, Week 2 is a fresh race. Utah and Tremont each get a row.</p>
       <div id="board-who-tabs" class="board-tabs"></div>
       <div id="board-day-tabs" class="board-tabs board-tabs-days"></div>
       <div id="board-list" class="board-list">Pulling the board…</div>
@@ -352,7 +381,7 @@
       <p class="shop-lead">This is the request bench — not Channel 7. Spell out <strong>one</strong> change. It gets pulled about every hour and wired into the hall if it’s clear enough to build.</p>
       <ol class="shop-how">
         <li><strong>Your name</strong> tags the request. Photos and clips stay on <em>your</em> ticket only. Nobody else’s add-on reuses them.</li>
-        <li><strong>Be specific.</strong> Who, where, what they wear, what they say. “Add a guy” gets skipped. “Rico in data hall 2, red vest, says watch the tiles, use my photo” gets built.</li>
+        <li><strong>Be specific.</strong> Tell us their name, where they work, what they wear, and what they say. Attach the photos or voice clips you want us to use.</li>
         <li><strong>Attach only what this request needs</strong> — a face, a voice line, or a short sting. Two photos and two clips max. Not an album.</li>
       </ol>
       <p class="shop-can">You can ask for: a person on the site, a voice line, a jump / emote, an outfit, a prop, a music sting, a bug fix. One idea per send.</p>
@@ -365,7 +394,7 @@
         <input id="shop-name" maxlength="20" placeholder="YOUR NAME (required if you attach a file)" autocomplete="nickname" />
       </div>
       <label class="shop-label" for="shop-text">WHAT SHOULD WE ADD? · BE DESCRIPTIVE</label>
-      <textarea id="shop-text" maxlength="500" rows="5" placeholder="Example: Add Rico in data hall 2. Red vest, hard hat. He tells people to watch the tiles. Use my photo for his face and my voice clip for that line." enterkeyhint="enter" autocomplete="on" autocorrect="on" autocapitalize="sentences" spellcheck="true"></textarea>
+      <textarea id="shop-text" maxlength="500" rows="5" placeholder="Who or what would you like added? Include the location, clothing or equipment, and any dialogue. You can attach reference photos and audio below." enterkeyhint="enter" autocomplete="on" autocorrect="on" autocapitalize="sentences" spellcheck="true"></textarea>
       <p class="shop-att-hint">Attachments go with <strong>this</strong> request and your name only. They will not get pasted onto someone else’s add later.</p>
       <div class="shop-attach">
         <label class="shop-att-btn" for="shop-photos">PHOTO / FACE
@@ -397,7 +426,7 @@
       <div id="chat-roster" class="chat-roster"></div>
       <div id="chat-log" class="chat-log">Nobody on the group channel yet.</div>
       <div class="chat-row">
-        <input id="chat-handle" maxlength="20" placeholder="HANDLE" autocomplete="off" readonly />
+        <input id="chat-handle" maxlength="20" placeholder="HANDLE" autocomplete="off" />
         <input id="chat-text" maxlength="80" placeholder="TRANSMIT ON CH. 7" autocomplete="off" />
         <button id="chat-send" type="button">SEND</button>
       </div>
@@ -408,7 +437,7 @@
     </div>
   </div>
 
-  <script type="module" src="game.js?v=126"></script>
+  <script type="module" src="game.js?v=rebuild-04"></script>
   <script>
     (function () {
       const $ = (id) => document.getElementById(id);
@@ -490,9 +519,6 @@
         if (!b || b.disabled) return;
         const d = Number(b.getAttribute("data-day")) || 1;
         window.__lwPicked = d;
-        // game.js rebuilds the chips and owns the highlight + START label once loaded;
-        // this shim only paints them when the hall script isn't up yet
-        if (window.LW && typeof window.LW.getPickedDay === "function") return;
         $("day-picker").querySelectorAll(".day-chip").forEach((c) => c.classList.toggle("on", c === b));
         const start = $("btn-start");
         if (start && d > 1) start.textContent = "DAY " + d;
@@ -564,20 +590,8 @@
         const el = $("site-pulse");
         if (el) el.textContent = "No hall radio — close and reopen.";
       }, 8000);
-      if ("serviceWorker" in navigator && /(web\.app|firebaseapp\.com)$/.test(location.hostname)) {
-        addEventListener("load", () => {
-          navigator.serviceWorker.getRegistrations().then((regs) => {
-            regs.forEach((r) => r.update());
-          }).catch(() => {});
-          navigator.serviceWorker.register("sw.js?v=126").then((reg) => reg.update()).catch(() => {});
-          navigator.serviceWorker.addEventListener("controllerchange", () => {
-            if (sessionStorage.getItem("lw_sw79")) return;
-            sessionStorage.setItem("lw_sw79", "1");
-            location.reload();
-          });
-        });
-      }
     })();
   </script>
+  <script type="module" src="modules/app-updates.js"></script>
 </body>
 </html>

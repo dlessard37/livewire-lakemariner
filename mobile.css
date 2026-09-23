@@ -1,0 +1,79 @@
+/* Touch UI uses actual input capability, including iPad with a connected mouse.
+   The qa=1 runner may explicitly force this mode without spoofing a real device. */
+html[data-touch="true"] #stick { width:112px;height:112px;left:calc(12px + var(--safel));bottom:calc(20px + var(--safeb)); }
+html[data-touch="true"] #stick-base { width:112px;height:112px; }
+html[data-touch="true"] #stick-knob { width:48px;height:48px;left:32px;top:32px; }
+html[data-touch="true"] #btns { right:calc(12px + var(--safer));bottom:calc(24px + var(--safeb));gap:8px; }
+html[data-touch="true"] #btn-jump { width:64px;height:64px;min-width:64px;flex:none; }
+html[data-touch="true"] #btn-act { width:76px;height:76px;min-width:76px;flex:none; }
+html[data-touch="true"] #lift-btns { position:absolute;right:0;bottom:calc(100% + 12px);flex-direction:row;gap:8px; }
+html[data-touch="true"] #lift-btns button { width:56px;height:56px;min-width:56px; }
+html[data-touch="true"] #touch.swap #stick { left:auto;right:calc(12px + var(--safer)); }
+html[data-touch="true"] #touch.swap #btns { right:auto;left:calc(12px + var(--safel)); }
+html[data-touch="true"] #touch.swap #lift-btns { right:auto;left:0; }
+html[data-touch="true"] #stick.floating { bottom:auto;right:auto; }
+html[data-touch="true"] #touch.swap #stick.floating { right:auto; }
+html[data-touch="true"] .hud-top { gap:6px;display:grid;grid-template-columns:minmax(0,1fr);padding:calc(8px + var(--safe)) calc(12px + var(--safer)) 0 calc(12px + var(--safel)); }
+html[data-touch="true"] .who { max-width:100%;min-width:0;padding:4px 7px;gap:7px; }
+html[data-touch="true"] .who > div { min-width:0; }
+html[data-touch="true"] .who img { width:34px;height:34px;flex:none; }
+html[data-touch="true"] .who-name { font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+html[data-touch="true"] .who-job { display:none; }
+html[data-touch="true"] .who-zone { font-size:10px; }
+html[data-touch="true"] .meters { min-width:0;flex-wrap:wrap;gap:4px;align-items:stretch; }
+html[data-touch="true"] .meter { min-width:48px;padding:4px 6px;min-height:44px; }
+html[data-touch="true"] .meter strong { font-size:18px; }
+html[data-touch="true"] .meters .m-pts,html[data-touch="true"] #site-wrap { display:none; }
+html[data-touch="true"] .meter.genny { min-width:64px; }
+html[data-touch="true"] .gen-bar { width:50px; }
+html[data-touch="true"] #hud button { min-height:44px;min-width:44px;padding:6px 8px;letter-spacing:.04em; }
+html[data-touch="true"] #jobs { top:var(--lw-hud-bottom,112px);flex-direction:row;flex-wrap:wrap;max-width:calc(100% - 100px - var(--safel) - var(--safer)); }
+html[data-touch="true"] .job:not(.active) { display:none; }
+html[data-touch="true"] .job { font-size:11px; }
+html[data-touch="true"] .job span.lab { display:inline; }
+html[data-touch="true"] #compass { top:var(--lw-hud-bottom,112px); }
+html[data-touch="true"] #watts-mini { top:calc(var(--lw-hud-bottom,112px) + 48px); }
+html[data-touch="true"] #heat-meter { top:calc(var(--lw-hud-bottom,112px) + 38px); }
+html[data-touch="true"] #prompt { min-height:44px;display:flex;align-items:center;justify-content:center;bottom:calc(184px + var(--safeb));max-width:calc(100% - 24px - var(--safel) - var(--safer));font-size:13px; }
+html[data-touch="true"] #punch-hint { bottom:calc(236px + var(--safeb));font-size:11px;max-width:75vw; }
+html[data-touch="true"] #radio { top:calc(var(--lw-hud-bottom,112px) + 46px);bottom:auto;left:auto;right:calc(12px + var(--safer));transform:none;width:min(320px,68vw);font-size:11px; }
+html[data-touch="true"] #radio-face { width:34px;height:34px; }
+html[data-touch="true"] .sheet button,html[data-touch="true"] .trav-btn,html[data-touch="true"] .day-chip,html[data-touch="true"] .week-chip { min-height:44px; }
+html[data-touch="true"] :is(#panel-game,#facp-game,#pause-screen,#board-screen,#mag-game,#trouble-game,#pull-game,#store-screen,#shop-screen,#print-view,#chat-dock) { height:var(--lw-visible-height,100dvh);top:var(--lw-visible-top,0px);bottom:auto;padding-left:max(12px,var(--safel));padding-right:max(12px,var(--safer)); }
+html[data-touch="true"] .sheet { max-height:calc(var(--lw-visible-height,100dvh) - var(--safe) - var(--safeb) - 24px); }
+html[data-touch="true"] .title-card { max-height:var(--lw-visible-height,100dvh);padding-left:max(18px,var(--safel));padding-right:max(18px,var(--safer)); }
+@media(max-width:359px) {
+ html[data-touch="true"] #stick,html[data-touch="true"] #stick-base { width:96px;height:96px; }
+ html[data-touch="true"] #stick-knob { width:40px;height:40px;left:28px;top:28px; }
+}
+@media(min-width:600px) and (max-height:500px) {
+ html[data-touch="true"] .hud-top { grid-template-columns:minmax(130px,.7fr) minmax(0,1.3fr); }
+ html[data-touch="true"] #prompt { bottom:calc(110px + var(--safeb));max-width:40vw; }
+ html[data-touch="true"] #punch-hint { bottom:calc(158px + var(--safeb));max-width:40vw; }
+ html[data-touch="true"] #radio { width:min(300px,40vw);top:var(--lw-hud-bottom,80px);right:calc(80px + var(--safer)); }
+}
+
+/* LIVE WIRE jobsite update: gate spacing on phones, including landscape. */
+@media(max-width:700px) {
+ .title-card .eyebrow { font-size:11px; letter-spacing:.09em; }
+ .title-card .release-note { font-size:10px; margin-top:7px; }
+ .title-card h1 { font-size:56px; margin-top:11px; }
+ .title-card .sub { font-size:18px; }
+ .title-card .blurb { font-size:14px; margin:11px 0; }
+ .title-card .traveler-row { gap:14px; margin:0 0 10px; }
+ .title-card #traveler-prev { width:76px; height:106px; }
+ .title-card .gate-hint { font-size:12px; margin:9px 0 3px; }
+ .title-card .title-btns { gap:8px; }
+ .title-card .title-btns :is(#btn-board,#btn-chat,#btn-store) { font-size:14px; }
+ .title-card #btn-shop .shop-sub { font-size:11px; }
+}
+@media(min-width:600px) and (max-height:500px) {
+ .title-card { width:min(620px,76vw); }
+ .title-card h1 { font-size:48px; }
+ .title-card .eyebrow { margin-top:0; font-size:11px; }
+ .title-card .release-note { margin-top:3px; }
+ .title-card .blurb { font-size:14px; max-width:54ch; }
+ .title-card #traveler-prev { width:64px; height:90px; }
+ .title-card .traveler-row { margin:0 0 8px; }
+}
+

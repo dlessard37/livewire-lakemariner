@@ -1,2347 +1,2457 @@
 [
- {
-  "role": "andy",
-  "text": "Andy. Donations for the sick and needy fund.",
-  "file": "/assets/voice/andy_0476ee8874.mp3"
- },
- {
-  "role": "andy",
-  "text": "Five bucks. Sick and needy. That's the ask.",
-  "file": "/assets/voice/andy_ad438080e9.mp3"
- },
- {
-  "role": "andy",
-  "text": "Folding money. Not IOUs.",
-  "file": "/assets/voice/andy_cb896b2f5f.mp3"
- },
- {
-  "role": "andy",
-  "text": "Local takes care of its own. Sick and needy fund.",
-  "file": "/assets/voice/andy_67edde06d3.mp3"
- },
- {
-  "role": "andy",
-  "text": "Pass the hat. Somebody's out hurt.",
-  "file": "/assets/voice/andy_efcf266b79.mp3"
- },
- {
-  "role": "andy",
-  "text": "Sick and needy fund. You in?",
-  "file": "/assets/voice/andy_554938983c.mp3"
- },
- {
-  "role": "chris",
-  "text": "Believe me. This is the greatest data hall. Maybe ever.",
-  "file": "/assets/voice/chris_36c41d1892.mp3"
- },
- {
-  "role": "chris",
-  "text": "Bends so clean, so beautiful, you'll say Chris you can't do that. I did it.",
-  "file": "/assets/voice/chris_52a34c72c0.mp3"
- },
- {
-  "role": "chris",
-  "text": "Chris. Lighting. O'Connell. Used to run fire alarm. Tremendous hall. Believe me.",
-  "file": "/assets/voice/chris_3f57af17f8.mp3"
- },
- {
-  "role": "chris",
-  "text": "Chris. Long Island. Tremendous hall. Everybody says so. Believe me.",
-  "file": "/assets/voice/chris_ca0472e1a6.mp3"
- },
- {
-  "role": "chris",
-  "text": "Fake news that this loop is open. It's not open. It's closed. Totally closed.",
-  "file": "/assets/voice/chris_8618b71cb8.mp3"
- },
- {
-  "role": "chris",
-  "text": "Hard hats. Very important. I have the best hard hat. Look at this hat.",
-  "file": "/assets/voice/chris_097c63b401.mp3"
- },
- {
-  "role": "chris",
-  "text": "I have a great brain for fire alarm. The best brain. It's true.",
-  "file": "/assets/voice/chris_4ed9872540.mp3"
- },
- {
-  "role": "chris",
-  "text": "I know conduit. I have the best conduit. Many people are saying it.",
-  "file": "/assets/voice/chris_1078435b4b.mp3"
- },
- {
-  "role": "chris",
-  "text": "I'm from Long Island. Lighting now. O'Connell. Yuge lights. Believe me.",
-  "file": "/assets/voice/chris_e36776d34f.mp3"
- },
- {
-  "role": "chris",
-  "text": "Long Island sent me. We don't do small jobs. We do yuge jobs.",
-  "file": "/assets/voice/chris_6f8b5564a4.mp3"
- },
- {
-  "role": "chris",
-  "text": "Many people said Book 2 can't pull. We pulled. Bigly.",
-  "file": "/assets/voice/chris_c28048d010.mp3"
- },
- {
-  "role": "chris",
-  "text": "Nobody knows 90s better than me. Nobody. I invent the 90.",
-  "file": "/assets/voice/chris_617229594f.mp3"
- },
- {
-  "role": "chris",
-  "text": "People tell me — smart people, the best people — this panel is a disaster. We're gonna make it huge.",
-  "file": "/assets/voice/chris_0da1d70c20.mp3"
- },
- {
-  "role": "chris",
-  "text": "Squenchers? Not a fan. Water. The best water. Long Island water, maybe.",
-  "file": "/assets/voice/chris_1f3287910e.mp3"
- },
- {
-  "role": "chris",
-  "text": "That's a lighting circuit. I don't land fire alarm anymore. I did that. Tremendous fire alarm.",
-  "file": "/assets/voice/chris_258b730c88.mp3"
- },
- {
-  "role": "chris",
-  "text": "The trailer says we're behind. We're not behind. We're ahead. Way ahead.",
-  "file": "/assets/voice/chris_fe759cfadb.mp3"
- },
- {
-  "role": "chris",
-  "text": "They're saying the inspector is tough. I love the inspector. Beautiful inspection coming.",
-  "file": "/assets/voice/chris_ba24850669.mp3"
- },
- {
-  "role": "chris",
-  "text": "This EMT? The best EMT. Nobody's ever seen EMT like this.",
-  "file": "/assets/voice/chris_74d24d0b2b.mp3"
- },
- {
-  "role": "chris",
-  "text": "This traveler — very nice person, by the way — is doing a tremendous job. Tremendous.",
-  "file": "/assets/voice/chris_3ef40dbce8.mp3"
- },
- {
-  "role": "chris",
-  "text": "Used to be fire alarm. O'Connell lighting now. Don't mix the books.",
-  "file": "/assets/voice/chris_bcec9490b4.mp3"
- },
- {
-  "role": "chris",
-  "text": "We're going to drain the swamp. By which I mean this wet floor. Somebody get a pig.",
-  "file": "/assets/voice/chris_52e8c09080.mp3"
- },
- {
-  "role": "chris",
-  "text": "We're going to win so much on this hall you'll get sick of winning.",
-  "file": "/assets/voice/chris_d890b514aa.mp3"
- },
- {
-  "role": "chris",
-  "text": "We're gonna hang so much pipe. You're gonna get tired of hanging pipe. Believe me.",
-  "file": "/assets/voice/chris_8f2388136d.mp3"
- },
- {
-  "role": "crew",
-  "text": "Book 2, O'Connell. Same stick.",
-  "file": "/assets/voice/crew_9f9ff77123.mp3"
- },
- {
-  "role": "crew",
-  "text": "Book 2. Same stick.",
-  "file": "/assets/voice/crew_734fffa099.mp3"
- },
- {
-  "role": "crew",
-  "text": "CHW's hot. Don't lean on it.",
-  "file": "/assets/voice/crew_2eb9998849.mp3"
- },
- {
-  "role": "crew",
-  "text": "Coming through.",
-  "file": "/assets/voice/crew_a1e2ce21f8.mp3"
- },
- {
-  "role": "crew",
-  "text": "Data hall's wet. Watch your boots.",
-  "file": "/assets/voice/crew_5ddef52a82.mp3"
- },
- {
-  "role": "crew",
-  "text": "Ferguson, east electrical.",
-  "file": "/assets/voice/crew_eb97d7be04.mp3"
- },
- {
-  "role": "crew",
-  "text": "God bless the candy man.",
-  "file": "/assets/voice/crew_ac3ca93a19.mp3"
- },
- {
-  "role": "crew",
-  "text": "HR is a phone call away, Utah.",
-  "file": "/assets/voice/crew_e52114fa1a.mp3"
- },
- {
-  "role": "crew",
-  "text": "Hey Tremont.",
-  "file": "/assets/voice/crew_e5150a6cf5.mp3"
- },
- {
-  "role": "crew",
-  "text": "Hey Utah.",
-  "file": "/assets/voice/crew_f8de4f34fa.mp3"
- },
- {
-  "role": "crew",
-  "text": "Hot work. Keep walking.",
-  "file": "/assets/voice/crew_43f08ddd93.mp3"
- },
- {
-  "role": "crew",
-  "text": "I'm on nights — gimme two handfuls.",
-  "file": "/assets/voice/crew_da00321437.mp3"
- },
- {
-  "role": "crew",
-  "text": "Insulators wrapping. Give us room.",
-  "file": "/assets/voice/crew_303fc69462.mp3"
- },
- {
-  "role": "crew",
-  "text": "Millwrights. Hands off the pumps.",
-  "file": "/assets/voice/crew_b6b9040ca8.mp3"
- },
- {
-  "role": "crew",
-  "text": "Pipefitters, coming through.",
-  "file": "/assets/voice/crew_f403d94b23.mp3"
- },
- {
-  "role": "crew",
-  "text": "That's our iron, sparkie.",
-  "file": "/assets/voice/crew_9833868ac9.mp3"
- },
- {
-  "role": "crew",
-  "text": "They're Skittles, Utah. They're just Skittles.",
-  "file": "/assets/voice/crew_77744818a6.mp3"
- },
- {
-  "role": "crew",
-  "text": "Watch your head on that tray.",
-  "file": "/assets/voice/crew_71a0d2ef94.mp3"
- },
- {
-  "role": "crew",
-  "text": "We're landing gear. Stay in your lane.",
-  "file": "/assets/voice/crew_88b69ae2ef.mp3"
- },
- {
-  "role": "crew",
-  "text": "We're wiping down. Go around.",
-  "file": "/assets/voice/crew_612b2aef50.mp3"
- },
- {
-  "role": "crew",
-  "text": "Yard's a mess today.",
-  "file": "/assets/voice/crew_29add915c0.mp3"
- },
- {
-  "role": "crew",
-  "text": "Yeah, hit me. Doctor's orders.",
-  "file": "/assets/voice/crew_7cc5e30d41.mp3"
- },
- {
-  "role": "crew",
-  "text": "You boys with O'Connell?",
-  "file": "/assets/voice/crew_07037fd0a4.mp3"
- },
- {
-  "role": "don",
-  "text": "Don't you take that to the landfill!",
-  "file": "/assets/voice/don_bc2ea0bbc2.mp3"
- },
- {
-  "role": "don",
-  "text": "Drew's gonna hear about this joyride!",
-  "file": "/assets/voice/don_0e7cb27452.mp3"
- },
- {
-  "role": "don",
-  "text": "Foreman vehicle! Says so on the clipboard!",
-  "file": "/assets/voice/don_1a99dfb48c.mp3"
- },
- {
-  "role": "don",
-  "text": "Get back here with my SXS!",
-  "file": "/assets/voice/don_8809553977.mp3"
- },
- {
-  "role": "don",
-  "text": "Give me back my side by side!",
-  "file": "/assets/voice/don_681254ad61.mp3"
- },
- {
-  "role": "don",
-  "text": "Hey! That's my side-by-side!",
-  "file": "/assets/voice/don_00efe85630.mp3"
- },
- {
-  "role": "don",
-  "text": "I didn't say you could take the Razor!",
-  "file": "/assets/voice/don_758de413c4.mp3"
- },
- {
-  "role": "don",
-  "text": "I was gonna eat lunch in that thing!",
-  "file": "/assets/voice/don_0a146bffff.mp3"
- },
- {
-  "role": "don",
-  "text": "Park it! Park it right now!",
-  "file": "/assets/voice/don_4e643352e1.mp3"
- },
- {
-  "role": "don",
-  "text": "That's not a toy! Okay it is. It's MY toy!",
-  "file": "/assets/voice/don_e8f6004224.mp3"
- },
- {
-  "role": "don",
-  "text": "That's what I thought. Walk next time.",
-  "file": "/assets/voice/don_473fcd0de5.mp3"
- },
- {
-  "role": "don",
-  "text": "Those are company keys! MY company keys!",
-  "file": "/assets/voice/don_f103cdae00.mp3"
- },
- {
-  "role": "don",
-  "text": "You hop in my seat like you pay the note!",
-  "file": "/assets/voice/don_69f11c6a34.mp3"
- },
- {
-  "role": "don",
-  "text": "You wreck that and you're buying it out of pocket!",
-  "file": "/assets/voice/don_d1fc20cfcc.mp3"
- },
- {
-  "role": "drew",
-  "text": "Bills by 30, Tremont. Now get back on the hall.",
-  "file": "/assets/voice/drew_24358accc6.mp3"
- },
- {
-  "role": "drew",
-  "text": "Bills by 30, Utah. Now get back on the hall.",
-  "file": "/assets/voice/drew_d879509c00.mp3"
- },
- {
-  "role": "drew",
-  "text": "Fine. Keep the numbers moving and I don't care what he drinks.",
-  "file": "/assets/voice/drew_5c970ca399.mp3"
- },
- {
-  "role": "drew",
-  "text": "How we looking on the circuits, Lemon?",
-  "file": "/assets/voice/drew_b46aa4d4a3.mp3"
- },
- {
-  "role": "drew",
-  "text": "How we looking on the loop, Lugo?",
-  "file": "/assets/voice/drew_7dec64b7b5.mp3"
- },
- {
-  "role": "drew",
-  "text": "If I find you laying in the aisle I'm calling heat illness and a slip.",
-  "file": "/assets/voice/drew_bb057a56cb.mp3"
- },
- {
-  "role": "drew",
-  "text": "Long as the work's clean, he can sell snow cones.",
-  "file": "/assets/voice/drew_288ec472a9.mp3"
- },
- {
-  "role": "drew",
-  "text": "Signed. Clean work, Tremont. Bills by 30.",
-  "file": "/assets/voice/drew_29fbd67a7b.mp3"
- },
- {
-  "role": "drew",
-  "text": "Signed. Clean work, Utah. Bills by 30.",
-  "file": "/assets/voice/drew_79cf205bab.mp3"
- },
- {
-  "role": "drew",
-  "text": "Tremont. Clipboard's out. Don't make me write this slip.",
-  "file": "/assets/voice/drew_997623f112.mp3"
- },
- {
-  "role": "drew",
-  "text": "Utah. Clipboard's out. Don't make me write this slip.",
-  "file": "/assets/voice/drew_0a0ba134b4.mp3"
- },
- {
-  "role": "drew",
-  "text": "You passed out in the hot aisle. Heat illness. Slip's in the trailer. Drink water next time.",
-  "file": "/assets/voice/drew_a348f346a2.mp3"
- },
- {
-  "role": "joe",
-  "text": "Both of you — close that gap or you're both on the next truck home.",
-  "file": "/assets/voice/joe_56b4ae2222.mp3"
- },
- {
-  "role": "joe",
-  "text": "Derek — I said the fucking tray. You deaf or just stupid?",
-  "file": "/assets/voice/joe_3c473747e8.mp3"
- },
- {
-  "role": "joe",
-  "text": "Derek — get that fucking tray up. Not whatever that shit is.",
-  "file": "/assets/voice/joe_421ce377f9.mp3"
- },
- {
-  "role": "joe",
-  "text": "Derek — stop staring at the traveler and put your hands on the pipe.",
-  "file": "/assets/voice/joe_bee0226d8e.mp3"
- },
- {
-  "role": "joe",
-  "text": "Derek, if that coupling backs off again you're buying lunch for the whole fucking crew.",
-  "file": "/assets/voice/joe_6d69c8f7c4.mp3"
- },
- {
-  "role": "joe",
-  "text": "Derek. Eyes up. That strap's crooked and I can see it from here, asshole.",
-  "file": "/assets/voice/joe_926b6804ae.mp3"
- },
- {
-  "role": "joe",
-  "text": "Derek. I will write your ass up so hard 237 sends you home in a paper bag.",
-  "file": "/assets/voice/joe_b3d7a18d42.mp3"
- },
- {
-  "role": "joe",
-  "text": "Don't look at the traveler. Look at the fucking work.",
-  "file": "/assets/voice/joe_c92c00255a.mp3"
- },
- {
-  "role": "joe",
-  "text": "Hard hats ON. I catch one more lid on a gang box and you're walking, you hear me?",
-  "file": "/assets/voice/joe_b2367230a8.mp3"
- },
- {
-  "role": "joe",
-  "text": "Hey. Yeah, you with the drill. Tighter. I still see daylight, you lazy shit.",
-  "file": "/assets/voice/joe_d2cb484ee4.mp3"
- },
- {
-  "role": "joe",
-  "text": "Hey. Yeah, you. That's a piss-poor coupling. Do it again before I come up there.",
-  "file": "/assets/voice/joe_dc68da3e8a.mp3"
- },
- {
-  "role": "joe",
-  "text": "I SAID THE TRAY, NOT THE GODDAMN FLOOR. You packing a lunch or hanging pipe?",
-  "file": "/assets/voice/joe_e51b016648.mp3"
- },
- {
-  "role": "joe",
-  "text": "I don't wanna see a gap in that run. Fill it or I'll fill your time sheet with a zero.",
-  "file": "/assets/voice/joe_fe050caae1.mp3"
- },
- {
-  "role": "joe",
-  "text": "I swear to god if I see another open box I'm writing all three of you up.",
-  "file": "/assets/voice/joe_9f7d949a2b.mp3"
- },
- {
-  "role": "joe",
-  "text": "Jesus Christ, Derek. That's a dogleg. Cut it out and do it again.",
-  "file": "/assets/voice/joe_7bddaa636c.mp3"
- },
- {
-  "role": "joe",
-  "text": "Measure twice. I already measured once and you're short, genius.",
-  "file": "/assets/voice/joe_ed4c81afee.mp3"
- },
- {
-  "role": "joe",
-  "text": "Move. Now. I am not asking. Get on that iron.",
-  "file": "/assets/voice/joe_03aca93f9c.mp3"
- },
- {
-  "role": "joe",
-  "text": "Put the phone away before I put it in the gang box, asshole.",
-  "file": "/assets/voice/joe_f1cb52a68e.mp3"
- },
- {
-  "role": "joe",
-  "text": "Rivera. That's the name on the slip if this corner ain't done by lunch. So quit dicking around.",
-  "file": "/assets/voice/joe_35efc9450f.mp3"
- },
- {
-  "role": "joe",
-  "text": "Rivera. This corner's mine — eyes on the fucking work, not the traveler. Don't test me.",
-  "file": "/assets/voice/joe_0e72e793d1.mp3"
- },
- {
-  "role": "joe",
-  "text": "That coupling's backwards, you stupid shit. Don't make me come up there.",
-  "file": "/assets/voice/joe_6f36214821.mp3"
- },
- {
-  "role": "joe",
-  "text": "That's a dogleg you could drive a truck through. Cut it and do it right.",
-  "file": "/assets/voice/joe_59d1ea59ef.mp3"
- },
- {
-  "role": "joe",
-  "text": "That's not a break. That's you hiding. Get the fuck back on the iron.",
-  "file": "/assets/voice/joe_2321bc837c.mp3"
- },
- {
-  "role": "joe",
-  "text": "You hanging pipe or standing there looking pretty? Because I don't see any pipe going in.",
-  "file": "/assets/voice/joe_bb9dc033d0.mp3"
- },
- {
-  "role": "joe",
-  "text": "You on my clock or theirs? Move your ass.",
-  "file": "/assets/voice/joe_f01a7efbbc.mp3"
- },
- {
-  "role": "joe",
-  "text": "You two talking or working? 'Cause I only hear one of those, and it ain't the work.",
-  "file": "/assets/voice/joe_5d69d12799.mp3"
- },
- {
-  "role": "lemon",
-  "text": "After energize, nobody touches nothing. You hear me?",
-  "file": "/assets/voice/lemon_5697edfd6c.mp3"
- },
- {
-  "role": "lemon",
-  "text": "After the whistle I'm in the gym. Until then it's the circuit.",
-  "file": "/assets/voice/lemon_711079300e.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Back on it, Tremont. Work's where you left it.",
-  "file": "/assets/voice/lemon_455fa7f9e0.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Black coffee. That's it. Leave the sugar sludge.",
-  "file": "/assets/voice/lemon_9bfd3debe1.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Blue diamond is next. Beat him there. No posing.",
-  "file": "/assets/voice/lemon_3ed9008013.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Blue diamond is where he's headed. Stay ahead of the man. No posing.",
-  "file": "/assets/voice/lemon_73e66ba9ef.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Book 2 on a 237 call. Don't embarrass the hall.",
-  "file": "/assets/voice/lemon_bb4bc5b7ae.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Boxes are up. Hang lights in the data halls and the corridors.",
-  "file": "/assets/voice/lemon_31a63fb647.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Boxes, lights, recs, then my gear. That's the order. Don't skip it.",
-  "file": "/assets/voice/lemon_e702a14532.mp3"
- },
- {
-  "role": "lemon",
-  "text": "CB-5 is iron and mud. Stay out of Ferguson's laydown.",
-  "file": "/assets/voice/lemon_11c719ddf1.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Callbacks. Drew found more. Clear week two's list.",
-  "file": "/assets/voice/lemon_55ad999830.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Cards are signed. Gear, corridor, pod one. RACK IN. ENERGIZE.",
-  "file": "/assets/voice/lemon_9ef5258e81.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Circuits look honest. Three pens: me on the hall, Drew in the yard, the inspector at the gear. Then we energize.",
-  "file": "/assets/voice/lemon_0d172a00d3.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Day two again. Meg the feeders, chase the opens, walk my gear.",
-  "file": "/assets/voice/lemon_3c041cc6a6.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Day two. Pipe's in. Meg the feeders, chase the opens, walk my gear. Stay sharp the whole ten.",
-  "file": "/assets/voice/lemon_88bc7b6577.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Device retest. Honest readings. Don't get cute.",
-  "file": "/assets/voice/lemon_8975af0135.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Devices are landing, Drew. We'll have it by walk time.",
-  "file": "/assets/voice/lemon_640e95ec05.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Devices landed. Gear is on the corridor, pod one. Don't leave it in trouble.",
-  "file": "/assets/voice/lemon_c7e0da707a.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Don't skip the work for a set. The set is between circuits, not instead of them.",
-  "file": "/assets/voice/lemon_ba78fbb750.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Don't skip the work for a set. The set is the reward.",
-  "file": "/assets/voice/lemon_33d95054aa.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Drew found you. Slip's got your name spelled right. 237 will call again, Tremont.",
-  "file": "/assets/voice/lemon_ba00e8eafc.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Drew signed it without looking up. That's as good as a handshake.",
-  "file": "/assets/voice/lemon_ff390457b2.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Drew signed. That's the punch list. Don't add to it.",
-  "file": "/assets/voice/lemon_6a3fb4d427.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Drew signs a CLEAN list. Finish the punch, Tremont.",
-  "file": "/assets/voice/lemon_9ae333cb97.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Drew walked it with a pencil. Ten punch items, no markers. You know this site. Clear the list.",
-  "file": "/assets/voice/lemon_40277a4771.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Drew's asking. I'm stalling. Finish the device.",
-  "file": "/assets/voice/lemon_aaed53f1ce.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Drew's at the trailer asking about the numbers, Tremont.",
-  "file": "/assets/voice/lemon_de49b37f5c.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Drew's writing on that clipboard. I can't hold him. Finish the device.",
-  "file": "/assets/voice/lemon_ff643cc7bd.mp3"
- },
- {
-  "role": "lemon",
-  "text": "EMT, boxes, lights, recs and switches first. Then you touch my gear.",
-  "file": "/assets/voice/lemon_f61899d8b3.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Emergency lights and sensors while she's running. Then transfer back to normal.",
-  "file": "/assets/voice/lemon_9f3cf0e7e6.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Emergency lights read honest. Reset the sensors, then we hand the building back to utility.",
-  "file": "/assets/voice/lemon_823d009f80.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Energize day. Final checks, three signatures, then the big one. Whole site's watching CB-4.",
-  "file": "/assets/voice/lemon_777844c4a1.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Every feeder megs clean. That's a run that passes paper.",
-  "file": "/assets/voice/lemon_d9480adea6.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Everything's hot. Stay on the checks. Nobody wants a hero today.",
-  "file": "/assets/voice/lemon_f51962cc05.mp3"
- },
- {
-  "role": "lemon",
-  "text": "FORKLIFT. Yellow iron has the right of way. Get off the path.",
-  "file": "/assets/voice/lemon_aa8b962828.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Fan crawl's loud. That's the wall pushing air. Work through it.",
-  "file": "/assets/voice/lemon_d0ad85d0c4.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Feeder lands LAST. Stage the reels, pull the sections, then bring it home.",
-  "file": "/assets/voice/lemon_dfcbd34d10.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Feeder's in the pipe. Land it at the gear.",
-  "file": "/assets/voice/lemon_55f7f38b07.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Feeder's landed. That's the pull. Don't nick it.",
-  "file": "/assets/voice/lemon_9d72bc2988.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Ferguson owns the east electrical. We're power. Stay in our lane.",
-  "file": "/assets/voice/lemon_97a1d2c80f.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Form over force. Same rule on the iron and in the gym.",
-  "file": "/assets/voice/lemon_8d39d5f53d.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Four bays. Don't get lost in the east hall.",
-  "file": "/assets/voice/lemon_5c494ad1bd.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Four bays. Service west, corridor down the middle, halls both sides. EMT first. Stay tight.",
-  "file": "/assets/voice/lemon_86ee9cbf52.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Gear's green with Drew ten feet out. Tell him to eat that slip. That's a Book 2 finish, Tremont.",
-  "file": "/assets/voice/lemon_a6835bcda9.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Gear's green. Four halls covered. That's a clean panel. That's the job.",
-  "file": "/assets/voice/lemon_af89b0753b.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Genny's coughing. South doors. Fuel her. Don't work in the dark.",
-  "file": "/assets/voice/lemon_2a8e2a3828.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Genny's dead. Lamp only. Fuel the diesel east of the south doors, then get back on the sensors.",
-  "file": "/assets/voice/lemon_8ef6fcbca4.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Gym after the whistle. Circuit before it.",
-  "file": "/assets/voice/lemon_cf5f5e6a7d.mp3"
- },
- {
-  "role": "lemon",
-  "text": "He saw a clean demo. Stay ahead of the blue diamond.",
-  "file": "/assets/voice/lemon_d06759a5ed.mp3"
- },
- {
-  "role": "lemon",
-  "text": "He saw last week. Don't give him a write-up.",
-  "file": "/assets/voice/lemon_aa6e3c2759.mp3"
- },
- {
-  "role": "lemon",
-  "text": "He's writing with the good pen. That's never free.",
-  "file": "/assets/voice/lemon_c41a504e74.mp3"
- },
- {
-  "role": "lemon",
-  "text": "High work's done. Don't leave the scissor sitting in the hall.",
-  "file": "/assets/voice/lemon_8729306085.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Hold the pull, let off before the redline. Cable isn't free.",
-  "file": "/assets/voice/lemon_cfbfba255b.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Hold the pull, let off before the redline. Same as a clean set — don't yank it.",
-  "file": "/assets/voice/lemon_bf9d3c570e.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Homeruns are landed. Terminations are honest.",
-  "file": "/assets/voice/lemon_52243bbe99.mp3"
- },
- {
-  "role": "lemon",
-  "text": "I got the book. You get the work.",
-  "file": "/assets/voice/lemon_2311277b3c.mp3"
- },
- {
-  "role": "lemon",
-  "text": "If Drew asks, I said stay productive.",
-  "file": "/assets/voice/lemon_5256442210.mp3"
- },
- {
-  "role": "lemon",
-  "text": "If YOU spark, I fill out paperwork. Don't make me fill out paperwork.",
-  "file": "/assets/voice/lemon_e322e8980a.mp3"
- },
- {
-  "role": "lemon",
-  "text": "If the halls go dark, the tests don't count. Fuel her.",
-  "file": "/assets/voice/lemon_ba4aa02190.mp3"
- },
- {
-  "role": "lemon",
-  "text": "If you need a break, make it water and air.",
-  "file": "/assets/voice/lemon_6f6b02ad26.mp3"
- },
- {
-  "role": "lemon",
-  "text": "If you need a break, make it water and air. Then get back on the stick.",
-  "file": "/assets/voice/lemon_af50e60d35.mp3"
- },
- {
-  "role": "lemon",
-  "text": "If you're working up there, you're tied off. I'm not calling your mother.",
-  "file": "/assets/voice/lemon_8fa3c623b5.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Inspector came back. Week two walk. Stay ahead of the blue diamond.",
-  "file": "/assets/voice/lemon_e8c8ff6cd7.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Inspector signed the card. Don't touch anything else.",
-  "file": "/assets/voice/lemon_f77dc40964.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Inspector walks at the end of shift. Meter bag's in the crib. Don't get cute.",
-  "file": "/assets/voice/lemon_fb81800877.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Inspector wrote one up. Get AHEAD of him, Tremont.",
-  "file": "/assets/voice/lemon_4d2d6f1d6b.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Inspector's on site. He walks to a device, you beat him there and show it clean. Three corrections and we re-walk Monday.",
-  "file": "/assets/voice/lemon_89e7544a74.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Inspector's tomorrow. Don't leave me a trip overnight.",
-  "file": "/assets/voice/lemon_f016eb04ce.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Keep diesel in her while you work. When she dies you're on the lamp. Tests don't count in the dark.",
-  "file": "/assets/voice/lemon_d19596d245.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Lamp's on. Diesel's east of the south doors. Fuel her when she coughs. Then emergency lights and sensors.",
-  "file": "/assets/voice/lemon_4f60f31d57.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Last stick. Boxes next, then lights. All four pods. Don't dog it.",
-  "file": "/assets/voice/lemon_8c350e3000.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Last week's score is last week. New seven. Stay tight.",
-  "file": "/assets/voice/lemon_ce50141e35.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Lemon. Channel three. Tremont, you're on my book. Power, CB-4. Lighting and feeders. Pouch on. I got your time.",
-  "file": "/assets/voice/lemon_e0590861f7.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Lighting is lighting. Don't land it on somebody else's gear.",
-  "file": "/assets/voice/lemon_c0fff3b132.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Lights are on. Recs and switches at the doors, then my gear in electrical one.",
-  "file": "/assets/voice/lemon_2a8687cb07.mp3"
- },
- {
-  "role": "lemon",
-  "text": "List is clear. Find Drew in the yard. He signs, we eat.",
-  "file": "/assets/voice/lemon_8aebac558f.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Material good, Tremont? Don't wait on me.",
-  "file": "/assets/voice/lemon_2ac6e58240.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Meg every feeder. The inspector doesn't care how pretty the EMT is if the run lies.",
-  "file": "/assets/voice/lemon_2e09c0ddcd.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Night shift. Utility's locked out. CB-4 is on the diesel east of the south doors. Emergency lights, occupancy sensors, then TRANSFER back to normal at the gear.",
-  "file": "/assets/voice/lemon_1eb7eb5f6d.mp3"
- },
- {
-  "role": "lemon",
-  "text": "No ladder up there. Bring the deck down first.",
-  "file": "/assets/voice/lemon_ca8813ed9f.mp3"
- },
- {
-  "role": "lemon",
-  "text": "No markers today. You know this site or you don't.",
-  "file": "/assets/voice/lemon_721ddb3da8.mp3"
- },
- {
-  "role": "lemon",
-  "text": "No markers. You know the site. Then find Drew.",
-  "file": "/assets/voice/lemon_2530011e48.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Nobody signs until the checks are done.",
-  "file": "/assets/voice/lemon_3bb98a6e57.mp3"
- },
- {
-  "role": "lemon",
-  "text": "OT nights. Emergency lights, sensors, TRANSFER. Same drill.",
-  "file": "/assets/voice/lemon_77be1c9955.mp3"
- },
- {
-  "role": "lemon",
-  "text": "One-ten in that cross. You ain't a server. Move.",
-  "file": "/assets/voice/lemon_5ed29046b2.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Opens cleared. Panel's quiet. Keep that discipline, Tremont.",
-  "file": "/assets/voice/lemon_5efac80b67.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Opens first, then homeruns, then we walk the gear.",
-  "file": "/assets/voice/lemon_0052f416ea.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Pouch first, Tremont. Crib's by the orange conex. Put it on, then work.",
-  "file": "/assets/voice/lemon_aab64f9084.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Pouch is on. Run the EMT. Lighting and homeruns. Clean bends.",
-  "file": "/assets/voice/lemon_82a99c3697.mp3"
- },
- {
-  "role": "lemon",
-  "text": "PowerBoost in the lot. Quiet on the gate, loud when I tow.",
-  "file": "/assets/voice/lemon_5fb398634c.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Pull day. Reels to every pod, then the feeder section by section. Controlled power. Cable isn't free.",
-  "file": "/assets/voice/lemon_cc8c75e6ac.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Pull smooth, not hard. Cable remembers.",
-  "file": "/assets/voice/lemon_883b9f7c60.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Quit talking. Finish the device and the set.",
-  "file": "/assets/voice/lemon_efd8b0f365.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Reels are staged. Now pull. Controlled power. Don't yank it.",
-  "file": "/assets/voice/lemon_b2f356c8b6.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Reels don't walk themselves. That's the job, Tremont.",
-  "file": "/assets/voice/lemon_2963f8808d.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Rivera's lighting his boys up in the east hall. Walk wide. That's not our circus.",
-  "file": "/assets/voice/lemon_c066e7a4ec.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Second pull. Feeder two. Controlled power. Don't yank it.",
-  "file": "/assets/voice/lemon_a049993b9b.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Sensors are reset. Gear on the corridor — TRANSFER when the list is clean.",
-  "file": "/assets/voice/lemon_626d440eed.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Signed. Don't make me regret trusting the form.",
-  "file": "/assets/voice/lemon_a5614576e5.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Sit down. Then get back on the iron. I'm still writing your time.",
-  "file": "/assets/voice/lemon_dac0c75422.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Stage every pod before you tug. Don't starve the pull.",
-  "file": "/assets/voice/lemon_34d6bbd442.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Stay productive. Stretching is for after the whistle.",
-  "file": "/assets/voice/lemon_92691a3b9f.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Stay productive. Stretching is for between circuits, not instead of them.",
-  "file": "/assets/voice/lemon_dc23077f8b.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Strong people show up. You're already on the clock — use it.",
-  "file": "/assets/voice/lemon_928fb323bd.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Tell Tremont I heard him on Squenchers. He can drop it now.",
-  "file": "/assets/voice/lemon_1a96cdb1c2.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Ten hours, seven days. I got the book. Don't make me eat your time.",
-  "file": "/assets/voice/lemon_b61f1d52ba.mp3"
- },
- {
-  "role": "lemon",
-  "text": "That one's up high. Blue scissor's parked in the yard. Bring it.",
-  "file": "/assets/voice/lemon_fc3474a3b5.mp3"
- },
- {
-  "role": "lemon",
-  "text": "That's 480 looking for a path. Don't be the path.",
-  "file": "/assets/voice/lemon_4c7ebb9b1d.mp3"
- },
- {
-  "role": "lemon",
-  "text": "That's Lake Ontario. CB-4 is the other way, Tremont.",
-  "file": "/assets/voice/lemon_e35ad89079.mp3"
- },
- {
-  "role": "lemon",
-  "text": "That's a clean run. All four halls. Lemon's signing off. Book 2. Tell 237 it's green.",
-  "file": "/assets/voice/lemon_0d9495af3e.mp3"
- },
- {
-  "role": "lemon",
-  "text": "That's a puddle. Walk around it. You're not here to swim.",
-  "file": "/assets/voice/lemon_2529942b2c.mp3"
- },
- {
-  "role": "lemon",
-  "text": "That's five thousand pounds of lift. You don't win that argument.",
-  "file": "/assets/voice/lemon_b9df0d477b.mp3"
- },
- {
-  "role": "lemon",
-  "text": "That's overtime. Drew's off the trailer. Finish the circuits NOW. No posing.",
-  "file": "/assets/voice/lemon_f56f9d58ab.mp3"
- },
- {
-  "role": "lemon",
-  "text": "That's the whole OT window. Drew's leaving your slip at the trailer. Rough one, Tremont.",
-  "file": "/assets/voice/lemon_bcb55d3c0f.mp3"
- },
- {
-  "role": "lemon",
-  "text": "That's two corrections. One more and he red-tags the whole job.",
-  "file": "/assets/voice/lemon_293579e2d7.mp3"
- },
- {
-  "role": "lemon",
-  "text": "The list is the list. Drew wrote it, Drew signs it. Clear it.",
-  "file": "/assets/voice/lemon_991fa77540.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Then find Drew for the sign-off. He's walking the yard. Don't make him hunt you.",
-  "file": "/assets/voice/lemon_70a7d98946.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Three corrections. He red-tagged it. We re-walk Monday and Drew eats the cost. Rough day, Tremont.",
-  "file": "/assets/voice/lemon_38be14bd06.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Three pens, then the big one. Don't get cute.",
-  "file": "/assets/voice/lemon_bf7bc2aca2.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Tremont doesn't run a candy cart. Don't start.",
-  "file": "/assets/voice/lemon_4bf4d8d5db.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Tremont doesn't run a candy cart. Keep it that way.",
-  "file": "/assets/voice/lemon_059274676d.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Tremont's Ford is in the south lot. Don't make him move it twice.",
-  "file": "/assets/voice/lemon_278675622e.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Tremont's truck is the Ford in the south lot. Don't block it.",
-  "file": "/assets/voice/lemon_0566c00b3e.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Tremont, that hallway is a pizza oven. Hustle through.",
-  "file": "/assets/voice/lemon_19038be20f.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Turnover. Week two energize. Checks, pens, the green.",
-  "file": "/assets/voice/lemon_b133c7fd1c.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Utility's back. Halls stay lit. Shutdown the diesel when you walk out.",
-  "file": "/assets/voice/lemon_8dd09d1e54.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Utility's locked out. That diesel east of the south doors is the building tonight.",
-  "file": "/assets/voice/lemon_695422f23c.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Walk around the iron. Don't make me write a near-miss.",
-  "file": "/assets/voice/lemon_c2d4ab9763.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Walk it off. Then get back on the circuit.",
-  "file": "/assets/voice/lemon_4c3cbc5ffb.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Walk sheet says demo them clean. He signs, we eat.",
-  "file": "/assets/voice/lemon_4aae9b944c.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Walk test's clean. Hand the inspector the paper and don't say anything extra. Book 2 does it again.",
-  "file": "/assets/voice/lemon_2f629a95fe.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Water's in the conex. Hydrate like you mean it.",
-  "file": "/assets/voice/lemon_de21490e60.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Water's in the conex. Not Squenchers. Water.",
-  "file": "/assets/voice/lemon_b1efc9bc09.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Water's in the conex. Squenchers are still poison.",
-  "file": "/assets/voice/lemon_549081882b.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Water's in the conex. Then get back on the stick.",
-  "file": "/assets/voice/lemon_d6e1cb01c1.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Week two nights. Diesel east of the south doors. Keep her fed.",
-  "file": "/assets/voice/lemon_e3020c3197.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Week two trim. Meg it like the first time. No coasting.",
-  "file": "/assets/voice/lemon_04f0637511.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Week two. Loop's in. Now we extend it. Pouch on, Tremont.",
-  "file": "/assets/voice/lemon_3262596d12.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Whole site's watching CB-4 again. Stay on the checks.",
-  "file": "/assets/voice/lemon_cef14cb77f.mp3"
- },
- {
-  "role": "lemon",
-  "text": "Whole site's watching CB-4. Look busy and be busy.",
-  "file": "/assets/voice/lemon_d3fe59b715.mp3"
- },
- {
-  "role": "lemon",
-  "text": "You need something, or are you stretching?",
-  "file": "/assets/voice/lemon_57398e91c5.mp3"
- },
- {
-  "role": "lugo",
-  "text": "237's hall is Niagara. We're the ones filling it.",
-  "file": "/assets/voice/lugo_9e212eae10.mp3"
- },
- {
-  "role": "lugo",
-  "text": "AHJ came back, y'all. Week two walk. Stay ahead of the blue diamond.",
-  "file": "/assets/voice/lugo_7728304d07.mp3"
- },
- {
-  "role": "lugo",
-  "text": "AHJ signed the card. Don't touch anything else.",
-  "file": "/assets/voice/lugo_17fefbe88f.mp3"
- },
- {
-  "role": "lugo",
-  "text": "AHJ walks at end of shift. Meter bag's in the crib. Ten-hour day — we call it eight minutes.",
-  "file": "/assets/voice/lugo_d7cb2acea4.mp3"
- },
- {
-  "role": "lugo",
-  "text": "AHJ wrote one up. Get AHEAD of him, Utah.",
-  "file": "/assets/voice/lugo_4d4b1218d6.mp3"
- },
- {
-  "role": "lugo",
-  "text": "AHJ's on site, y'all. He walks to a device, you beat him there and demo it clean. Three corrections and we re-walk Monday.",
-  "file": "/assets/voice/lugo_c92e379c06.mp3"
- },
- {
-  "role": "lugo",
-  "text": "AHJ's tomorrow. Don't leave me a chirp overnight.",
-  "file": "/assets/voice/lugo_0f0b32c68d.mp3"
- },
- {
-  "role": "lugo",
-  "text": "After energize, nobody touches nothing. Y'all hear me?",
-  "file": "/assets/voice/lugo_a3bcb22257.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Ain't no ladder up there, y'all. Bring the deck down first.",
-  "file": "/assets/voice/lugo_5585b6caeb.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Back in Texas we'd have this loop in by lunch. Y'all move like it's already snowing.",
-  "file": "/assets/voice/lugo_55d4753fbd.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Back on it, Utah. Loop's where you left it.",
-  "file": "/assets/voice/lugo_c8cdb7f55b.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Battery backups read honest. Reset the ducts, then we hand the building back to utility.",
-  "file": "/assets/voice/lugo_ab4003e61c.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Battery strobes and ducts while she's running. Then transfer back to normal.",
-  "file": "/assets/voice/lugo_49d9a9355c.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Blue diamond is next. Beat him there.",
-  "file": "/assets/voice/lugo_3842493e70.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Blue diamond is where he's headed next. Stay ahead of the man.",
-  "file": "/assets/voice/lugo_2fb367ed0d.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Boxes are up. Hang smokes in the data halls and corridors.",
-  "file": "/assets/voice/lugo_a14aafe09c.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Boxes, smokes, strobes, then my panel. That's the order.",
-  "file": "/assets/voice/lugo_bc0b54edf3.mp3"
- },
- {
-  "role": "lugo",
-  "text": "CB-4 is four bays off a center corridor. Service wing west, data halls both sides. Red pipe first.",
-  "file": "/assets/voice/lugo_ae4dca32a2.mp3"
- },
- {
-  "role": "lugo",
-  "text": "CB-5's all iron and mud. Stay out of Ferguson's laydown, y'all.",
-  "file": "/assets/voice/lugo_4e53810c0b.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Callbacks, y'all. Drew found more with the pencil. Clear week two's list.",
-  "file": "/assets/voice/lugo_d0cf4dc448.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Cards are signed. FACP on the corridor, pod one. ENERGIZE, SILENCE, RESET.",
-  "file": "/assets/voice/lugo_719be62787.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Clear the list, then find Drew for the sign-off. He's walking the yard.",
-  "file": "/assets/voice/lugo_ce6d5a6788.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Conduit, boxes, smokes, strobes, pulls, then the VESDAs in the fan crawl. Then you touch my panel.",
-  "file": "/assets/voice/lugo_7e4f0f04d3.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Day two again. Mag the smokes, chase my troubles, walk the panel.",
-  "file": "/assets/voice/lugo_9ba42b0cad.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Day two, y'all. Loop's in — now we make it honest. Mag the smokes, chase my troubles, walk the panel.",
-  "file": "/assets/voice/lugo_18e8c00fab.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Device retest, y'all. Honest readings or we walk it twice.",
-  "file": "/assets/voice/lugo_ccc8b2b1ca.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Devices are flying, Drew. Y'all will have it by walk time.",
-  "file": "/assets/voice/lugo_44adcd2d02.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Don't rest on last week's score. Same halls, new list.",
-  "file": "/assets/voice/lugo_6438591201.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Drew found you. Slip's got your name spelled right. 237 will call again, Utah.",
-  "file": "/assets/voice/lugo_7a3219b8dd.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Drew signed it without looking up. That's as good as a handshake.",
-  "file": "/assets/voice/lugo_0ac79beff1.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Drew signed. That's the punch list. Don't add to it.",
-  "file": "/assets/voice/lugo_2dee20f6d4.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Drew signs a CLEAN list, Utah. Finish the punch.",
-  "file": "/assets/voice/lugo_3258537ad0.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Drew walked the job with a pencil, y'all. Ten punch items, no markers. The list says where — you know this site by now.",
-  "file": "/assets/voice/lugo_ec3846fa23.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Drew's asking. I'm stalling. Work faster.",
-  "file": "/assets/voice/lugo_2ccb4bef58.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Drew's at the trailer asking about y'all's numbers, Utah.",
-  "file": "/assets/voice/lugo_5f54191376.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Drew's writing something on that clipboard. I can't hold him long.",
-  "file": "/assets/voice/lugo_bf7224bd72.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Ducts are reset. FACP on the corridor — TRANSFER when the list is clean.",
-  "file": "/assets/voice/lugo_ac347f752f.mp3"
- },
- {
-  "role": "lugo",
-  "text": "EOLs are swapped. Supervision's honest now.",
-  "file": "/assets/voice/lugo_9d9a409e1d.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Energize day, y'all. Final checks, three signatures, then hit the big one. The whole site's watching CB-4 today.",
-  "file": "/assets/voice/lugo_8d7d1d1f10.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Every smoke reads clean. That's a loop that'll pass paper.",
-  "file": "/assets/voice/lugo_ab43277b8a.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Everything's hot and everyone's stupid today. Watch the floor and get your checks done.",
-  "file": "/assets/voice/lugo_4d48469f9a.mp3"
- },
- {
-  "role": "lugo",
-  "text": "FORKLIFT. Yellow iron has the right of way, genius.",
-  "file": "/assets/voice/lugo_ecae7bdb70.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Fan crawl's loud. That's the wall pushing air into the hall. VESDAs live in there.",
-  "file": "/assets/voice/lugo_3dda0265c3.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Ferguson's on the east electrical. That's their gear. We're O'Connell fire alarm.",
-  "file": "/assets/voice/lugo_14a786373e.mp3"
- },
- {
-  "role": "lugo",
-  "text": "First aid. Then get back on the hall. I'm still writing your time.",
-  "file": "/assets/voice/lugo_516ef6e27e.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Four bays off the corridor, Utah. Don't y'all get lost in the east hall.",
-  "file": "/assets/voice/lugo_fa3642dd8a.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Genny's coughing. South doors. Fuel her before the halls go black.",
-  "file": "/assets/voice/lugo_ab18cd3ce8.mp3"
- },
- {
-  "role": "lugo",
-  "text": "He already saw last week's demo. Don't give him a reason to write us up.",
-  "file": "/assets/voice/lugo_6e81c49b64.mp3"
- },
- {
-  "role": "lugo",
-  "text": "He honked. You didn't move. That's on you, y'all.",
-  "file": "/assets/voice/lugo_70edd1d820.mp3"
- },
- {
-  "role": "lugo",
-  "text": "He saw a clean demo. Stay ahead of the blue diamond, y'all.",
-  "file": "/assets/voice/lugo_84f7dceb29.mp3"
- },
- {
-  "role": "lugo",
-  "text": "He's writing with the good pen, y'all. That's never free.",
-  "file": "/assets/voice/lugo_2c324f4d43.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Headlamp's on. Diesel's east of the south doors. Fuel her when she coughs — then batteries and ducts.",
-  "file": "/assets/voice/lugo_c66e57b3ec.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Heat illness is a write-up. Walk through, don't live there.",
-  "file": "/assets/voice/lugo_885c705c82.mp3"
- },
- {
-  "role": "lugo",
-  "text": "High work's done. Don't leave the scissor sitting in the hall.",
-  "file": "/assets/voice/lugo_35464eef9c.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Hold the pull, let off before the redline. Cable still ain't free.",
-  "file": "/assets/voice/lugo_858993edf1.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Hold the pull, let off before the redline. Work it like a big fish.",
-  "file": "/assets/voice/lugo_228cae71a0.mp3"
- },
- {
-  "role": "lugo",
-  "text": "I got your time. You get the work.",
-  "file": "/assets/voice/lugo_9b0bfad618.mp3"
- },
- {
-  "role": "lugo",
-  "text": "If Drew asks, I said something inspirational.",
-  "file": "/assets/voice/lugo_7d2f6177b7.mp3"
- },
- {
-  "role": "lugo",
-  "text": "If it sparks, it's working. If YOU spark, I fill out paperwork.",
-  "file": "/assets/voice/lugo_a156061722.mp3"
- },
- {
-  "role": "lugo",
-  "text": "If the halls go dark, the tests don't count. Fuel her.",
-  "file": "/assets/voice/lugo_f069b8b8ca.mp3"
- },
- {
-  "role": "lugo",
-  "text": "If y'all are working up there, y'all are tied off. I ain't calling your mother.",
-  "file": "/assets/voice/lugo_7b3ad3d4b3.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Keep diesel in her while you work. When she dies you're on the lamp and the tests don't mean a thing.",
-  "file": "/assets/voice/lugo_836cfc0c97.mp3"
- },
- {
-  "role": "lugo",
-  "text": "List is clear. Find Drew in the yard. He signs, we eat.",
-  "file": "/assets/voice/lugo_bb8e3e5711.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Loop looks honest. Three pens: me on the hall, Drew in the yard, AHJ at the panel. Then we hit the big one.",
-  "file": "/assets/voice/lugo_5a282d6102.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Loop's green with Drew ten feet out. Tell him to eat that slip. That's a Book 2 finish, Utah.",
-  "file": "/assets/voice/lugo_43e9dd5145.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Lugo on three. Utah, Book 2, O'Connell. 237's call. Fire alarm. Grab your pouch, y'all — I got your time.",
-  "file": "/assets/voice/lugo_7b5eaad640.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Mag every smoke. AHJ doesn't care how pretty the pipe is if the loop lies.",
-  "file": "/assets/voice/lugo_c222d470c0.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Miner row's still humming. That's the old money paying for the new building.",
-  "file": "/assets/voice/lugo_3fdc2acff6.mp3"
- },
- {
-  "role": "lugo",
-  "text": "NAC's loaded. VESDAs in the fan crawl next — land the aux off the print. Then FACP.",
-  "file": "/assets/voice/lugo_36cc0b429c.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Night shift, y'all. Utility's locked out. CB-4 is on the diesel east of the south doors. Test the battery strobes, reset the ducts, then TRANSFER back to normal at the FACP.",
-  "file": "/assets/voice/lugo_9d432b4013.mp3"
- },
- {
-  "role": "lugo",
-  "text": "No markers again. You know the site. Find the work, then find Drew.",
-  "file": "/assets/voice/lugo_406bac4bee.mp3"
- },
- {
-  "role": "lugo",
-  "text": "No markers today. You know this site or you don't.",
-  "file": "/assets/voice/lugo_683454d930.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Nobody signs 'til the checks are done, y'all.",
-  "file": "/assets/voice/lugo_0ee157fb76.mp3"
- },
- {
-  "role": "lugo",
-  "text": "OT nights, y'all. Battery strobes, ducts, TRANSFER. Same as last Thursday, colder.",
-  "file": "/assets/voice/lugo_5563662e95.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Panel's green. All four halls are covered. That's a Book 2 fire alarm, brother.",
-  "file": "/assets/voice/lugo_a1d8b33def.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Pouch first, Utah. Crib's by the orange conex. I got your time — you get the work.",
-  "file": "/assets/voice/lugo_79b5f65cdc.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Pouch is on. Run red EMT through the hallways and electrical corridors. Don't mix it with power.",
-  "file": "/assets/voice/lugo_f030f8aee1.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Pull day, y'all. Reels from the rack to every pod, then pull the riser section by section. Cable ain't free.",
-  "file": "/assets/voice/lugo_52a2935485.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Pull smooth, not hard. Cable remembers, y'all.",
-  "file": "/assets/voice/lugo_43f61a9a65.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Quit talking to me and go make us look good, y'all.",
-  "file": "/assets/voice/lugo_25daf34166.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Red conduit is fire alarm. Don't land it on a lighting circuit, y'all.",
-  "file": "/assets/voice/lugo_fc42bdb92f.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Reels are staged. Now pull. Smooth, not stupid.",
-  "file": "/assets/voice/lugo_d30bfc404c.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Reels don't walk themselves. That's what Utah's for.",
-  "file": "/assets/voice/lugo_e6b2075fa2.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Riser lands LAST, y'all. Stage the reels, pull the sections, then bring it home.",
-  "file": "/assets/voice/lugo_2728454d9e.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Riser's in the pipe. Land it at the panel.",
-  "file": "/assets/voice/lugo_3e387db2b0.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Riser's landed. That's the pull. Don't nick it.",
-  "file": "/assets/voice/lugo_fd320ae624.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Rivera's lighting his boys up in the east hall. Walk wide, y'all.",
-  "file": "/assets/voice/lugo_9b7a179a66.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Second pull, y'all. Feeder two. Same tugger, don't get cute.",
-  "file": "/assets/voice/lugo_8f083debb2.mp3"
- },
- {
-  "role": "lugo",
-  "text": "See that stack up the shore? Old coal plant. This whole site ran on Somerset coal. Now it runs on megawatts.",
-  "file": "/assets/voice/lugo_a8cfafd0b2.mp3"
- },
- {
-  "role": "lugo",
-  "text": "She's dead. Headlamp only until somebody fuels the diesel east of the south doors.",
-  "file": "/assets/voice/lugo_17c5ad3c04.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Signed. Don't make me regret the penmanship.",
-  "file": "/assets/voice/lugo_767b991e86.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Smokes are on the loop. Strobes and pulls at the doors, then the FACP in electrical one.",
-  "file": "/assets/voice/lugo_7f95324724.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Stage every pod before you tug. Don't starve the pull.",
-  "file": "/assets/voice/lugo_1ca56797e5.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Ten hours, seven days. I got the book. Don't make me eat your time.",
-  "file": "/assets/voice/lugo_e2159ef4d3.mp3"
- },
- {
-  "role": "lugo",
-  "text": "That one's up high, y'all. Blue scissor's parked in the yard.",
-  "file": "/assets/voice/lugo_c61dccb71e.mp3"
- },
- {
-  "role": "lugo",
-  "text": "That's 277 looking for a path. Don't be the path.",
-  "file": "/assets/voice/lugo_941efb71a2.mp3"
- },
- {
-  "role": "lugo",
-  "text": "That's Lake Ontario, Utah. CB-4 is the other way.",
-  "file": "/assets/voice/lugo_ab07fd38af.mp3"
- },
- {
-  "role": "lugo",
-  "text": "That's a lift, not a suggestion. Get off his travel lane.",
-  "file": "/assets/voice/lugo_8fa6036c52.mp3"
- },
- {
-  "role": "lugo",
-  "text": "That's a loop, y'all. All four halls. Lugo's signing off. Book 2. Tell 237 it's green.",
-  "file": "/assets/voice/lugo_71e7f66764.mp3"
- },
- {
-  "role": "lugo",
-  "text": "That's a puddle, not a spa.",
-  "file": "/assets/voice/lugo_316f7df867.mp3"
- },
- {
-  "role": "lugo",
-  "text": "That's overtime. Drew's off the trailer with paperwork. Land this loop NOW.",
-  "file": "/assets/voice/lugo_d846c48286.mp3"
- },
- {
-  "role": "lugo",
-  "text": "That's the hot aisle, Utah. One-ten on the gun. Don't make a camp.",
-  "file": "/assets/voice/lugo_a1a5a67918.mp3"
- },
- {
-  "role": "lugo",
-  "text": "That's the last stick. Mount the FA boxes, then devices. All four pods, y'all.",
-  "file": "/assets/voice/lugo_69f8c6fb82.mp3"
- },
- {
-  "role": "lugo",
-  "text": "That's the whole OT window. Drew's leaving your slip at the trailer. Rough one, Utah.",
-  "file": "/assets/voice/lugo_44bf854fe5.mp3"
- },
- {
-  "role": "lugo",
-  "text": "That's two corrections. One more and he red-tags the whole job.",
-  "file": "/assets/voice/lugo_f9d03f0e88.mp3"
- },
- {
-  "role": "lugo",
-  "text": "The hall's watching CB-4 again. Checks, pens, then the green.",
-  "file": "/assets/voice/lugo_d03cdf0d92.mp3"
- },
- {
-  "role": "lugo",
-  "text": "The list is the list, y'all. Drew wrote it, Drew signs it.",
-  "file": "/assets/voice/lugo_de56857f4e.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Three corrections. He red-tagged it. We re-walk Monday and Drew eats the cost. Rough day, Utah.",
-  "file": "/assets/voice/lugo_fe0438cee7.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Three pens, then the big one. Don't get cute.",
-  "file": "/assets/voice/lugo_26648f2a8b.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Troubles cleared. Panel's quiet. I'm almost impressed, Utah.",
-  "file": "/assets/voice/lugo_2f2a0fbfe2.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Troubles first, then EOLs, then we walk the panel.",
-  "file": "/assets/voice/lugo_54774547e6.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Turnover day. Week two energize. Same big one, new signatures.",
-  "file": "/assets/voice/lugo_75a8bf55ca.mp3"
- },
- {
-  "role": "lugo",
-  "text": "UPS trailers and transformers are live-adjacent. Don't climb them for a photo, Utah.",
-  "file": "/assets/voice/lugo_d29e10cd70.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Utah's cart has more candy than a gas station.",
-  "file": "/assets/voice/lugo_54a7f3262c.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Utility's back, y'all. Halls stay lit. Kill the diesel on your way out.",
-  "file": "/assets/voice/lugo_b1fbbb870d.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Utility's locked out. That diesel east of the south doors is the building tonight.",
-  "file": "/assets/voice/lugo_e8fd606dbc.mp3"
- },
- {
-  "role": "lugo",
-  "text": "VESDAs are on the aux. Fault contacts stay hot in normal — don't kill 24V. FACP on the corridor, pod one.",
-  "file": "/assets/voice/lugo_d23c0f1c81.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Walk it off, y'all. Hair'll grow back.",
-  "file": "/assets/voice/lugo_2b435e94a8.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Walk sheet says demo 'em clean. He signs, we eat.",
-  "file": "/assets/voice/lugo_c7a7325ccd.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Walk test's clean. Hand the AHJ the paper and don't say nothing extra. Book 2 does it again.",
-  "file": "/assets/voice/lugo_0c3f888a31.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Water's in the conex. Hydrate or die-drate, y'all.",
-  "file": "/assets/voice/lugo_ada3fc4afc.mp3"
- },
- {
-  "role": "lugo",
-  "text": "We're Book 2 on a 237 call. Don't embarrass the travelers.",
-  "file": "/assets/voice/lugo_55c83e2000.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Week two nights. Diesel's still east of the south doors. Keep her fed.",
-  "file": "/assets/voice/lugo_291bd15fcb.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Week two trim. Mag it again like you've never seen this loop.",
-  "file": "/assets/voice/lugo_70536b85b5.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Week two, y'all. Loop's in from last week. Now we extend it. Grab your pouch.",
-  "file": "/assets/voice/lugo_c4af73014c.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Wendel's finest tenders. Don't tell safety, Utah.",
-  "file": "/assets/voice/lugo_724fa84ffe.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Wendel's finest. Tastes like a 345-kV splice and regret.",
-  "file": "/assets/voice/lugo_17d1e706cd.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Whole site's watching CB-4 today. Look busy AND be busy, y'all.",
-  "file": "/assets/voice/lugo_5a834b008d.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Y'all good on material, Utah?",
-  "file": "/assets/voice/lugo_d5d451ae0e.mp3"
- },
- {
-  "role": "lugo",
-  "text": "Y'all need something, or y'all just admiring the foreman?",
-  "file": "/assets/voice/lugo_4ec7958677.mp3"
- },
- {
-  "role": "lugo",
-  "text": "You loiter in that hallway, you're going to cook. Move it.",
-  "file": "/assets/voice/lugo_84137389a9.mp3"
- },
- {
-  "role": "redbeard",
-  "text": "Hot aisle. Don't camp in it.",
-  "file": "/assets/voice/redbeard_a623592c10.mp3"
- },
- {
-  "role": "redbeard",
-  "text": "I'm Red Beard. That's the whole introduction.",
-  "file": "/assets/voice/redbeard_8461d69a54.mp3"
- },
- {
-  "role": "redbeard",
-  "text": "Red Beard. Data one. Keep it moving.",
-  "file": "/assets/voice/redbeard_e53d2ccb63.mp3"
- },
- {
-  "role": "redbeard",
-  "text": "Row's tight. Squeeze through.",
-  "file": "/assets/voice/redbeard_e85cdefc81.mp3"
- },
- {
-  "role": "redbeard",
-  "text": "This hall's live. Watch the tiles.",
-  "file": "/assets/voice/redbeard_0d3f94960f.mp3"
- },
- {
-  "role": "redbeard",
-  "text": "You lost?",
-  "file": "/assets/voice/redbeard_88964d72da.mp3"
- },
- {
-  "role": "safety",
-  "text": "Are you tied off?",
-  "file": "/assets/voice/safety_17fbbe0261.mp3"
- },
- {
-  "role": "safety",
-  "text": "Both feet on the deck.",
-  "file": "/assets/voice/safety_526761e4b4.mp3"
- },
- {
-  "role": "safety",
-  "text": "Both feet on the platform.",
-  "file": "/assets/voice/safety_324ea319f3.mp3"
- },
- {
-  "role": "safety",
-  "text": "Don't look at me like that.",
-  "file": "/assets/voice/safety_f040d36279.mp3"
- },
- {
-  "role": "safety",
-  "text": "Glasses. On. Now.",
-  "file": "/assets/voice/safety_9a63a6efbd.mp3"
- },
- {
-  "role": "safety",
-  "text": "Hard hat on that deck. Don't argue.",
-  "file": "/assets/voice/safety_7bf4ae9ea6.mp3"
- },
- {
-  "role": "safety",
-  "text": "Harness. I'm not asking.",
-  "file": "/assets/voice/safety_ee12a20141.mp3"
- },
- {
-  "role": "safety",
-  "text": "I need a harness if that stick goes up.",
-  "file": "/assets/voice/safety_aafdb932a2.mp3"
- },
- {
-  "role": "safety",
-  "text": "Is your lift inspection filled out?",
-  "file": "/assets/voice/safety_59cd700d92.mp3"
- },
- {
-  "role": "safety",
-  "text": "Tied off or you come down.",
-  "file": "/assets/voice/safety_c128b2f230.mp3"
- },
- {
-  "role": "safety",
-  "text": "Where are your safety glasses?",
-  "file": "/assets/voice/safety_a4e541ae69.mp3"
- },
- {
-  "role": "safety",
-  "text": "Where is the lift inspection.",
-  "file": "/assets/voice/safety_f0099a3547.mp3"
- },
- {
-  "role": "tremont",
-  "text": "After this pull I'm hitting the gym. Not the vending machine.",
-  "file": "/assets/voice/tremont_0c2f7cf73f.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Black coffee. No sugar sludge.",
-  "file": "/assets/voice/tremont_2ec4a8691f.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Book 2, Tremont. Built different.",
-  "file": "/assets/voice/tremont_086f4900f2.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Borrowing the blue scissor. Legs still warm from the set.",
-  "file": "/assets/voice/tremont_1c37915419.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Box is tight. Next set.",
-  "file": "/assets/voice/tremont_ab0282fea5.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Chest tight. Mind clear. Next device.",
-  "file": "/assets/voice/tremont_f194c2c04f.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Chest to the deck. Circuit can wait two seconds.",
-  "file": "/assets/voice/tremont_8fa4446dea.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Don't hand me a Squencher. I'll finish this set first.",
-  "file": "/assets/voice/tremont_071447c3f6.mp3"
- },
- {
-  "role": "tremont",
-  "text": "F-150's in the south lot. PowerBoost. Don't block it.",
-  "file": "/assets/voice/tremont_69bdbf16e0.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Ford in the lot, iron in the hall. That's the day.",
-  "file": "/assets/voice/tremont_868949ed71.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Form over force. Same as a clean 90.",
-  "file": "/assets/voice/tremont_4716e71ffd.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Form over force. That's a clean bend.",
-  "file": "/assets/voice/tremont_0c673db894.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Gear's green, Lemon. Built different over here.",
-  "file": "/assets/voice/tremont_62cfbdf9e8.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Going up. Don't park in front of my Ford.",
-  "file": "/assets/voice/tremont_3249714898.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Going up. Don't throw me a Squencher.",
-  "file": "/assets/voice/tremont_827daad74f.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Gym after the whistle. This set is just to stay honest.",
-  "file": "/assets/voice/tremont_ecc9a8beb4.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Gym first. Then the circuit. Squenchers are poison.",
-  "file": "/assets/voice/tremont_152fb7087d.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Gym, Ford, water. Squenchers didn't make the list.",
-  "file": "/assets/voice/tremont_682b67fb0e.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Hot aisle's trying to kill us. Keep walking.",
-  "file": "/assets/voice/tremont_68f1cde2c2.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Hydrate. Not that colored sugar water.",
-  "file": "/assets/voice/tremont_6c03043ac8.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Hydrate. Water. That's the whole sermon.",
-  "file": "/assets/voice/tremont_6a479dcd22.mp3"
- },
- {
-  "role": "tremont",
-  "text": "I didn't buy that F-150 to sit in the lot all shift.",
-  "file": "/assets/voice/tremont_e42220fd75.mp3"
- },
- {
-  "role": "tremont",
-  "text": "I don't run that bag. Protein and a Ford payment.",
-  "file": "/assets/voice/tremont_a520659fe3.mp3"
- },
- {
-  "role": "tremont",
-  "text": "I don't run that bag. Water and iron only.",
-  "file": "/assets/voice/tremont_6f099c3994.mp3"
- },
- {
-  "role": "tremont",
-  "text": "I've seen better form on a gas-station pull-up bar.",
-  "file": "/assets/voice/tremont_b5a88eca13.mp3"
- },
- {
-  "role": "tremont",
-  "text": "If it isn't water or work, I don't want it.",
-  "file": "/assets/voice/tremont_7d31583eab.mp3"
- },
- {
-  "role": "tremont",
-  "text": "If you brought a Squencher, drink it over there.",
-  "file": "/assets/voice/tremont_a0bcc5a411.mp3"
- },
- {
-  "role": "tremont",
-  "text": "If you need a ride to the hall, I drive American.",
-  "file": "/assets/voice/tremont_6856d5e4fc.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Lights are up. Don't skip the work either.",
-  "file": "/assets/voice/tremont_5b96d22806.mp3"
- },
- {
-  "role": "tremont",
-  "text": "My boots are sweating. That's a first.",
-  "file": "/assets/voice/tremont_e1e7090efc.mp3"
- },
- {
-  "role": "tremont",
-  "text": "No candy cart. Never a candy cart.",
-  "file": "/assets/voice/tremont_308632c811.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Pouch on. Blood moving. Let's hang iron.",
-  "file": "/assets/voice/tremont_1daf21e4be.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Push-up set. Then the device.",
-  "file": "/assets/voice/tremont_1fbfaf78c0.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Rec's landed. F-150's in the lot. Let's finish this.",
-  "file": "/assets/voice/tremont_a3e4769b29.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Rec's landed. Still not drinking Squenchers.",
-  "file": "/assets/voice/tremont_15bc5e1a4f.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Recover after the shift. Work during it.",
-  "file": "/assets/voice/tremont_a52638684c.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Squenchers are poison.",
-  "file": "/assets/voice/tremont_bfd02bc74d.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Squenchers are poison. Water and iron.",
-  "file": "/assets/voice/tremont_027c977ed9.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Squenchers are still poison. That's the last time I'm saying it.",
-  "file": "/assets/voice/tremont_1e2f311504.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Stick's in. Form's solid.",
-  "file": "/assets/voice/tremont_4d49501bb3.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Strong community starts with strong people. And no Squenchers.",
-  "file": "/assets/voice/tremont_318825f1b8.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Strong people. Strong community. Strong circuit.",
-  "file": "/assets/voice/tremont_e6aadb2195.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Tell Lemon the set's done and the device is landed.",
-  "file": "/assets/voice/tremont_9f1d2ab182.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Tendies are a recovery meal. Not a mid-shift meal.",
-  "file": "/assets/voice/tremont_a8e22ecc8a.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Tool cart only. No candy. No Squenchers.",
-  "file": "/assets/voice/tremont_002088afad.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Tool cart. Not a snack cart. Keep it rolling.",
-  "file": "/assets/voice/tremont_6946ff34dd.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Tow package, Pro Power, and a circuit that actually lands.",
-  "file": "/assets/voice/tremont_29d5557176.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Truck's a Ford. Work's a set. Don't mix 'em up.",
-  "file": "/assets/voice/tremont_8ea511dd25.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Water and iron. Then we land the device.",
-  "file": "/assets/voice/tremont_64f51366db.mp3"
- },
- {
-  "role": "tremont",
-  "text": "Who's skipping leg day on my site?",
-  "file": "/assets/voice/tremont_9b84059457.mp3"
- },
- {
-  "role": "tremont",
-  "text": "You can keep the Squenchers. I'll take the water and the truck.",
-  "file": "/assets/voice/tremont_a57909f1e5.mp3"
- },
- {
-  "role": "utah",
-  "text": "Book 2 does it better. That's not bragging, that's data.",
-  "file": "/assets/voice/utah_8b52e04df5.mp3"
- },
- {
-  "role": "utah",
-  "text": "Borrowing the blue scissor. Tell Ferguson it drives itself.",
-  "file": "/assets/voice/utah_4927cf4e4a.mp3"
- },
- {
-  "role": "utah",
-  "text": "Box is up.",
-  "file": "/assets/voice/utah_2b5b8fc92b.mp3"
- },
- {
-  "role": "utah",
-  "text": "Cart's coming with me. Candy stays cold.",
-  "file": "/assets/voice/utah_ddcaa5c35e.mp3"
- },
- {
-  "role": "utah",
-  "text": "Device is landed.",
-  "file": "/assets/voice/utah_3dd99bd1c3.mp3"
- },
- {
-  "role": "utah",
-  "text": "Do you even know what you're doing?",
-  "file": "/assets/voice/utah_7ede9fc7f7.mp3"
- },
- {
-  "role": "utah",
-  "text": "Going up. Somebody hold my coffee.",
-  "file": "/assets/voice/utah_cfebed80f3.mp3"
- },
- {
-  "role": "utah",
-  "text": "I'm a Mormon.",
-  "file": "/assets/voice/utah_e7bf160696.mp3"
- },
- {
-  "role": "utah",
-  "text": "I'm a virgin!",
-  "file": "/assets/voice/utah_7df56d9d87.mp3"
- },
- {
-  "role": "utah",
-  "text": "I've seen better bends in a garden hose.",
-  "file": "/assets/voice/utah_00aeee199f.mp3"
- },
- {
-  "role": "utah",
-  "text": "It's throat punch Thursday.",
-  "file": "/assets/voice/utah_c8db135e0d.mp3"
- },
- {
-  "role": "utah",
-  "text": "Mood enhancing drugs, anybody?",
-  "file": "/assets/voice/utah_1fc8b1aacd.mp3"
- },
- {
-  "role": "utah",
-  "text": "One-ten easy. Who designed this, the sun?",
-  "file": "/assets/voice/utah_bfdbccc458.mp3"
- },
- {
-  "role": "utah",
-  "text": "Panel's green, Lugo.",
-  "file": "/assets/voice/utah_a4dd3ace53.mp3"
- },
- {
-  "role": "utah",
-  "text": "Pouch is on. Let's get this loop in.",
-  "file": "/assets/voice/utah_ef08535ded.mp3"
- },
- {
-  "role": "utah",
-  "text": "Pride tee on. Loudest thing on this site besides the horns.",
-  "file": "/assets/voice/utah_22d0efeefc.mp3"
- },
- {
-  "role": "utah",
-  "text": "Smoke's on the loop.",
-  "file": "/assets/voice/utah_dfeff72386.mp3"
- },
- {
-  "role": "utah",
-  "text": "Somebody's playing country in pod three and it's ruining my splice.",
-  "file": "/assets/voice/utah_3ba8848c47.mp3"
- },
- {
-  "role": "utah",
-  "text": "Tell Drew my numbers are beautiful.",
-  "file": "/assets/voice/utah_3aee92788b.mp3"
- },
- {
-  "role": "utah",
-  "text": "That's a stick.",
-  "file": "/assets/voice/utah_c276c32e05.mp3"
- },
- {
-  "role": "utah",
-  "text": "This hall's crooked. Not my work — the HALL.",
-  "file": "/assets/voice/utah_707b5b7827.mp3"
- },
- {
-  "role": "utah",
-  "text": "This hallway's a convection oven. My pouch is melting.",
-  "file": "/assets/voice/utah_59bbb863cf.mp3"
- },
- {
-  "role": "utah",
-  "text": "Vesda's on the aux.",
-  "file": "/assets/voice/utah_9f19901a4c.mp3"
- },
- {
-  "role": "utah",
-  "text": "Want any mood enhancing drugs?",
-  "file": "/assets/voice/utah_03efa575e2.mp3"
- }
+  {
+    "role": "andy",
+    "text": "Andy. Donations for the sick and needy fund.",
+    "file": "/assets/voice/andy_0476ee8874.mp3"
+  },
+  {
+    "role": "andy",
+    "text": "Are you going to brotherhood night?",
+    "file": "/assets/voice/andy_9a76ea4213.mp3"
+  },
+  {
+    "role": "andy",
+    "text": "Buy a tip board and win for the sick and needy fund.",
+    "file": "/assets/voice/andy_74fbf79667.mp3"
+  },
+  {
+    "role": "andy",
+    "text": "Come to brotherhood night.",
+    "file": "/assets/voice/andy_504a4078ba.mp3"
+  },
+  {
+    "role": "andy",
+    "text": "Five bucks. Sick and needy. That's the ask.",
+    "file": "/assets/voice/andy_ad438080e9.mp3"
+  },
+  {
+    "role": "andy",
+    "text": "Folding money. Not IOUs.",
+    "file": "/assets/voice/andy_cb896b2f5f.mp3"
+  },
+  {
+    "role": "andy",
+    "text": "Local takes care of its own. Sick and needy fund.",
+    "file": "/assets/voice/andy_67edde06d3.mp3"
+  },
+  {
+    "role": "andy",
+    "text": "Pass the hat. Somebody's out hurt.",
+    "file": "/assets/voice/andy_efcf266b79.mp3"
+  },
+  {
+    "role": "andy",
+    "text": "Sick and needy fund. You in?",
+    "file": "/assets/voice/andy_554938983c.mp3"
+  },
+  {
+    "role": "andy",
+    "text": "Want to buy a coin.",
+    "file": "/assets/voice/andy_1042ea4572.mp3"
+  },
+  {
+    "role": "don",
+    "text": "Don't you take that to the landfill!",
+    "file": "/assets/voice/don_bc2ea0bbc2.mp3"
+  },
+  {
+    "role": "don",
+    "text": "Drew's gonna hear about this joyride!",
+    "file": "/assets/voice/don_0e7cb27452.mp3"
+  },
+  {
+    "role": "don",
+    "text": "Foreman vehicle! Says so on the clipboard!",
+    "file": "/assets/voice/don_1a99dfb48c.mp3"
+  },
+  {
+    "role": "don",
+    "text": "Get back here with my SXS!",
+    "file": "/assets/voice/don_8809553977.mp3"
+  },
+  {
+    "role": "don",
+    "text": "Give me back my side by side!",
+    "file": "/assets/voice/don_681254ad61.mp3"
+  },
+  {
+    "role": "don",
+    "text": "Hey! That's my side-by-side!",
+    "file": "/assets/voice/don_00efe85630.mp3"
+  },
+  {
+    "role": "don",
+    "text": "I didn't say you could take the Razor!",
+    "file": "/assets/voice/don_758de413c4.mp3"
+  },
+  {
+    "role": "don",
+    "text": "I was gonna eat lunch in that thing!",
+    "file": "/assets/voice/don_0a146bffff.mp3"
+  },
+  {
+    "role": "don",
+    "text": "Park it! Park it right now!",
+    "file": "/assets/voice/don_4e643352e1.mp3"
+  },
+  {
+    "role": "don",
+    "text": "That's not a toy! Okay it is. It's MY toy!",
+    "file": "/assets/voice/don_e8f6004224.mp3"
+  },
+  {
+    "role": "don",
+    "text": "That's what I thought. Walk next time.",
+    "file": "/assets/voice/don_473fcd0de5.mp3"
+  },
+  {
+    "role": "don",
+    "text": "Those are company keys! MY company keys!",
+    "file": "/assets/voice/don_f103cdae00.mp3"
+  },
+  {
+    "role": "don",
+    "text": "You hop in my seat like you pay the note!",
+    "file": "/assets/voice/don_69f11c6a34.mp3"
+  },
+  {
+    "role": "don",
+    "text": "You wreck that and you're buying it out of pocket!",
+    "file": "/assets/voice/don_d1fc20cfcc.mp3"
+  },
+  {
+    "role": "drew",
+    "text": "Bills by 30, Tremont. Now get back on the hall.",
+    "file": "/assets/voice/drew_24358accc6.mp3"
+  },
+  {
+    "role": "drew",
+    "text": "Bills by 30, Utah. Now get back on the hall.",
+    "file": "/assets/voice/drew_d879509c00.mp3"
+  },
+  {
+    "role": "drew",
+    "text": "Fine. Keep the numbers moving and I don't care what he drinks.",
+    "file": "/assets/voice/drew_5c970ca399.mp3"
+  },
+  {
+    "role": "drew",
+    "text": "How we looking on the circuits, Lemon?",
+    "file": "/assets/voice/drew_b46aa4d4a3.mp3"
+  },
+  {
+    "role": "drew",
+    "text": "How we looking on the loop, Lugo?",
+    "file": "/assets/voice/drew_7dec64b7b5.mp3"
+  },
+  {
+    "role": "drew",
+    "text": "If I find you laying in the aisle I'm calling heat illness and a slip.",
+    "file": "/assets/voice/drew_bb057a56cb.mp3"
+  },
+  {
+    "role": "drew",
+    "text": "Long as the work's clean, he can sell snow cones.",
+    "file": "/assets/voice/drew_288ec472a9.mp3"
+  },
+  {
+    "role": "drew",
+    "text": "Signed. Clean work, Tremont. Bills by 30.",
+    "file": "/assets/voice/drew_29fbd67a7b.mp3"
+  },
+  {
+    "role": "drew",
+    "text": "Signed. Clean work, Utah. Bills by 30.",
+    "file": "/assets/voice/drew_79cf205bab.mp3"
+  },
+  {
+    "role": "drew",
+    "text": "Tremont. Clipboard's out. Don't make me write this slip.",
+    "file": "/assets/voice/drew_997623f112.mp3"
+  },
+  {
+    "role": "drew",
+    "text": "Utah. Clipboard's out. Don't make me write this slip.",
+    "file": "/assets/voice/drew_0a0ba134b4.mp3"
+  },
+  {
+    "role": "drew",
+    "text": "You passed out in the hot aisle. Heat illness. Slip's in the trailer. Drink water next time.",
+    "file": "/assets/voice/drew_a348f346a2.mp3"
+  },
+  {
+    "role": "gibbs",
+    "text": "Has anyone seen my neck.",
+    "file": "/assets/voice/gibbs_28753ea25d.mp3"
+  },
+  {
+    "role": "gibbs",
+    "text": "I'm Robin. He's Batman. I still don't have a neck.",
+    "file": "/assets/voice/gibbs_0fca28d989.mp3"
+  },
+  {
+    "role": "gibbs",
+    "text": "If you find a neck, it's Gibbs's.",
+    "file": "/assets/voice/gibbs_593fa61421.mp3"
+  },
+  {
+    "role": "gibbs",
+    "text": "Joe. Where's my neck.",
+    "file": "/assets/voice/gibbs_3106177966.mp3"
+  },
+  {
+    "role": "gibbs",
+    "text": "Walking the hall. Still no neck.",
+    "file": "/assets/voice/gibbs_c26f28c34d.mp3"
+  },
+  {
+    "role": "gibbs",
+    "text": "Where's my neck.",
+    "file": "/assets/voice/gibbs_e987312b8d.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Both of you — close that gap or you're both on the next truck home.",
+    "file": "/assets/voice/joe_56b4ae2222.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Derek — I said the fucking tray. You deaf or just stupid?",
+    "file": "/assets/voice/joe_3c473747e8.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Derek — get that fucking tray up. Not whatever that shit is.",
+    "file": "/assets/voice/joe_421ce377f9.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Derek — stop staring at the traveler and put your hands on the pipe.",
+    "file": "/assets/voice/joe_bee0226d8e.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Derek, if that coupling backs off again you're buying lunch for the whole fucking crew.",
+    "file": "/assets/voice/joe_6d69c8f7c4.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Derek. Eyes up. That strap's crooked and I can see it from here, asshole.",
+    "file": "/assets/voice/joe_926b6804ae.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Derek. I will write your ass up so hard 237 sends you home in a paper bag.",
+    "file": "/assets/voice/joe_b3d7a18d42.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Don't look at the traveler. Look at the fucking work.",
+    "file": "/assets/voice/joe_c92c00255a.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Get to fucking workkk.",
+    "file": "/assets/voice/joe_855b62391d.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Hard hats ON. I catch one more lid on a gang box and you're walking, you hear me?",
+    "file": "/assets/voice/joe_b2367230a8.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Hey. Yeah, you with the drill. Tighter. I still see daylight, you lazy shit.",
+    "file": "/assets/voice/joe_d2cb484ee4.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Hey. Yeah, you. That's a piss-poor coupling. Do it again before I come up there.",
+    "file": "/assets/voice/joe_dc68da3e8a.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "I SAID THE TRAY, NOT THE GODDAMN FLOOR. You packing a lunch or hanging pipe?",
+    "file": "/assets/voice/joe_e51b016648.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "I don't wanna see a gap in that run. Fill it or I'll fill your time sheet with a zero.",
+    "file": "/assets/voice/joe_fe050caae1.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "I swear to god if I see another open box I'm writing all three of you up.",
+    "file": "/assets/voice/joe_9f7d949a2b.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Jesus Christ, Derek. That's a dogleg. Cut it out and do it again.",
+    "file": "/assets/voice/joe_7bddaa636c.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Measure twice. I already measured once and you're short, genius.",
+    "file": "/assets/voice/joe_ed4c81afee.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Move. Now. I am not asking. Get on that iron.",
+    "file": "/assets/voice/joe_03aca93f9c.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Put the phone away before I put it in the gang box, asshole.",
+    "file": "/assets/voice/joe_f1cb52a68e.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Rivera. That's the name on the slip if this corner ain't done by lunch. So quit dicking around.",
+    "file": "/assets/voice/joe_35efc9450f.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "Rivera. This corner's mine — eyes on the fucking work, not the traveler. Don't test me.",
+    "file": "/assets/voice/joe_0e72e793d1.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "That coupling's backwards, you stupid shit. Don't make me come up there.",
+    "file": "/assets/voice/joe_6f36214821.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "That's a dogleg you could drive a truck through. Cut it and do it right.",
+    "file": "/assets/voice/joe_59d1ea59ef.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "That's not a break. That's you hiding. Get the fuck back on the iron.",
+    "file": "/assets/voice/joe_2321bc837c.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "You hanging pipe or standing there looking pretty? Because I don't see any pipe going in.",
+    "file": "/assets/voice/joe_bb9dc033d0.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "You on my clock or theirs? Move your ass.",
+    "file": "/assets/voice/joe_f01a7efbbc.mp3"
+  },
+  {
+    "role": "joe",
+    "text": "You two talking or working? 'Cause I only hear one of those, and it ain't the work.",
+    "file": "/assets/voice/joe_5d69d12799.mp3"
+  },
+  {
+    "role": "kenny",
+    "text": "Don't get stew on the shirt. That's a sixty-dollar shirt.",
+    "file": "/assets/voice/kenny_61dd676cec.mp3"
+  },
+  {
+    "role": "kenny",
+    "text": "Kenny the stew. Shirt's not from the trailer.",
+    "file": "/assets/voice/kenny_d8f6f68c31.mp3"
+  },
+  {
+    "role": "kenny",
+    "text": "Sixty bucks. Tie-dye. Don't even ask.",
+    "file": "/assets/voice/kenny_d5328275d7.mp3"
+  },
+  {
+    "role": "kenny",
+    "text": "This dye job cost more than your boots.",
+    "file": "/assets/voice/kenny_7603200b3a.mp3"
+  },
+  {
+    "role": "kenny",
+    "text": "Tie-dye. Sixty bucks. Final answer.",
+    "file": "/assets/voice/kenny_2eb41016db.mp3"
+  },
+  {
+    "role": "kenny",
+    "text": "You want one? Sixty. Cash.",
+    "file": "/assets/voice/kenny_bfa3f76785.mp3"
+  },
+  {
+    "role": "nate",
+    "text": "Beer in the cooler. Don't tell Drew.",
+    "file": "/assets/voice/nate_78d43d8a23.mp3"
+  },
+  {
+    "role": "nate",
+    "text": "I said wieners AND beer. Not just beer.",
+    "file": "/assets/voice/nate_9a4dcfdae3.mp3"
+  },
+  {
+    "role": "nate",
+    "text": "I'm walking the yard. Cooler's still full.",
+    "file": "/assets/voice/nate_3f9b5cd042.mp3"
+  },
+  {
+    "role": "nate",
+    "text": "Nate's got the cooler. Wieners first, then the beer.",
+    "file": "/assets/voice/nate_c84fede5e1.mp3"
+  },
+  {
+    "role": "nate",
+    "text": "Who took the last wiener.",
+    "file": "/assets/voice/nate_5ef599833a.mp3"
+  },
+  {
+    "role": "nate",
+    "text": "Wieners AND beer. Both.",
+    "file": "/assets/voice/nate_d8c54f7077.mp3"
+  },
+  {
+    "role": "nate",
+    "text": "Wieners and beer. That's lunch. That's the whole program.",
+    "file": "/assets/voice/nate_f6af814ea7.mp3"
+  },
+  {
+    "role": "nate",
+    "text": "You got wieners?",
+    "file": "/assets/voice/nate_33ccb3845d.mp3"
+  },
+  {
+    "role": "nate",
+    "text": "You want a wiener, you come find Nate.",
+    "file": "/assets/voice/nate_3289f14d4c.mp3"
+  },
+  {
+    "role": "redbeard",
+    "text": "Have you seen my guys?",
+    "file": "/assets/voice/redbeard_8f69c069ce.mp3"
+  },
+  {
+    "role": "redbeard",
+    "text": "Hot aisle. Don't camp in it.",
+    "file": "/assets/voice/redbeard_a623592c10.mp3"
+  },
+  {
+    "role": "redbeard",
+    "text": "I'm Red Beard. That's the whole introduction.",
+    "file": "/assets/voice/redbeard_8461d69a54.mp3"
+  },
+  {
+    "role": "redbeard",
+    "text": "Red Beard. Data one. Keep it moving.",
+    "file": "/assets/voice/redbeard_e53d2ccb63.mp3"
+  },
+  {
+    "role": "redbeard",
+    "text": "Row's tight. Squeeze through.",
+    "file": "/assets/voice/redbeard_e85cdefc81.mp3"
+  },
+  {
+    "role": "redbeard",
+    "text": "This hall's live. Watch the tiles.",
+    "file": "/assets/voice/redbeard_0d3f94960f.mp3"
+  },
+  {
+    "role": "redbeard",
+    "text": "What are you guys doing.",
+    "file": "/assets/voice/redbeard_5687eec264.mp3"
+  },
+  {
+    "role": "redbeard",
+    "text": "You lost?",
+    "file": "/assets/voice/redbeard_88964d72da.mp3"
+  },
+  {
+    "role": "safety",
+    "text": "Are you tied off?",
+    "file": "/assets/voice/safety_17fbbe0261.mp3"
+  },
+  {
+    "role": "safety",
+    "text": "Both feet on the deck.",
+    "file": "/assets/voice/safety_526761e4b4.mp3"
+  },
+  {
+    "role": "safety",
+    "text": "Both feet on the platform.",
+    "file": "/assets/voice/safety_324ea319f3.mp3"
+  },
+  {
+    "role": "safety",
+    "text": "Don't look at me like that.",
+    "file": "/assets/voice/safety_f040d36279.mp3"
+  },
+  {
+    "role": "safety",
+    "text": "Glasses. On. Now.",
+    "file": "/assets/voice/safety_9a63a6efbd.mp3"
+  },
+  {
+    "role": "safety",
+    "text": "Hard hat on that deck. Don't argue.",
+    "file": "/assets/voice/safety_7bf4ae9ea6.mp3"
+  },
+  {
+    "role": "safety",
+    "text": "Harness. I'm not asking.",
+    "file": "/assets/voice/safety_ee12a20141.mp3"
+  },
+  {
+    "role": "safety",
+    "text": "I need a harness if that stick goes up.",
+    "file": "/assets/voice/safety_aafdb932a2.mp3"
+  },
+  {
+    "role": "safety",
+    "text": "Is your lift inspection filled out?",
+    "file": "/assets/voice/safety_59cd700d92.mp3"
+  },
+  {
+    "role": "safety",
+    "text": "Tied off or you come down.",
+    "file": "/assets/voice/safety_c128b2f230.mp3"
+  },
+  {
+    "role": "safety",
+    "text": "Where are your safety glasses?",
+    "file": "/assets/voice/safety_a4e541ae69.mp3"
+  },
+  {
+    "role": "safety",
+    "text": "Where is the lift inspection.",
+    "file": "/assets/voice/safety_f0099a3547.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "Believe me. This is the greatest data hall. Maybe ever.",
+    "file": "/assets/voice/chris_496ea61a6ababd5c78b5_7946d1440d84_4efc029caf1e_47cc892e8434.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "Bends so clean, so beautiful, you'll say Chris you can't do that. I did it.",
+    "file": "/assets/voice/chris_6b67523a3d49836121dc_7946d1440d84_fe1189bdab54_b7e6491c7d8a.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "Fake news that this loop is open. It's not open. It's closed. Totally closed.",
+    "file": "/assets/voice/chris_87e7697de7d66fea2c68_7946d1440d84_7ed315e682ed_6e95c5330fb0.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "Hard hats. Very important. I have the best hard hat. Look at this hat.",
+    "file": "/assets/voice/chris_c08f96716103fd36ab9c_7946d1440d84_dc6f863163e7_10e858d7ae63.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "I have a great brain for fire alarm. The best brain. It's true.",
+    "file": "/assets/voice/chris_83a9c51834eb4f913649_7946d1440d84_64d6939dca08_db6312a8d085.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "I know conduit. I have the best conduit. Many people are saying it.",
+    "file": "/assets/voice/chris_93c0e744b71934212ccc_7946d1440d84_0d931808d3db_a1d2182e4243.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "I'm from Long Island. Lighting now. O'Connell. Yuge lights. Believe me.",
+    "file": "/assets/voice/chris_94e808b1bcc331d0367c_7946d1440d84_bab130c64af9_83e9f5786f2e.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "Many people said we wouldn't finish the pull. We finished. Tremendous pull.",
+    "file": "/assets/voice/chris_1f2034f9d633ceb9527b_7946d1440d84_e1ffdc83801d_47d437edcedd.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "Nobody knows 90s better than me. Nobody. I invent the 90.",
+    "file": "/assets/voice/chris_5f59061da9c2633d23dd_7946d1440d84_c7d5fffd009b_2b29b1fb5f1c.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "People tell me — smart people, the best people — this panel is a disaster. We're gonna make it huge.",
+    "file": "/assets/voice/chris_2dbed38f40ef567327b6_7946d1440d84_5db9e20cbebf_9b84b1d66e52.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "Squenchers? Not a fan. Water. The best water. Long Island water, maybe.",
+    "file": "/assets/voice/chris_630875d3e4505fadaaca_7946d1440d84_09a0e67e82c3_fc58825cd41b.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "That's a lighting circuit. I don't land fire alarm anymore. I did that. Tremendous fire alarm.",
+    "file": "/assets/voice/chris_c1e1be4acbfd98d62078_7946d1440d84_f6e4b38156ec_dd7cc8c17292.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "The trailer says we're behind. We're not behind. We're ahead. Way ahead.",
+    "file": "/assets/voice/chris_577852448df258ba39e4_7946d1440d84_59c4c78e92c5_3db50a5f74cd.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "They're saying the inspector is tough. I love the inspector. Beautiful inspection coming.",
+    "file": "/assets/voice/chris_c192bc188a2d43f17253_7946d1440d84_1de3caf3fb70_60aa840003f5.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "This EMT? The best EMT. Nobody's ever seen EMT like this.",
+    "file": "/assets/voice/chris_5cca94171590d5540aaa_7946d1440d84_9ee7233fe2b6_b3dc425abd07.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "This traveler — very nice person, by the way — is doing a tremendous job. Tremendous.",
+    "file": "/assets/voice/chris_b6d37c838d3008111174_7946d1440d84_c60d68dd0069_8980e3dd779c.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "Used to be fire alarm. O'Connell lighting now. Don't mix the books.",
+    "file": "/assets/voice/chris_fb2a1a68c1ed43051abb_7946d1440d84_55bfbd325d84_e2e2ce869c97.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "We're going to drain the swamp. By which I mean this wet floor. Somebody get a pig.",
+    "file": "/assets/voice/chris_b6f94c098b0576dfb759_7946d1440d84_aa82e0454de1_e5eadcf2139b.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "We're going to win so much on this hall you'll get sick of winning.",
+    "file": "/assets/voice/chris_205d11f5d1446d12b8cb_7946d1440d84_1f83d098e4a9_a98d4eb5597c.mp3"
+  },
+  {
+    "role": "chris",
+    "text": "We're gonna hang so much pipe. You're gonna get tired of hanging pipe. Believe me.",
+    "file": "/assets/voice/chris_09b2839f7ab06ca5a5e0_7946d1440d84_30153821f068_f7fe4659f8e7.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "CHW's hot. Don't lean on it.",
+    "file": "/assets/voice/crew_3bcf2907cae8bd43a1d0_da352f0ab633_61032afc1817_25c14bf1bb6a.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "Coming through.",
+    "file": "/assets/voice/crew_6b14c5285c53ed18308e_da352f0ab633_f4e89baebf63_91853beb8eb4.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "Data hall's wet. Watch your boots.",
+    "file": "/assets/voice/crew_155a36ba3872bb11d062_da352f0ab633_b9b50f07857b_9e35d6893806.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "Ferguson, east electrical.",
+    "file": "/assets/voice/crew_c4eb2bc3571ef0b9f050_da352f0ab633_d138d15d8277_edf0323bf8e8.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "God bless the candy man.",
+    "file": "/assets/voice/crew_e640f261852d3427b977_da352f0ab633_4e10d8e38b3e_c3811ba9223c.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "Hey Tremont.",
+    "file": "/assets/voice/crew_df9b5bf5cf4a37be2766_da352f0ab633_04f7a33781ff_dfca92cebcbb.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "Hey Utah.",
+    "file": "/assets/voice/crew_c6511d3bf0143385b38e_da352f0ab633_a592b676a6ad_c1bd7529d2a3.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "Hot work. Keep walking.",
+    "file": "/assets/voice/crew_8eae2445a26bc0918988_da352f0ab633_7f7b718386c8_842780f8ae9e.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "HR is a phone call away, Utah.",
+    "file": "/assets/voice/crew_409f44a46222d72bd0c2_da352f0ab633_39dc5eb745af_42772806441b.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "I'm on nights — gimme two handfuls.",
+    "file": "/assets/voice/crew_2893a28ab1f00e62aa89_da352f0ab633_2e94e5f62a70_580911b83019.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "Insulators wrapping. Give us room.",
+    "file": "/assets/voice/crew_c613c8407f187d541889_da352f0ab633_9c4a6d6a14e9_fe16a3c48a1d.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "Millwrights. Hands off the pumps.",
+    "file": "/assets/voice/crew_b1710b6c9627a5b01f98_da352f0ab633_41ca8c204e80_0f04924dad3c.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "Pipefitters, coming through.",
+    "file": "/assets/voice/crew_87feb61cd75b05f87d64_da352f0ab633_8822b75e5030_b7e8273e18d9.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "That's our iron, sparkie.",
+    "file": "/assets/voice/crew_2451ab8a37919dcbefc5_da352f0ab633_99d3f7979624_f44983d3903f.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "They're Skittles, Utah. They're just Skittles.",
+    "file": "/assets/voice/crew_765d904d249b2c955705_da352f0ab633_a177282b2dfc_38813bea4c9c.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "Watch your head on that tray.",
+    "file": "/assets/voice/crew_beeea1c88c6a09c27bcd_da352f0ab633_b6399210b36b_5de607b22ead.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "We're landing gear. Stay in your lane.",
+    "file": "/assets/voice/crew_2f03ed95fb4766d03a85_da352f0ab633_e78eed5049c0_25f9080e2e5c.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "We're wiping down. Go around.",
+    "file": "/assets/voice/crew_6850ae9f1525a0e3d30d_da352f0ab633_fe4bc47a0067_c3d472aa5226.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "Yard's a mess today.",
+    "file": "/assets/voice/crew_dcd93367d5ec8e7c323d_da352f0ab633_eea881376f2d_bae55bfcb478.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "Yeah, hit me. Doctor's orders.",
+    "file": "/assets/voice/crew_3221309bc2f3a8b4ebdb_da352f0ab633_e45bf4de64a2_94e041b3b5f2.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "You boys with O'Connell?",
+    "file": "/assets/voice/crew_f44cfdb8a6ee8f063c50_da352f0ab633_11bf12fa3afc_bc8441dc3e99.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "You on Lemon's crew? We've got room on this cart.",
+    "file": "/assets/voice/crew_c345f9ee9ac9732392bc_da352f0ab633_033b26e8a142_e627ef92531e.mp3"
+  },
+  {
+    "role": "crew",
+    "text": "You're with O'Connell too? Grab the other end of this.",
+    "file": "/assets/voice/crew_8af9215922f71a660804_da352f0ab633_e49b50ccc508_ebef35afba90.mp3"
+  },
+  {
+    "role": "david",
+    "text": "He doesn't like the scissor.",
+    "file": "/assets/voice/david_930cebace627b562fc9e_c0894189033e_ddd49ea51623_51d6dca040d4.mp3"
+  },
+  {
+    "role": "david",
+    "text": "Jobsite speed. Moose speed.",
+    "file": "/assets/voice/david_0b4980897a89bdfe2b14_c0894189033e_ff697a854d35_757565e4780e.mp3"
+  },
+  {
+    "role": "david",
+    "text": "That's a moose. I'm David. Don't make it a thing.",
+    "file": "/assets/voice/david_cde311b5b5e4d98c4dd9_c0894189033e_22bc575293ee_a96c44f9e145.mp3"
+  },
+  {
+    "role": "david",
+    "text": "They covered a lot at orientation. The moose wasn't in it.",
+    "file": "/assets/voice/david_25f539ad0cfde5361522_c0894189033e_c13f6a2e74da_186308ebb02d.mp3"
+  },
+  {
+    "role": "david",
+    "text": "Utah said put me on a moose. I put me on a moose.",
+    "file": "/assets/voice/david_0a84f12602171f72526d_c0894189033e_40f50b7e7fad_d9cc09dd425a.mp3"
+  },
+  {
+    "role": "david",
+    "text": "Watch the antlers in the doorway.",
+    "file": "/assets/voice/david_3e6b17902f59e3a45b2e_c0894189033e_6a53cedccf6f_e6f1af8a67f9.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "After energize, nobody touches nothing. You hear me?",
+    "file": "/assets/voice/lemon_35437e5b5995be9a02e1_4ac987d71faa_e5d9d0e946e4_d93686045628.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "After the whistle I'm in the gym. Until then it's the circuit.",
+    "file": "/assets/voice/lemon_1a49b17b4dd8396ae0fc_4ac987d71faa_6553d4fdcc3c_d5ef5c158e5d.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Back on it, Tremont. Work's where you left it.",
+    "file": "/assets/voice/lemon_2c4ec0ec503f8def9824_4ac987d71faa_ba90e1b0e29f_dfe842cc1cb9.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Blue diamond is next. Beat him there. No posing.",
+    "file": "/assets/voice/lemon_cf6bd7cc4a94a37bf5ee_4ac987d71faa_fe931ad10b69_4db160ea0737.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Blue diamond is where he's headed. Stay ahead of the man. No posing.",
+    "file": "/assets/voice/lemon_b457704721ff7cb6a806_4ac987d71faa_d1e8b8c5cc10_2bdcd72d2d3f.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Boxes are up. Hang lights in the data halls and the corridors.",
+    "file": "/assets/voice/lemon_8e2f9613cb8d08da3a75_4ac987d71faa_4ea974a78db0_f1b9b96e1d37.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Boxes, lights, recs, then my gear. That's the order. Don't skip it.",
+    "file": "/assets/voice/lemon_d1652ebcb59645583e25_4ac987d71faa_57b4acfce19c_4289585e743d.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Callbacks. Drew found more. Clear week two's list.",
+    "file": "/assets/voice/lemon_9141561daa318d94d75a_4ac987d71faa_1268a9272fdb_3b68ac975b4d.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Cards are signed. Gear, corridor, pod one. RACK IN. ENERGIZE.",
+    "file": "/assets/voice/lemon_279935379af5f225bc44_4ac987d71faa_ba229dab61f1_f7f515ac92bd.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "CB-5 is iron and mud. Stay out of Ferguson's laydown.",
+    "file": "/assets/voice/lemon_0e3d4f5c7727e094286a_4ac987d71faa_3ad3f7edea58_153c4eada7e5.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Check the bend against the print before you make the next three.",
+    "file": "/assets/voice/lemon_94ea723fc0515e702a1f_4ac987d71faa_aa0f0b3e4d26_f965ec7f923f.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Check your hours before you leave. If something's missing, tell me today.",
+    "file": "/assets/voice/lemon_ccbf3e1ce30c5ccd6491_4ac987d71faa_e13fcdf57057_84255100d05c.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Circuits look honest. Three pens: me on the hall, Drew in the yard, the inspector at the gear. Then we energize.",
+    "file": "/assets/voice/lemon_db7461d8901769e4ef1d_4ac987d71faa_76d17d4073a0_772738f6e9ae.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Day two again. Meg the feeders, chase the opens, walk my gear.",
+    "file": "/assets/voice/lemon_a14a2fca4d7deb927e27_4ac987d71faa_1ef7fb05b68d_0e9128daa1b3.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Day two. Pipe's in. Meg the feeders, chase the opens, walk my gear. Stay sharp the whole ten.",
+    "file": "/assets/voice/lemon_0327e7e2125ca086bf5c_4ac987d71faa_5ca274efd7c5_2ad906bcc8ac.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Device retest. Honest readings. Don't get cute.",
+    "file": "/assets/voice/lemon_e6544e87167672c460eb_4ac987d71faa_542496c5b920_47d4b8af5d56.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Devices are landing, Drew. We'll have it by walk time.",
+    "file": "/assets/voice/lemon_92826d7f35dd7aeec7d3_4ac987d71faa_8f7052f1a71e_c17178332c9a.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Devices landed. Gear is on the corridor, pod one. Don't leave it in trouble.",
+    "file": "/assets/voice/lemon_1ed50a502fb6c5edcac5_4ac987d71faa_9612ebf0d4f3_5bee687b02c7.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Don't skip the work for a set. The set is the reward.",
+    "file": "/assets/voice/lemon_1b1a753208c94ca96a6a_4ac987d71faa_1abe8bc82abd_ede34268eaa1.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Drew found you. Slip's got your name spelled right. 237 will call again, Tremont.",
+    "file": "/assets/voice/lemon_48586de8dc0c5dbfaef6_4ac987d71faa_b26f4418b9e5_e3fe7c76fe46.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Drew signed it without looking up. That's as good as a handshake.",
+    "file": "/assets/voice/lemon_bf10a4ea175cf1640e3c_4ac987d71faa_35b5bdef5ce3_a909d7b2c640.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Drew signed. That's the punch list. Don't add to it.",
+    "file": "/assets/voice/lemon_f937cd14c94e11ea5b13_4ac987d71faa_864cb64618c5_65747e9b8fab.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Drew signs a CLEAN list. Finish the punch, Tremont.",
+    "file": "/assets/voice/lemon_63555aed698263cd3a62_4ac987d71faa_fdc4d06c2088_652da1050b8c.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Drew walked it with a pencil. Ten punch items, no markers. You know this site. Clear the list.",
+    "file": "/assets/voice/lemon_01c25f6102336477a0db_4ac987d71faa_b7ebea3de905_c4d4ddcf0446.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Drew's asking. I'm stalling. Finish the device.",
+    "file": "/assets/voice/lemon_f782b0e20920d8845d9b_4ac987d71faa_3c10f6c8675d_f626d20fbbdd.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Drew's at the trailer asking about the numbers, Tremont.",
+    "file": "/assets/voice/lemon_f163dc7812ea7b2c4cb8_4ac987d71faa_d6da0597b128_3ebd9b03015f.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Drew's writing on that clipboard. I can't hold him. Finish the device.",
+    "file": "/assets/voice/lemon_9368b12a936c9ea8bbc4_4ac987d71faa_36de160aaee0_07b889be3ccd.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Emergency lights and sensors while she's running. Then transfer back to normal.",
+    "file": "/assets/voice/lemon_f1a73bb37ebcaeeddc6c_4ac987d71faa_698356f3711a_79615971cf6c.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Emergency lights read honest. Reset the sensors, then we hand the building back to utility.",
+    "file": "/assets/voice/lemon_69fcbdf1036ade818ac0_4ac987d71faa_622120528a43_e3e779519764.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "EMT, boxes, lights, recs and switches first. Then you touch my gear.",
+    "file": "/assets/voice/lemon_b2842fa19b2fbea8ce9f_4ac987d71faa_96313acbe6da_38a3c6511e1d.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Energize day. Final checks, three signatures, then the big one. Whole site's watching CB-4.",
+    "file": "/assets/voice/lemon_cf5ee0dacc26eb206ea1_4ac987d71faa_eb9dfdd838cf_d11a683312bb.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Every feeder megs clean. That's a run that passes paper.",
+    "file": "/assets/voice/lemon_733187a973ba875dc14c_4ac987d71faa_c26cb5d5990e_1ed4f94afc4c.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Everything's hot. Stay on the checks. Nobody wants a hero today.",
+    "file": "/assets/voice/lemon_636f22c19f7a921db1ce_4ac987d71faa_128f5818b02a_12aa0bb778b1.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Fan crawl's loud. That's the wall pushing air. Work through it.",
+    "file": "/assets/voice/lemon_417042d4b8f43ce1e408_4ac987d71faa_af262a0be351_8ab828fb11f8.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Feeder lands LAST. Stage the reels, pull the sections, then bring it home.",
+    "file": "/assets/voice/lemon_9a0150d9022578b9c852_4ac987d71faa_acfdfc31a226_0ecf582e0f11.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Feeder's in the pipe. Land it at the gear.",
+    "file": "/assets/voice/lemon_0675599a75c9674517a0_4ac987d71faa_e104d213334c_d14fc2c80c33.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Feeder's landed. That's the pull. Don't nick it.",
+    "file": "/assets/voice/lemon_b69e2e26d4da445c4e94_4ac987d71faa_8075d8d42157_e42976866095.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Ferguson owns the east electrical. We're power. Stay in our lane.",
+    "file": "/assets/voice/lemon_878929dab3c15d721275_4ac987d71faa_63bdbe684685_aef34c740799.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Finish that connection, label it, then tell me what's left.",
+    "file": "/assets/voice/lemon_72907a34f46efde50666_4ac987d71faa_dac864da27d2_a4f6231ee815.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "FORKLIFT. Yellow iron has the right of way. Get off the path.",
+    "file": "/assets/voice/lemon_2b92e9b627394ec2319d_4ac987d71faa_77cdfe2daf21_3229926445cb.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Four bays. Don't get lost in the east hall.",
+    "file": "/assets/voice/lemon_90345c6d97aa6a91e92c_4ac987d71faa_d14e30aab3ee_b20e84188404.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Four bays. Service west, corridor down the middle, halls both sides. EMT first. Stay tight.",
+    "file": "/assets/voice/lemon_6167ba2643b6a5725b82_4ac987d71faa_dac9bd131e5f_ed1ee2866862.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Gear's green, Tremont. Drew's getting a finished job. Tools away.",
+    "file": "/assets/voice/lemon_36af7246363dc1185c7d_4ac987d71faa_223c7203e538_94262788fcd1.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Gear's green. Four halls covered. That's a clean panel. That's the job.",
+    "file": "/assets/voice/lemon_36b8e247674a4dd67911_4ac987d71faa_1b148f0111cb_903af7fced16.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Genny's coughing. South doors. Fuel her. Don't work in the dark.",
+    "file": "/assets/voice/lemon_de5aa594c8435bde137b_4ac987d71faa_8cbecb7a8de0_4a4e45d1479d.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Genny's dead. Lamp only. Fuel the diesel east of the south doors, then get back on the sensors.",
+    "file": "/assets/voice/lemon_270b922cd5a5e61cf76e_4ac987d71faa_f8f5eec3344b_7cd14bffb955.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Gym after the whistle. Circuit before it.",
+    "file": "/assets/voice/lemon_1e9dda416da28946369d_4ac987d71faa_9f07042a94d0_3dfba074879f.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Halls are dark. Tests don't count. Fuel the diesel east of the south doors.",
+    "file": "/assets/voice/lemon_242d5f9afa0404802b03_4ac987d71faa_1010a442a2ce_efc855710e15.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "He saw a clean demo. Stay ahead of the blue diamond.",
+    "file": "/assets/voice/lemon_e60c620b43011e13fbfe_4ac987d71faa_79da311a53f1_165e1b08ae16.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "He saw last week. Don't give him a write-up.",
+    "file": "/assets/voice/lemon_4911e8aff9f69ed2ec2a_4ac987d71faa_6c431e06a536_9f9dab388f8c.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "He's writing with the good pen. That's never free.",
+    "file": "/assets/voice/lemon_ba51a0ebb74db7ab4eaa_4ac987d71faa_6525271bf772_682521de0f6c.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "High work's done. Don't leave the scissor sitting in the hall.",
+    "file": "/assets/voice/lemon_2ee9c69c91d1ab072c12_4ac987d71faa_b231b7b115bf_754d9bdf7409.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Hold the pull, let off before the redline. Cable isn't free.",
+    "file": "/assets/voice/lemon_091a29160f574481186c_4ac987d71faa_58ecc10ecfd8_c7dfbe8d4672.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Hold the pull, let off before the redline. Same as a clean set — don't yank it.",
+    "file": "/assets/voice/lemon_0ecdb5da7382ebf090c2_4ac987d71faa_9dab3f637c61_62fcdf0b39f9.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Homeruns are landed. Terminations are honest.",
+    "file": "/assets/voice/lemon_b8b5ba3972d4e983e1ba_4ac987d71faa_5124fae41df4_f0a6941ccb8a.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "If Drew asks, I said stay productive.",
+    "file": "/assets/voice/lemon_333a64371d7a44bca960_4ac987d71faa_c01e43f198ad_8ff82e4558d4.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "If the halls go dark, the tests don't count. Fuel her.",
+    "file": "/assets/voice/lemon_cd75eb024931b13a95d6_4ac987d71faa_04964f8364a9_36b68c399920.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "If the next area isn't ready, tell me. I'll find you work that is.",
+    "file": "/assets/voice/lemon_4b3b7d03c26cf6257d7b_4ac987d71faa_80510d1f8027_fcbe5cb5e0ca.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "If the print and the field don't agree, bring it to me before you change anything.",
+    "file": "/assets/voice/lemon_58c40ddfc956f3fda44d_4ac987d71faa_c917e9e579b9_2d53ab6d669f.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "If you need a break, make it water and air. Then get back on the stick.",
+    "file": "/assets/voice/lemon_4dcdd4560770cfa5a5b7_4ac987d71faa_3e425e06bdb0_2e081853e3cd.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "If you're working up there, you're tied off. I'm not calling your mother.",
+    "file": "/assets/voice/lemon_7f32a17afe401b185fe8_4ac987d71faa_36616f9f2090_9d9bef32fc3b.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Inspector came back. Week two walk. Stay ahead of the blue diamond.",
+    "file": "/assets/voice/lemon_167db285d5602467381b_4ac987d71faa_2acd5a40058c_25479e85fe77.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Inspector signed the card. Don't touch anything else.",
+    "file": "/assets/voice/lemon_3462a429ed48c9991b17_4ac987d71faa_69ad04c8e6fb_38a08fadde1a.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Inspector walks at the end of shift. Meter bag's in the crib. Don't get cute.",
+    "file": "/assets/voice/lemon_e1eeaa2b0177b393e35e_4ac987d71faa_763824d98433_84e59e10fcfa.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Inspector wrote one up. Get AHEAD of him, Tremont.",
+    "file": "/assets/voice/lemon_14e0a80edaa54e57dbc0_4ac987d71faa_66981648aa9f_6d2c002a3c27.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Inspector's on site. He walks to a device, you beat him there and show it clean. Three corrections and we re-walk Monday.",
+    "file": "/assets/voice/lemon_49b00d7cb2d27f933d73_4ac987d71faa_2e784f08a28b_6b6774cb4dff.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Inspector's tomorrow. Don't leave me a trip overnight.",
+    "file": "/assets/voice/lemon_2e86eb3c6b0175a0de09_4ac987d71faa_111dfa5de94d_e13333c8ca51.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Keep a material list. I can get you fittings; I can't guess what you're short.",
+    "file": "/assets/voice/lemon_afc460391e5af7ad8c1e_4ac987d71faa_b91fe1de30ec_ecbf92c8182d.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Keep diesel in her while you work. When she dies you're on the lamp. Tests don't count in the dark.",
+    "file": "/assets/voice/lemon_82434402deabbbcafe3e_4ac987d71faa_3a15db32aaef_46eb8eaa9e1a.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Lamp's on. Diesel's east of the south doors. Fuel her when she coughs. Then emergency lights and sensors.",
+    "file": "/assets/voice/lemon_7c7051ad90f31283a645_4ac987d71faa_be5d34b8bda9_80b9906e34a8.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Last stick. Boxes next, then lights. All four pods. Don't dog it.",
+    "file": "/assets/voice/lemon_e90c676224df7a291c8a_4ac987d71faa_2a2d03d95c20_56c93b8ef862.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Last week's score is last week. New seven. Stay tight.",
+    "file": "/assets/voice/lemon_66e1a2adc568d96003be_4ac987d71faa_4da9093d7ece_550ec36d48c1.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Leave that fault alone. Keep the next person away from it. I'm coming over.",
+    "file": "/assets/voice/lemon_dd62e270e7a0ede54ea1_4ac987d71faa_fce7a16ab8d3_676099b5bdcd.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Lemon on three. Morning, Tremont. O'Connell power crew, CB-4. Get your pouch. We're starting with the EMT.",
+    "file": "/assets/voice/lemon_ba980989e5e9b578d7af_4ac987d71faa_3d5ef84ead64_7e372091a58a.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Lighting is lighting. Don't land it on somebody else's gear.",
+    "file": "/assets/voice/lemon_5b909af01217d464e8d3_4ac987d71faa_e0566b3cfe02_f71c7d3e263d.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Lights are on. Recs and switches at the doors, then my gear in electrical one.",
+    "file": "/assets/voice/lemon_dcb5d44f8db20c55d089_4ac987d71faa_8375339cc331_bd25591376e3.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "List is clear. Find Drew in the yard. He signs, we eat.",
+    "file": "/assets/voice/lemon_4cfdc840a785403f1743_4ac987d71faa_00c59a60eeca_08264022c507.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Long shift. Get some water before you head back into the data space.",
+    "file": "/assets/voice/lemon_89ef2f44d6f82bef27bc_4ac987d71faa_a83247e72d74_880c90629dca.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Make room for the next crew in the laydown. We all need to get through there.",
+    "file": "/assets/voice/lemon_32c23cc365682262deea_4ac987d71faa_b9f17bef7462_c1ae35a3794c.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Material good, Tremont? Don't wait on me.",
+    "file": "/assets/voice/lemon_b25499f96c5f48dff583_4ac987d71faa_7c9f0e9901fb_cb62e7ab0762.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Meg every feeder. The inspector doesn't care how pretty the EMT is if the run lies.",
+    "file": "/assets/voice/lemon_f8daaab71235bd1b4b98_4ac987d71faa_5a2452d5d9b0_6f85291276b7.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Night shift. Utility's locked out. CB-4 is on the diesel east of the south doors. Emergency lights, occupancy sensors, then TRANSFER back to normal at the gear.",
+    "file": "/assets/voice/lemon_74079cee7c785d315539_4ac987d71faa_abf700908d66_c19e0db44118.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "No ladder up there. Bring the deck down first.",
+    "file": "/assets/voice/lemon_48bab1ea4af1411544b9_4ac987d71faa_d63584dc7eff_b385ea8aac75.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "No markers today. You know this site or you don't.",
+    "file": "/assets/voice/lemon_58c912dd9c09eac430b2_4ac987d71faa_7fe2797e6af0_bb81d514ef5b.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "No markers. You know the site. Then find Drew.",
+    "file": "/assets/voice/lemon_b6728703c19e26074497_4ac987d71faa_56ae68481254_8efa14856304.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Nobody signs until the checks are done.",
+    "file": "/assets/voice/lemon_99d0838127863eee7f50_4ac987d71faa_8ae496d616d6_e2b8abcf2022.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "One-ten in that cross. You ain't a server. Move.",
+    "file": "/assets/voice/lemon_e8f6987fa643c5fb0582_4ac987d71faa_2a35567f4719_cf7f74a1b5e1.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Opens cleared. Panel's quiet. Keep that discipline, Tremont.",
+    "file": "/assets/voice/lemon_edddf139ad742f8e754f_4ac987d71faa_33e0c8df04e7_81541ede1263.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Opens first, then homeruns, then we walk the gear.",
+    "file": "/assets/voice/lemon_aa26e45ac0aaa03c4d65_4ac987d71faa_0e5222359e6f_2772fdf2829a.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "OT nights. Emergency lights, sensors, TRANSFER. Same drill.",
+    "file": "/assets/voice/lemon_54f7f1d21b723a9b92bd_4ac987d71faa_8762ae8842f6_a3682ca39736.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Pouch first, Tremont. Crib's by the orange conex. Put it on, then work.",
+    "file": "/assets/voice/lemon_9660fe31d0f1dd603c4c_4ac987d71faa_c2463ce7bec7_970c993e25fe.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Pouch is on. Run the EMT. Lighting and homeruns. Clean bends.",
+    "file": "/assets/voice/lemon_af71f8ee29c3ce838c71_4ac987d71faa_421a713fb69b_9452f2086f0e.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Pull day. Reels to every pod, then the feeder section by section. Controlled power. Cable isn't free.",
+    "file": "/assets/voice/lemon_d95ca17853b57a3761c0_4ac987d71faa_75af2392c829_ae085be5232e.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Pull smooth, not hard. Cable remembers.",
+    "file": "/assets/voice/lemon_d8c563eae0d20b10ab6f_4ac987d71faa_61c87ef20b1a_3e0024548f81.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Reels are staged. Now pull. Controlled power. Don't yank it.",
+    "file": "/assets/voice/lemon_65f8f7f9bc604bc6fad9_4ac987d71faa_9373e7905566_3afe6a45fc94.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Reels don't walk themselves. That's the job, Tremont.",
+    "file": "/assets/voice/lemon_a6473a071d3691c826b4_4ac987d71faa_8c516efbaeda_b4ad14928b79.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Rivera's lighting his boys up in the east hall. Walk wide. That's not our circus.",
+    "file": "/assets/voice/lemon_1ab749d64293b1d75b3f_4ac987d71faa_d1273f03c4d8_41d03340c431.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Second pull. Feeder two. Controlled power. Don't yank it.",
+    "file": "/assets/voice/lemon_15df60b00daa6355dd2c_4ac987d71faa_70d6e5707665_d12438a92117.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Sensors are reset. Gear on the corridor — TRANSFER when the list is clean.",
+    "file": "/assets/voice/lemon_fc057df1d93b6ba9b6d8_4ac987d71faa_f547273a2dc8_7800522cb562.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Signed. Don't make me regret trusting the form.",
+    "file": "/assets/voice/lemon_34b39b152e94e6a762eb_4ac987d71faa_7d44bf62746d_9e370927f739.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Sit down. Then get back on the iron. I'm still writing your time.",
+    "file": "/assets/voice/lemon_be5f09981a86ad4c49df_4ac987d71faa_868e35a50a36_8eb3b53f446b.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Stage every pod before you tug. Don't starve the pull.",
+    "file": "/assets/voice/lemon_9842bfc18685d9889de9_4ac987d71faa_b5c1d5cd9d05_79cfb5edcfa2.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Stop, Tremont. Keep clear of that circuit and let somebody know you got hit.",
+    "file": "/assets/voice/lemon_5daa0f6a9b1c566c14f3_4ac987d71faa_a5a976765ebf_b642f940c019.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "That one's up high. Blue scissor's parked in the yard. Bring it.",
+    "file": "/assets/voice/lemon_be5d91110e0b14effb92_4ac987d71faa_35d86e9a7e24_8808bcb91aff.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "That's 480 looking for a path. Don't be the path.",
+    "file": "/assets/voice/lemon_d3467c0d3036267def9e_4ac987d71faa_b610663844f8_31e3ae043c89.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "That's a clean run. All four pods. Lemon's signing off. Put the gear away and check your time.",
+    "file": "/assets/voice/lemon_284f8230ab6ccd00855b_4ac987d71faa_313c857811b1_ad88ec5cf25f.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "That's five thousand pounds of lift. You don't win that argument.",
+    "file": "/assets/voice/lemon_edf42b89fa4d29bb48ae_4ac987d71faa_810d224a8fa8_b295bcf34a4f.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "That's Lake Ontario. CB-4 is the other way, Tremont.",
+    "file": "/assets/voice/lemon_8269db9d0e268f6c4310_4ac987d71faa_f8fb5d2906e0_c50efd194cbf.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "That's overtime. Drew's off the trailer. Finish the circuits NOW. No posing.",
+    "file": "/assets/voice/lemon_ab8e1a92eb27e9c4ba57_4ac987d71faa_81ceeb4dfe85_0d18f65a0a5f.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "That's the whole OT window. Drew's leaving your slip at the trailer. Rough one, Tremont.",
+    "file": "/assets/voice/lemon_1513de1d05684fda3b0b_4ac987d71faa_819f3b913903_a3f6ea4b494a.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "That's two corrections. One more and he red-tags the whole job.",
+    "file": "/assets/voice/lemon_9df664f86906c1b7a739_4ac987d71faa_834356152978_bf07da37737b.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "The list is the list. Drew wrote it, Drew signs it. Clear it.",
+    "file": "/assets/voice/lemon_37e1b38e0b0e6d6a2525_4ac987d71faa_fd1fde333403_61d957c6feb1.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Then find Drew for the sign-off. He's walking the yard. Don't make him hunt you.",
+    "file": "/assets/voice/lemon_2342923c23b3da99992d_4ac987d71faa_8f9d309d05e9_6d575c2abef2.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Three corrections. He red-tagged it. We re-walk Monday and Drew eats the cost. Rough day, Tremont.",
+    "file": "/assets/voice/lemon_b417ed2dd204b73ce440_4ac987d71faa_4bfc11c8f87e_cd1588358dd2.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Three pens, then the big one. Don't get cute.",
+    "file": "/assets/voice/lemon_6c24cee820b43f206145_4ac987d71faa_f5b6539b57f0_c6add01c6758.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Tremont doesn't run a candy cart. Keep it that way.",
+    "file": "/assets/voice/lemon_af05256c04c6d1fced0b_4ac987d71faa_a1d63bf0b471_b0464bb710c6.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Tremont, that hallway is a pizza oven. Hustle through.",
+    "file": "/assets/voice/lemon_c9e674cefaaeda4e3b1b_4ac987d71faa_a3f8894ab1b8_004dac0be1c7.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Tremont's already planned the gym session. I've still got a material order to finish.",
+    "file": "/assets/voice/lemon_54caf2a32ed3889658fe_4ac987d71faa_3d555c30942d_1ce2c7a7a64a.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Tremont's Ford is in the south lot. Don't make him move it twice.",
+    "file": "/assets/voice/lemon_fa905faff002ffcf2acf_4ac987d71faa_4572faa60d02_e46536d0d7b4.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Tremont's truck is the Ford in the south lot. Don't block it.",
+    "file": "/assets/voice/lemon_d70f1d8d11bec7652c10_4ac987d71faa_b0dfa0408b6c_4cba0d5deb57.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Turnover. Week two energize. Checks, pens, the green.",
+    "file": "/assets/voice/lemon_bb807f1fdd19ba327184_4ac987d71faa_a5d70d40c8ea_4e68479662d3.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Utility's back. Halls stay lit. Shutdown the diesel when you walk out.",
+    "file": "/assets/voice/lemon_e049688c922d3b04d3b0_4ac987d71faa_ae79cd4066bb_b97a5d625af8.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Utility's locked out. That diesel east of the south doors is the building tonight.",
+    "file": "/assets/voice/lemon_fab05951cf8474d36490_4ac987d71faa_e07288ae98c7_04ac2bb2f2d7.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Walk around the iron. Don't make me write a near-miss.",
+    "file": "/assets/voice/lemon_03df2f724b9f1590a6fa_4ac987d71faa_72558d2aa179_6f4183769c8e.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Walk sheet says demo them clean. He signs, we eat.",
+    "file": "/assets/voice/lemon_566ebe5ccf7025044ad4_4ac987d71faa_edfbf74f818b_e3647bfa8ada.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Walk test's clean. Get the completed sheet to the inspector. That's the job, Tremont.",
+    "file": "/assets/voice/lemon_cb85f313121b094fb03b_4ac987d71faa_24b2be1f64b4_966833cb45b3.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Water's in the conex. Hydrate like you mean it.",
+    "file": "/assets/voice/lemon_5c9ac8c89300f8ceb043_4ac987d71faa_ba57afe3bacf_f72bb4ee2d4c.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Water's in the conex. Take care of yourself; it's a long shift.",
+    "file": "/assets/voice/lemon_e285fe53068b731f0991_4ac987d71faa_096c76b464be_8a91687b74eb.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Water's in the conex. Then get back on the stick.",
+    "file": "/assets/voice/lemon_de6a3e6faa1e0ca398c4_4ac987d71faa_4c2d79f8e5de_90a99bfb11ac.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Week two nights. Diesel east of the south doors. Keep her fed.",
+    "file": "/assets/voice/lemon_0d62d765ecd2ca54f4c9_4ac987d71faa_8e4235fb9731_bcb94d12beae.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Week two trim. Meg it like the first time. No coasting.",
+    "file": "/assets/voice/lemon_4ca32718c4fbfef07ab8_4ac987d71faa_101c672a5fdb_29a203f82f38.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Week two. Loop's in. Now we extend it. Pouch on, Tremont.",
+    "file": "/assets/voice/lemon_f95da93c9c269bf04916_4ac987d71faa_9a29b9580389_09783577e09d.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "What do you need, Tremont? Material or a second pair of hands?",
+    "file": "/assets/voice/lemon_12f7a75610ecf1f80d35_4ac987d71faa_c687a996a234_4171c5ee2dc0.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "What's holding you up: material, access, or another trade?",
+    "file": "/assets/voice/lemon_c1ae88ee604434aebbc7_4ac987d71faa_3a23dc671872_6cb35d299a59.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Whole site's watching CB-4 again. Stay on the checks.",
+    "file": "/assets/voice/lemon_ce0d399e9f1b1a6d6395_4ac987d71faa_895faff8d351_08938af78d2e.mp3"
+  },
+  {
+    "role": "lemon",
+    "text": "Whole site's watching CB-4. Look busy and be busy.",
+    "file": "/assets/voice/lemon_b3d7cd2c80f3ce4d6078_4ac987d71faa_df4d956d0707_cf2d3262baae.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "After energize, nobody touches nothing. Y'all hear me?",
+    "file": "/assets/voice/lugo_5744effff661502053cc_4581e5350e2a_a67e7bccdf11_67fc4845e24a.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "AHJ came back, y'all. Week two walk. Stay ahead of the blue diamond.",
+    "file": "/assets/voice/lugo_ec6b14b3b473b17c33e6_4581e5350e2a_72ccbbc9d8e9_56f267a5b22a.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "AHJ signed the card. Don't touch anything else.",
+    "file": "/assets/voice/lugo_dc1c1641a11727e172f7_4581e5350e2a_94130f00d05a_46cb75ba0a69.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "AHJ walks at end of shift. Meter bag's in the crib. Ten-hour day — we call it eight minutes.",
+    "file": "/assets/voice/lugo_8eac430b7530763127fd_4581e5350e2a_0d587b511fb1_3a6715aa4d19.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "AHJ wrote one up. Get AHEAD of him, Utah.",
+    "file": "/assets/voice/lugo_fbf71e0b520fd7bc3864_4581e5350e2a_95f815fe15ec_410258cf3680.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "AHJ's on site, y'all. He walks to a device, you beat him there and demo it clean. Three corrections and we re-walk Monday.",
+    "file": "/assets/voice/lugo_5a0450a793eea63009c1_4581e5350e2a_8b30535e7265_4d72b97e3156.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "AHJ's tomorrow. Don't leave me a chirp overnight.",
+    "file": "/assets/voice/lugo_2b2fdeda255850c30544_4581e5350e2a_51f981bffd89_36d11e8bec1d.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Ain't no ladder up there, y'all. Bring the deck down first.",
+    "file": "/assets/voice/lugo_f0adf167c0790edda04c_4581e5350e2a_2e3f83c6b715_12b2a869be11.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Back on it, Utah. Loop's where you left it.",
+    "file": "/assets/voice/lugo_a8d4ece0a52c4d131137_4581e5350e2a_562e87e4724b_9d24d7352a6c.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Battery backups read honest. Reset the ducts, then we hand the building back to utility.",
+    "file": "/assets/voice/lugo_2c278afd885d8057043f_4581e5350e2a_870968a29e0e_9d25dad12f0e.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Battery strobes and ducts while she's running. Then transfer back to normal.",
+    "file": "/assets/voice/lugo_1e38cc2a5a76cd4896e0_4581e5350e2a_d16ec05e8223_1b1eaff2f0b4.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Blue diamond is next. Beat him there.",
+    "file": "/assets/voice/lugo_f0fe9768ebc8adb4ac1f_4581e5350e2a_f3b65ef6754f_38c6df056f88.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Blue diamond is where he's headed next. Stay ahead of the man.",
+    "file": "/assets/voice/lugo_45443deaa85a6dd6caf0_4581e5350e2a_0c62826f1c8c_eeeda237ef30.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Boxes are up. Hang smokes in the data halls and corridors.",
+    "file": "/assets/voice/lugo_5e7c27b5da89925b6a43_4581e5350e2a_7b0204a979ce_5e23fa3eef59.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Boxes, smokes, strobes, then my panel. That's the order.",
+    "file": "/assets/voice/lugo_3689f8ef946ad84554ac_4581e5350e2a_116ffea9b6b1_fe3e1aea9b9f.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Bring me the part that's holding you up. We'll sort it out.",
+    "file": "/assets/voice/lugo_87948c2c419678a2acd0_4581e5350e2a_8aca1e6d3eb0_e6ace59d890b.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Callbacks, y'all. Drew found more with the pencil. Clear week two's list.",
+    "file": "/assets/voice/lugo_65965e576c7e8983a7f9_4581e5350e2a_437fc90e66a2_b9738dd63ad9.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Cards are signed. FACP on the corridor, pod one. ENERGIZE, SILENCE, RESET.",
+    "file": "/assets/voice/lugo_5171feff0196ece326a0_4581e5350e2a_7820d06c893e_e0cbe2bf20d8.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "CB-4. Data space in the middle, fan and power halls alongside it. Four pods to cover. Red pipe first.",
+    "file": "/assets/voice/lugo_634cdf2f670b5dc250b1_4581e5350e2a_120613ca6f40_c7fc5d9d92e9.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "CB-5's all iron and mud. Stay out of Ferguson's laydown, y'all.",
+    "file": "/assets/voice/lugo_ea7ee263f6f8b31f2df8_4581e5350e2a_ec91883adac6_d28a5e239247.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Check your hours before you leave. If something's missing, tell me today.",
+    "file": "/assets/voice/lugo_5a81b2678cf09e6d2064_4581e5350e2a_9ae7cc8dd547_9d2920428e98.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Clear the list, then find Drew for the sign-off. He's walking the yard.",
+    "file": "/assets/voice/lugo_c3415238b9ab835c2fca_4581e5350e2a_6cee73d81a4b_49383675c5b6.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Conduit, boxes, smokes, strobes, pulls, then the VESDAs in the fan crawl. Then you touch my panel.",
+    "file": "/assets/voice/lugo_704be78ffc6569b1bbdb_4581e5350e2a_3b1f909b80fe_36f35226fa34.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Day two again. Mag the smokes, chase my troubles, walk the panel.",
+    "file": "/assets/voice/lugo_b5aca96703e870c69baf_4581e5350e2a_5830aa13db99_25ee2b0d8848.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Day two, y'all. Loop's in — now we make it honest. Mag the smokes, chase my troubles, walk the panel.",
+    "file": "/assets/voice/lugo_2d4eb21ff49af9b2a498_4581e5350e2a_077932fc7af5_aec23c592f49.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Device retest, y'all. Honest readings or we walk it twice.",
+    "file": "/assets/voice/lugo_8109b8c8778cf4d663da_4581e5350e2a_4bf2872e803c_fb914fe1d12a.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Devices are flying, Drew. Y'all will have it by walk time.",
+    "file": "/assets/voice/lugo_f688ac409a8da463fedb_4581e5350e2a_cfb02eeddd86_4706ee0b868c.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Don't rest on last week's score. Same halls, new list.",
+    "file": "/assets/voice/lugo_1c4878d8d3d0be650014_4581e5350e2a_4d0ebcc29953_5abe7ba1ecd4.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Drew found you. Slip's got your name spelled right. 237 will call again, Utah.",
+    "file": "/assets/voice/lugo_755c52a80d2667c41958_4581e5350e2a_0234b8027dc7_8da13bf0a0c4.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Drew signed it without looking up. That's as good as a handshake.",
+    "file": "/assets/voice/lugo_e2f2306abb7aae9f35e8_4581e5350e2a_4f0cca7e0eb2_aa5bec346717.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Drew signed. That's the punch list. Don't add to it.",
+    "file": "/assets/voice/lugo_c7c2efbf0292902c2a26_4581e5350e2a_5fb9a7927603_5e6fc9aec90e.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Drew signs a CLEAN list, Utah. Finish the punch.",
+    "file": "/assets/voice/lugo_4eff342374eb813f001f_4581e5350e2a_b5400d941537_0d4412f5f817.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Drew walked the job with a pencil, y'all. Ten punch items, no markers. The list says where — you know this site by now.",
+    "file": "/assets/voice/lugo_689982582ba057372a7d_4581e5350e2a_08efc5587bef_143760139c64.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Drew's asking. I'm stalling. Work faster.",
+    "file": "/assets/voice/lugo_c9dc49f40a3eccd750bc_4581e5350e2a_31c81a6efe9f_401c732336e7.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Drew's at the trailer asking about y'all's numbers, Utah.",
+    "file": "/assets/voice/lugo_918330f3c61fda57cca9_4581e5350e2a_e0e5fb988bcf_1d72d738deaa.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Drew's writing something on that clipboard. I can't hold him long.",
+    "file": "/assets/voice/lugo_28c3a90f821a64ddca57_4581e5350e2a_bac5c40d9622_e2e701be09ff.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Ducts are reset. FACP on the corridor — TRANSFER when the list is clean.",
+    "file": "/assets/voice/lugo_0ed6ef0fb3d5a37af8cd_4581e5350e2a_2146f13e1fb4_6ced673f9120.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Energize day, y'all. Final checks, three signatures, then hit the big one. The whole site's watching CB-4 today.",
+    "file": "/assets/voice/lugo_5fdd87352cc90aaa5547_4581e5350e2a_0f275199ac36_afd424ef0b37.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "EOLs are swapped. Supervision's honest now.",
+    "file": "/assets/voice/lugo_973124fc151ec952a613_4581e5350e2a_f0ab94a45d40_fe4e057c5221.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Every smoke reads clean. That's a loop that'll pass paper.",
+    "file": "/assets/voice/lugo_ec945461f85045c2976e_4581e5350e2a_97c43ffeb63d_ba9e50eae422.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Everything's hot and everyone's stupid today. Watch the floor and get your checks done.",
+    "file": "/assets/voice/lugo_4ca73ae1bd9bbecedb49_4581e5350e2a_36045a138bb6_f46a8322eea5.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Fan crawl's loud. That's the wall pushing air into the hall. VESDAs live in there.",
+    "file": "/assets/voice/lugo_8f747a3edb9c98eff722_4581e5350e2a_162325bfe916_9adf1d035da1.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Ferguson's on the east electrical. That's their gear. We're O'Connell fire alarm.",
+    "file": "/assets/voice/lugo_eecc81971c71b8d69454_4581e5350e2a_4920407fe769_ae3dc0d60a04.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "First aid. Then get back on the hall. I'm still writing your time.",
+    "file": "/assets/voice/lugo_b5f67a638fa37690a535_4581e5350e2a_1fd3cf44e97c_21cd07dc7723.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "FORKLIFT. Yellow iron has the right of way, genius.",
+    "file": "/assets/voice/lugo_1f21be3b836e2cefe622_4581e5350e2a_0cccfe1dcb17_5af56c925057.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Four bays off the corridor, Utah. Don't y'all get lost in the east hall.",
+    "file": "/assets/voice/lugo_bf79c8c714f7560fedc6_4581e5350e2a_4c32468aadf8_1294a4c710be.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Genny's coughing. South doors. Fuel her before the halls go black.",
+    "file": "/assets/voice/lugo_a9862ca285543e6b389c_4581e5350e2a_b35a5a5c372d_0554f4b4a0ae.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Halls are dark, y'all. Tests don't count. Fuel the diesel east of the south doors.",
+    "file": "/assets/voice/lugo_8a4b6e0099f9cf478e16_4581e5350e2a_45537ec01124_c46481980b49.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "He already saw last week's demo. Don't give him a reason to write us up.",
+    "file": "/assets/voice/lugo_3ea864d6717acff8712a_4581e5350e2a_1f35b43a0505_88d3437f30d5.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "He honked. You didn't move. That's on you, y'all.",
+    "file": "/assets/voice/lugo_72f0341c5dd6dc696eb8_4581e5350e2a_9e5604fcef28_978fb6eb6abd.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "He saw a clean demo. Stay ahead of the blue diamond, y'all.",
+    "file": "/assets/voice/lugo_5256cb4297eff6aade38_4581e5350e2a_34c5f9f83c14_25b52d996658.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "He's writing with the good pen, y'all. That's never free.",
+    "file": "/assets/voice/lugo_7b93bedd9668b55a9b8a_4581e5350e2a_41c53555b0a8_55b7fb0f884c.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Headlamp's on. Diesel's east of the south doors. Fuel her when she coughs — then batteries and ducts.",
+    "file": "/assets/voice/lugo_d35cda25f8ec2a099537_4581e5350e2a_d48d584e1db5_063fa678b9e4.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "High work's done. Don't leave the scissor sitting in the hall.",
+    "file": "/assets/voice/lugo_8f651ef5b7044a38107e_4581e5350e2a_b972e78fee26_1e6bfaec1e63.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Hold the pull, let off before the redline. Cable still ain't free.",
+    "file": "/assets/voice/lugo_fc87513b4c7b116302d4_4581e5350e2a_0da18c2d002c_30dc68aa46c6.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Hold the pull, let off before the redline. Work it like a big fish.",
+    "file": "/assets/voice/lugo_0ebe25abedc35379963b_4581e5350e2a_cbadcc543422_9bbfdd1fde39.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "How are you fixed for couplings? Call it in before you're down to the last handful.",
+    "file": "/assets/voice/lugo_8ecef9c5a66b961aaff9_4581e5350e2a_b031bce610a5_035d5282712d.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "If Drew asks, I said something inspirational.",
+    "file": "/assets/voice/lugo_d935918ec9440222d937_4581e5350e2a_8b048357fe14_0605eecaa37a.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "If the halls go dark, the tests don't count. Fuel her.",
+    "file": "/assets/voice/lugo_fe4f8550726ef1141571_4581e5350e2a_36f7c8d8b9c6_95b6862d76a8.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "If y'all are working up there, y'all are tied off. I ain't calling your mother.",
+    "file": "/assets/voice/lugo_e629d40d5c342d98b0f4_4581e5350e2a_a38e2a457495_56afad49e53c.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Keep diesel in her while you work. When she dies you're on the lamp and the tests don't mean a thing.",
+    "file": "/assets/voice/lugo_c9b7472e592732228ee4_4581e5350e2a_6af4f9fe9e93_e31a32822f69.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "List is clear. Find Drew in the yard. He signs, we eat.",
+    "file": "/assets/voice/lugo_ab4810fd7e46f58732ab_4581e5350e2a_b0298933dd26_08c96e069d4a.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Loop looks honest. Three pens: me on the hall, Drew in the yard, AHJ at the panel. Then we hit the big one.",
+    "file": "/assets/voice/lugo_379e67031b193dda88e0_4581e5350e2a_4926f77472ce_a2936fee34fe.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Loop's green, Utah. Drew can put that slip away. Let's get our tools.",
+    "file": "/assets/voice/lugo_9833175e806037dd0f3d_4581e5350e2a_123864a15d16_089828462d85.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Lugo on three. Morning, Utah. O'Connell fire alarm, CB-4. Grab your pouch and meet me in the corridor.",
+    "file": "/assets/voice/lugo_008ff2780a3ac6104dda_4581e5350e2a_fcb2a2dd8806_b0e09018ef5c.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Mag every smoke. AHJ doesn't care how pretty the pipe is if the loop lies.",
+    "file": "/assets/voice/lugo_4780571b4d44b385f28b_4581e5350e2a_383f47ff9c61_5c4ced6a6b87.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Miner row's still humming. That's the old money paying for the new building.",
+    "file": "/assets/voice/lugo_aaeab6dd1606ed08b34f_4581e5350e2a_242d1612214c_a7c510eef0b7.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "NAC's loaded. VESDAs in the fan crawl next — land the aux off the print. Then FACP.",
+    "file": "/assets/voice/lugo_6334cd99506f3416c865_4581e5350e2a_3118f78dd439_922d837f7b95.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Need material or another set of hands? Tell me before you're stuck.",
+    "file": "/assets/voice/lugo_8bd51cb550e78195540c_4581e5350e2a_576b327527c3_e48a0d416461.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Night shift, y'all. Utility's locked out. CB-4 is on the diesel east of the south doors. Test the battery strobes, reset the ducts, then TRANSFER back to normal at the FACP.",
+    "file": "/assets/voice/lugo_fc42ee472c6c3ad02f9d_4581e5350e2a_e77b6a06617d_f8c181515631.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "No markers again. You know the site. Find the work, then find Drew.",
+    "file": "/assets/voice/lugo_34c163b6f23e32d54dcc_4581e5350e2a_55488af9c36f_dcb397fa0264.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "No markers today. You know this site or you don't.",
+    "file": "/assets/voice/lugo_301348c7a2e5bce17ab0_4581e5350e2a_5c7abeced7d5_c5990c832a46.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Nobody signs 'til the checks are done, y'all.",
+    "file": "/assets/voice/lugo_8bc108b9039d6e12c83f_4581e5350e2a_3486395842a8_130d603d8016.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "OT nights, y'all. Battery strobes, ducts, TRANSFER. Same as last Thursday, colder.",
+    "file": "/assets/voice/lugo_cb01d39020c81083c786_4581e5350e2a_24460be24c83_d19e8b1731ad.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Panel's green. All four pods are covered. Nice work, Utah. Let's get the checks done.",
+    "file": "/assets/voice/lugo_5cc889e9cfea2f502652_4581e5350e2a_2c386cb7b6a6_5b71897a1716.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Pouch first, Utah. Crib's by the orange conex. I got your time — you get the work.",
+    "file": "/assets/voice/lugo_c224adbb78214536988e_4581e5350e2a_70da0d6eeb4d_2545c0f75c0b.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Pouch is on. Run red EMT through the hallways and electrical corridors. Don't mix it with power.",
+    "file": "/assets/voice/lugo_7f0945617c1ebaa755e2_4581e5350e2a_cc9359470452_fcb993c9c43c.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Pull day, y'all. Reels from the rack to every pod, then pull the riser section by section. Cable ain't free.",
+    "file": "/assets/voice/lugo_1cc044d648af221294a0_4581e5350e2a_4d54b35509e3_20e175932b14.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Pull smooth, not hard. Cable remembers, y'all.",
+    "file": "/assets/voice/lugo_c02dbfb18d6bb810114f_4581e5350e2a_9322827861ff_57db667968ea.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Red conduit is fire alarm. Don't land it on a lighting circuit, y'all.",
+    "file": "/assets/voice/lugo_aa8c1914cb3ed3b01101_4581e5350e2a_979b7d4912d7_a5821b1be9a3.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Reels are staged. Now pull. Smooth, not stupid.",
+    "file": "/assets/voice/lugo_82e6499f31df2054faab_4581e5350e2a_8e64f10e7ee1_b86e9c472212.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Reels don't walk themselves. That's what Utah's for.",
+    "file": "/assets/voice/lugo_bf5a0023a74ae0e79660_4581e5350e2a_89e5ed49133e_eda6ae7ea0b9.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Riser lands LAST, y'all. Stage the reels, pull the sections, then bring it home.",
+    "file": "/assets/voice/lugo_4aa336e70d608f5e1647_4581e5350e2a_7d6319169655_7882ebbdea79.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Riser's in the pipe. Land it at the panel.",
+    "file": "/assets/voice/lugo_5d3a03f8608f0cac6976_4581e5350e2a_a125716ca925_28060e1d133e.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Riser's landed. That's the pull. Don't nick it.",
+    "file": "/assets/voice/lugo_d22353ef89b3d0c39083_4581e5350e2a_ca85a1daa247_93abaad79c1e.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Rivera's lighting his boys up in the east hall. Walk wide, y'all.",
+    "file": "/assets/voice/lugo_c8d6aede6a30af47ad76_4581e5350e2a_001174c530f0_d8724b411e88.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Second pull, y'all. Feeder two. Same tugger, don't get cute.",
+    "file": "/assets/voice/lugo_1f0f816fb9609dcba822_4581e5350e2a_fbf92e9816b4_f0ff0a55ff6f.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "She's dead. Headlamp only until somebody fuels the diesel east of the south doors.",
+    "file": "/assets/voice/lugo_e6d1432a7896c5cb9056_4581e5350e2a_e8e104840105_06b5868b4e7f.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Signed. Don't make me regret the penmanship.",
+    "file": "/assets/voice/lugo_703fc79225e0b895a88c_4581e5350e2a_db6bc498b0e4_f8da42e55e1d.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Smokes are on the loop. Strobes and pulls at the doors, then the FACP in electrical one.",
+    "file": "/assets/voice/lugo_38b70d58625f83ee92d0_4581e5350e2a_463baf09d102_fe361b87d444.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Something's wrong there. Keep people clear and get me over to it.",
+    "file": "/assets/voice/lugo_1fa0f74f97eada199d92_4581e5350e2a_3f09e5c6e065_90f5c4d55d4e.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Stage every pod before you tug. Don't starve the pull.",
+    "file": "/assets/voice/lugo_194e3cd0d7d163cc36d7_4581e5350e2a_827fe3f8068c_f9a4a8d33e34.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "That old plant by the lake is Somerset. Quite a change of work out here.",
+    "file": "/assets/voice/lugo_4aec7a1e82da377db450_4581e5350e2a_3a5e8942d508_526947f7e435.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "That one's up high, y'all. Blue scissor's parked in the yard.",
+    "file": "/assets/voice/lugo_b540af9839d7eeef38be_4581e5350e2a_7907e63e69a1_c2948b23c0d5.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "That's 277 looking for a path. Don't be the path.",
+    "file": "/assets/voice/lugo_420ff787526f2a282faf_4581e5350e2a_bcd97b9c7cf6_cab906ed9e06.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "That's a lift, not a suggestion. Get off his travel lane.",
+    "file": "/assets/voice/lugo_680db2d80fe14e441c8e_4581e5350e2a_c34750e58b90_f57de5efd0ed.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "That's Lake Ontario, Utah. CB-4 is the other way.",
+    "file": "/assets/voice/lugo_594a420365ad3a2bdd9b_4581e5350e2a_1dfcd75e86ff_f533bf5b06eb.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "That's overtime. Drew's off the trailer with paperwork. Land this loop NOW.",
+    "file": "/assets/voice/lugo_c6c424ddda9fdad0b496_4581e5350e2a_2488b8661765_87a2cbdca131.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "That's the hot aisle, Utah. One-ten on the gun. Don't make a camp.",
+    "file": "/assets/voice/lugo_5a6e55972698521421e2_4581e5350e2a_06c506a99c59_0b3e179c729d.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "That's the last stick. Mount the FA boxes, then devices. All four pods, y'all.",
+    "file": "/assets/voice/lugo_79dac6a29d4ca492426f_4581e5350e2a_df094f46a6fa_5fd8926100d1.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "That's the loop, y'all. All four pods. Lugo's signing off. Get your tools and we'll walk out together.",
+    "file": "/assets/voice/lugo_74c6f90cc96f7fab8087_4581e5350e2a_e05d1cb46dec_70bb68903821.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "That's the whole OT window. Drew's leaving your slip at the trailer. Rough one, Utah.",
+    "file": "/assets/voice/lugo_8e0214a1e003651d5a6f_4581e5350e2a_37322fa80f22_1a5b4a092b4c.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "That's two corrections. One more and he red-tags the whole job.",
+    "file": "/assets/voice/lugo_cc22140459edf61e187b_4581e5350e2a_e66c5394abd4_aa5d7a9e3a6a.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "The list is the list, y'all. Drew wrote it, Drew signs it.",
+    "file": "/assets/voice/lugo_653101738bc7094b70e2_4581e5350e2a_9fd2c9b43f08_2af96f6996ce.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "The Local 237 hands know this site. If you're turned around, ask one of them.",
+    "file": "/assets/voice/lugo_c585acab6c715b9ed03b_4581e5350e2a_bf8b3e6f2935_ae67990e204d.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "The turnover team is back at CB-4. Checks, signatures, then the panel.",
+    "file": "/assets/voice/lugo_8a2a3ffe76bc6a0c9fd5_4581e5350e2a_2d0f75218d92_5d7ef23db44c.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Three corrections. He red-tagged it. We re-walk Monday and Drew eats the cost. Rough day, Utah.",
+    "file": "/assets/voice/lugo_c72df0262b2d50d40f58_4581e5350e2a_36dc9af75005_213f08fa5c86.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Three pens, then the big one. Don't get cute.",
+    "file": "/assets/voice/lugo_6f8fb1ea6af49156f340_4581e5350e2a_feda991fe719_2af02ed9d76d.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Too hot in there, Utah. Get out of the aisle and tell me if you're feeling rough.",
+    "file": "/assets/voice/lugo_67435e975641b5394946_4581e5350e2a_37b96a65fc1d_0681e661233f.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Troubles cleared. Panel's quiet. I'm almost impressed, Utah.",
+    "file": "/assets/voice/lugo_422b095dcab80f0a1957_4581e5350e2a_fad385e9ff68_70f6aa803ecf.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Troubles first, then EOLs, then we walk the panel.",
+    "file": "/assets/voice/lugo_a0b75ec78cc03699c55a_4581e5350e2a_52ed63ce3b4d_15f17b452549.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Turnover day. Week two energize. Same big one, new signatures.",
+    "file": "/assets/voice/lugo_188199a0b5a8e89ab9b9_4581e5350e2a_29c29943891d_89743081001c.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "UPS trailers and transformers are live-adjacent. Don't climb them for a photo, Utah.",
+    "file": "/assets/voice/lugo_37aa4443ae5d51814b07_4581e5350e2a_2166071d34e2_1180a36885f2.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Utah, stop a minute. Let the crew know what happened and keep clear of that fault.",
+    "file": "/assets/voice/lugo_7831bd7b7ad4799145e0_4581e5350e2a_afa9f1982773_2d7e134341e8.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Utah's cart has more candy than a gas station.",
+    "file": "/assets/voice/lugo_eb81dc0b2c69a65c7474_4581e5350e2a_d56b75547328_9633b72c7c1e.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Utility's back, y'all. Halls stay lit. Kill the diesel on your way out.",
+    "file": "/assets/voice/lugo_823ef6e5c3edeb78470b_4581e5350e2a_0eb19adb9394_3bb7ccd15340.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Utility's locked out. That diesel east of the south doors is the building tonight.",
+    "file": "/assets/voice/lugo_77f9f8ff24cb394c34ff_4581e5350e2a_a5b12ee956f5_89f1c980af42.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "VESDAs are on the aux. Fault contacts stay hot in normal — don't kill 24V. FACP on the corridor, pod one.",
+    "file": "/assets/voice/lugo_2bab7a631d7bc60fb51f_4581e5350e2a_3a96fd7ebf7a_0cd4c70a8f93.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Walk sheet says demo 'em clean. He signs, we eat.",
+    "file": "/assets/voice/lugo_4e93ee5dcc971fed08de_4581e5350e2a_c877d7d481c2_180806f960cc.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Walk test's clean. Give the AHJ the completed sheet. Good work, Utah.",
+    "file": "/assets/voice/lugo_65d56be0203fd8339542_4581e5350e2a_26da3586cc77_601d3c4495f5.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Water's in the conex. Take a minute before you head back in.",
+    "file": "/assets/voice/lugo_04b1ff9aebec3c8e5694_4581e5350e2a_d725b3f24669_c2bc1d57c3f9.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Week two nights. Diesel's still east of the south doors. Keep her fed.",
+    "file": "/assets/voice/lugo_5205d4df05a78dd6d03a_4581e5350e2a_e0737813d679_2b0b2d0d6195.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Week two trim. Mag it again like you've never seen this loop.",
+    "file": "/assets/voice/lugo_d3eb1773dd91fa0b5d2f_4581e5350e2a_857c9667dcfb_a9afabcc1ca6.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Week two, y'all. Loop's in from last week. Now we extend it. Grab your pouch.",
+    "file": "/assets/voice/lugo_3e85d2be9eb673c056d8_4581e5350e2a_1aff966e7272_7cc6663cb266.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Wendel's finest tenders. Don't tell safety, Utah.",
+    "file": "/assets/voice/lugo_d84922dca4732654a9b9_4581e5350e2a_ba6297fe669c_ad2d753cf3a1.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Wendel's finest. Tastes like a 345-kV splice and regret.",
+    "file": "/assets/voice/lugo_e9f6d0ea33bd77f580c8_4581e5350e2a_187ddde98a17_722a1191da47.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Whole site's watching CB-4 today. Look busy AND be busy, y'all.",
+    "file": "/assets/voice/lugo_d0cf0147edceea8d96c5_4581e5350e2a_ada7bf600084_f5615256f0cd.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Y'all good on material, Utah?",
+    "file": "/assets/voice/lugo_93cce700995a7d516e41_4581e5350e2a_4adbfb1b8485_774ddebf78ce.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "Y'all need something, or y'all just admiring the foreman?",
+    "file": "/assets/voice/lugo_b75a35fa0df2727aeadc_4581e5350e2a_61bec3533ab9_e9fd841f1d8c.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "You find a decent place to stay yet? Ask around before you book another week.",
+    "file": "/assets/voice/lugo_b39cb0914c1b776d2b7d_4581e5350e2a_ad61800aa070_fb0cd02b71f3.mp3"
+  },
+  {
+    "role": "lugo",
+    "text": "You loiter in that hallway, you're going to cook. Move it.",
+    "file": "/assets/voice/lugo_d502083467e5582d70ce_4581e5350e2a_61ae3c39574c_886b603040e8.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "After this pull I'm hitting the gym. Not the vending machine.",
+    "file": "/assets/voice/tremont_870c601e9f2bb98d7ab3_d9e1963d3528_1dc6d45acb66_6e8b60857c1b.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Anybody find a decent breakfast place that's open before shift?",
+    "file": "/assets/voice/tremont_ae5717c4bd8537e918a8_d9e1963d3528_3cc14504eebe_55ad8425ace0.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Anybody heading toward the hotel after shift? I've got a seat.",
+    "file": "/assets/voice/tremont_35fc9ec9493af120ad1e_d9e1963d3528_61ea9d1f544d_85ae0086b5b2.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Black coffee. No sugar sludge.",
+    "file": "/assets/voice/tremont_38440c39ea728ba5adad_d9e1963d3528_7deafaad737c_0a6b91cfbde3.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Borrowing the blue scissor. Legs still warm from the set.",
+    "file": "/assets/voice/tremont_bbbfa0e5c862f7bb7363_d9e1963d3528_ef9b18c1a56d_a022874760bf.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Box is tight. What's next?",
+    "file": "/assets/voice/tremont_6358a16b6a634bf158b2_d9e1963d3528_02fcc32e9cf3_f0c9b53856a0.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Chest to the deck. Circuit can wait two seconds.",
+    "file": "/assets/voice/tremont_77d781878c384ebd9cf6_d9e1963d3528_b5b888e54196_09539d345b74.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Don't hand me a Squencher. I'll finish this set first.",
+    "file": "/assets/voice/tremont_58c316201a1a67305cad_d9e1963d3528_43b65a358817_dcbb5e8c8fa3.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "F-150's in the south lot. PowerBoost. Don't block it.",
+    "file": "/assets/voice/tremont_8e7142b920aa84ca03c0_d9e1963d3528_fc78b0060e6a_35bb476fabd0.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Ford in the lot, iron in the hall. That's the day.",
+    "file": "/assets/voice/tremont_561966554f4c892da9e3_d9e1963d3528_e62b26bdd66d_71d9fb34125f.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Ford's in the lot. This thing's for the pit.",
+    "file": "/assets/voice/tremont_85147f779273d26ef180_d9e1963d3528_7c625760984b_e2ff1f7b23d2.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Form over force. Same as a clean 90.",
+    "file": "/assets/voice/tremont_ed38152a0ca918532708_d9e1963d3528_dc086ba567eb_e3b840cc5f78.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Form over force. That's a clean bend.",
+    "file": "/assets/voice/tremont_72232aab9e6d359c3cec_d9e1963d3528_09036fe86545_183ea7032a10.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Gear's green, Lemon. Ready for your check.",
+    "file": "/assets/voice/tremont_34ef95ce05df2913b5d0_d9e1963d3528_0778b1558b35_32682e75b7e9.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Going up. Don't park in front of my Ford.",
+    "file": "/assets/voice/tremont_9ca80af353e1e98359be_d9e1963d3528_8bdd6edfb621_29e09243a711.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Good crew on this call. Makes the long days easier.",
+    "file": "/assets/voice/tremont_e1a12f6035fd8bed6456_d9e1963d3528_4efb2cca96d3_b94172978504.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Gym after the whistle. This set is just to stay honest.",
+    "file": "/assets/voice/tremont_c66e120220f739635a41_d9e1963d3528_c5c2c78153cc_22be88559040.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Heading home when this stretch is over. Been looking forward to it.",
+    "file": "/assets/voice/tremont_43a57404bd847a92deff_d9e1963d3528_807d82849f3b_d3858ce542c9.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Hot aisle's trying to kill us. Keep walking.",
+    "file": "/assets/voice/tremont_1aa9c12867ad203a4e33_d9e1963d3528_eb70a9516f4d_bbd9e2c992d2.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Hydrate. Water. That's the whole sermon.",
+    "file": "/assets/voice/tremont_89845d518d6352d7ce5d_d9e1963d3528_4e0c87f18cf2_c088fd439a2d.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "I didn't buy that F-150 to sit in the lot all shift.",
+    "file": "/assets/voice/tremont_0aba878fa4d21b2d21be_d9e1963d3528_2323f0bc5649_7ce37f90ec19.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "I don't run that bag. Protein and a Ford payment.",
+    "file": "/assets/voice/tremont_95709a775676e97cfb21_d9e1963d3528_9b46feaa2c36_2f25c6cf4c2c.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "I owe somebody a phone call when we get out of here.",
+    "file": "/assets/voice/tremont_bb1f53345e6f3bb990ff_d9e1963d3528_edf76d64c92d_a2df4b1e595d.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "I've got laundry to do tonight. Living the dream.",
+    "file": "/assets/voice/tremont_17aebff7dcebb1af4438_d9e1963d3528_e68718794c3a_84964cec5cd5.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "I've seen better form on a gas-station pull-up bar.",
+    "file": "/assets/voice/tremont_d2e73a86cfc9e9b346cb_d9e1963d3528_3c888a1e0922_ba71cbc81643.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "If you brought a Squencher, drink it over there.",
+    "file": "/assets/voice/tremont_0dbab01eec40ae43565d_d9e1963d3528_f38cbb95419f_af5883800e99.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "If you need a ride to the union hall, let me know before we leave.",
+    "file": "/assets/voice/tremont_3def2bf6273dd4d375cf_d9e1963d3528_57edf4fb5a48_58a000b1eca2.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Lights are up. I'll check the next bay.",
+    "file": "/assets/voice/tremont_3ce1ae8ac157b0545824_d9e1963d3528_9927be939de3_594100bf9b69.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Long day. One device at a time.",
+    "file": "/assets/voice/tremont_2204744007281ecb6590_d9e1963d3528_887ea69b6569_d38ee838d7c1.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "My boots are sweating. That's a first.",
+    "file": "/assets/voice/tremont_ee96e9aa974003c73616_d9e1963d3528_0c11d08a5b5e_1ec8d818bf43.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Need anything from the supply run? Put it on the list now.",
+    "file": "/assets/voice/tremont_d8dbac3534d0fce865c3_d9e1963d3528_45b88a1c8543_eeff905c1935.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "No candy cart. Never a candy cart.",
+    "file": "/assets/voice/tremont_0376d057ab3e58db6197_d9e1963d3528_fb262ddbcad0_4ef88c8a383b.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Overtime's good. A proper night's sleep would be good too.",
+    "file": "/assets/voice/tremont_8ddf41e304c3ec276695_d9e1963d3528_9ca05f7d7464_5db691c321f9.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Pouch is on. Let's get the first run in.",
+    "file": "/assets/voice/tremont_3654770b0f461cbe1926_d9e1963d3528_d3e352f2616c_3a078eaccc80.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Push-up set. Then the device.",
+    "file": "/assets/voice/tremont_fa20340dcb97b0f24a76_d9e1963d3528_668a04e29dc8_2d0885c7f066.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Receptacle's landed. Moving on.",
+    "file": "/assets/voice/tremont_abec8a898b926cf4861e_d9e1963d3528_e9d60aaca2c7_aaee6ade6a24.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Recover after the shift. Work during it.",
+    "file": "/assets/voice/tremont_34af91cd5e52699f93c1_d9e1963d3528_2198b35438e7_1b990ee9afd5.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Squenchers are poison. Water and iron.",
+    "file": "/assets/voice/tremont_1330652a47a398f36247_d9e1963d3528_a827c68b41ae_c7da93683d30.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Stick's in. On to the next one.",
+    "file": "/assets/voice/tremont_8100d3c87d94e4566cf5_d9e1963d3528_d915d574e16e_dcf1a9de642d.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Strong people. Strong community. Strong circuit.",
+    "file": "/assets/voice/tremont_aa1b9fd570e9eb919feb_d9e1963d3528_bfb208f28c07_cb706b9dc6e4.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Tell Lemon I'm checking the last connection before I move on.",
+    "file": "/assets/voice/tremont_7b08f40d6ba456747bcb_d9e1963d3528_d5c8f5e22d01_fb077ad9b242.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Tendies are a recovery meal. Not a mid-shift meal.",
+    "file": "/assets/voice/tremont_865ec712af184372b310_d9e1963d3528_96a3aa3234e3_6bb88763560f.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Tool cart. Not a snack cart. Keep it rolling.",
+    "file": "/assets/voice/tremont_f5e8fba62680fa3482b6_d9e1963d3528_b406b09efc3d_3240f9ab629f.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Truck's a Ford. Work's a set. Don't mix 'em up.",
+    "file": "/assets/voice/tremont_8f4f5a82beee88be66e6_d9e1963d3528_a86bb023f9de_1048e05644f2.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Water and iron. Then we land the device.",
+    "file": "/assets/voice/tremont_973ee49170b7397c89ec_d9e1963d3528_b9a28bb429e5_68a4eb3792ea.mp3"
+  },
+  {
+    "role": "tremont",
+    "text": "Who's skipping leg day on my site?",
+    "file": "/assets/voice/tremont_cdda362fc9b67837d614_d9e1963d3528_2ad93ef73ac3_ae52db0e82fe.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "Borrowing the blue scissor. Tell Ferguson it drives itself.",
+    "file": "/assets/voice/utah_62f3292e9eddf766fe75_e6edfe608d7e_a26321a7c9b3_c9cd183147ec.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "Box is up.",
+    "file": "/assets/voice/utah_57514998ad282b5339cb_e6edfe608d7e_06517f5d39b4_630eb8d1880e.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "Came all this way to run conduit. Still hunting couplings.",
+    "file": "/assets/voice/utah_9f96fe10c3e46895f33a_e6edfe608d7e_2a5ce63058e2_a3613f93d449.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "Cart's coming with me. Candy stays cold.",
+    "file": "/assets/voice/utah_7e0417f88b4b408ffb19_e6edfe608d7e_59525f34e728_d6b28ac4a4f6.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "Device is landed.",
+    "file": "/assets/voice/utah_60cfc2bb4664303935a2_e6edfe608d7e_92ad14f9496b_b14f4fd99a8f.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "Going up. Somebody hold my coffee.",
+    "file": "/assets/voice/utah_d69c895ea9748d79bcf2_e6edfe608d7e_79d11e9953a1_7dfc6bc56cb4.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "I'm a Mormon.",
+    "file": "/assets/voice/utah_f721a6c8efc5454c8557_e6edfe608d7e_f1b154040e8e_0da110b74ab0.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "I'm a virgin!",
+    "file": "/assets/voice/utah_1484f93563590bc559f3_e6edfe608d7e_7b2e54fdd413_9cc95b629e49.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "I've seen better bends in a garden hose.",
+    "file": "/assets/voice/utah_92e2349990d2ab8451fa_e6edfe608d7e_b79ae443b1d3_87f0fb921ce7.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "It's throat punch Thursday.",
+    "file": "/assets/voice/utah_5e5f2e7c92b4e8cd2aec_e6edfe608d7e_d3eb18ee2245_13430dcba20d.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "Need a hand, or are we both staring at the same print?",
+    "file": "/assets/voice/utah_f94ed6312dd13bbccd9d_e6edfe608d7e_326e268dd4f0_5ae9753d8877.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "One-ten easy. Who designed this, the sun?",
+    "file": "/assets/voice/utah_5f60c7248ecfa7fd036b_e6edfe608d7e_3cdaf3e96b84_b12ee13bcec5.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "Panel's green, Lugo.",
+    "file": "/assets/voice/utah_0a5503dc847acca47f21_e6edfe608d7e_ddd5430399be_35faff043bf7.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "Pouch is on. Let's get this loop in.",
+    "file": "/assets/voice/utah_746c2df69175fcb20fc7_e6edfe608d7e_e388347b4c63_a3afe2d68117.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "Pride tee on. Loudest thing on this site besides the horns.",
+    "file": "/assets/voice/utah_07add1ecde58319c6927_e6edfe608d7e_76cca9a70295_aa78e1f82284.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "Side-by-side. Don't tell Drew.",
+    "file": "/assets/voice/utah_4afa398e99fea60be5c7_e6edfe608d7e_187c4a91bee4_06a7b369266d.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "Smoke's on the loop.",
+    "file": "/assets/voice/utah_2530de3347a1152772db_e6edfe608d7e_b36d423599e5_e19b69ba9bfb.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "Somebody's playing country in pod three and it's ruining my splice.",
+    "file": "/assets/voice/utah_b9a6df8c047e9978dfa6_e6edfe608d7e_6a7a161de7e3_7d16f0ad1754.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "Tell Drew I'm working on it. His pencil can wait.",
+    "file": "/assets/voice/utah_e0293911c7d4aed74ff0_e6edfe608d7e_30804d9e6cd5_6a7c399209de.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "That corridor keeps getting longer every time I walk it.",
+    "file": "/assets/voice/utah_1a80d978db7feae3b5de_e6edfe608d7e_b95a2df75a7d_3e32d4723e99.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "That's a stick.",
+    "file": "/assets/voice/utah_ca4f15c101095367abc5_e6edfe608d7e_dbe42e4c67af_9913d4c394df.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "That's hotel coffee doing its best.",
+    "file": "/assets/voice/utah_7a2e8960fbf6d15e6316_e6edfe608d7e_c89fc006b213_c411227fdb48.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "This hallway's a convection oven. My pouch is melting.",
+    "file": "/assets/voice/utah_9bc8380bf68c5f3d159b_e6edfe608d7e_eae9dd26d4ca_2122093249e3.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "Vesda's on the aux.",
+    "file": "/assets/voice/utah_018391bf4c936e172776_e6edfe608d7e_a1ee0b64be48_c885df8d24a0.mp3"
+  },
+  {
+    "role": "utah",
+    "text": "Want any mood enhancing drugs?",
+    "file": "/assets/voice/utah_3293bccb54e81d72f613_e6edfe608d7e_df64f5963864_40ddbb7713c1.mp3"
+  }
 ]
